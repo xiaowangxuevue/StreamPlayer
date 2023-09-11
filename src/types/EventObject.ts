@@ -1,3 +1,3 @@
 export type EventObject = {
-    [props:string]:Function[]; 
+    [props:string]: Function[];
 }

@@ -2,10 +2,10 @@ import { $warn, styles,icon } from "../../index";
 import "./error-mask.less";
 
 export class ErrorMask {
-  private container!:HTMLElement
   private template_!: string | HTMLElement;
-  constructor(container:HTMLElement) {
-    this.container = container
+  private container!: HTMLElement;
+  constructor(container: HTMLElement) {
+    this.container = container;
     this.init();
   }
 
@@ -33,8 +33,10 @@ export class ErrorMask {
     errorContainer.appendChild(errorItem);
     errorContainer.appendChild(errorTitle);
     mask.appendChild(errorContainer);
+
     return mask;
   }
+
   addErrorMask() {
     if(![...this.container.children].includes(this.template as HTMLElement)) {
       // ToDo
@@ -44,9 +46,8 @@ export class ErrorMask {
 
   removeErrorMask() {
     if([...this.container.children].includes(this.template as HTMLElement)) {
-      this.container.removeChild(this.template as HTMLElement)
+      // ToDo
+      this.container.removeChild(this.template as HTMLElement);
     }
   }
-
-
 }

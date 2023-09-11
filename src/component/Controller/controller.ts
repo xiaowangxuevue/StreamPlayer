@@ -15,6 +15,7 @@ export class Controller extends BaseEvent {
   get template(): HTMLElement | string {
     return this.template_;
   }
+
   init() {
     this.template_ = `
         <div class="${styles["video-play"]}">
@@ -51,7 +52,7 @@ export class Controller extends BaseEvent {
 
   initEvent() {
     this.on("play",()=>{
-        this.videoPlayBtn.className = `${icon["iconfont"]} ${icon["icon-stop"]}`;
+        this.videoPlayBtn.className = `${icon["iconfont"]} ${icon["icon-zanting"]}`;
     })
 
     this.on("pause",()=>{

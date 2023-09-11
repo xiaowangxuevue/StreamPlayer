@@ -5,5 +5,5 @@ export const icon = {
     "icon-yinliang":"",
     "icon-quanping":"",
     "icon-cuowutishi":"",
-    "icon-stop":""
+    "icon-zanting":""
 }
