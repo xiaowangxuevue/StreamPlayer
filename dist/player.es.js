@@ -43,8 +43,9 @@ class Player extends BaseEvent {
         this.container = container;
     }
     initComponent() {
-        let toolbar = new ToolBar(this.container);
-        this.toolbar = toolbar;
+        this.toolbar = new ToolBar(this.container);
+        this.loadingMask = new LoadingMask(this.container);
+        this.errorMask = new ErrorMask(this.container);
     }
     initContainer() {
         this.container.style.width = this.playerOptions.width;
@@ -60,10 +61,15 @@ class Player extends BaseEvent {
       </div>
     `;
         this.container.appendChild(this.toolbar.template);
-        console.log(this.toolbar.template, 'toolbar');
         this.video = this.container.querySelector("video");
     }
     initEvent() {
+        console.log('开始initEvent', this.container.addEventListener);
+        this.on("mounted", (ctx) => {
+            // ctx.playerOptions.autoplay && ctx.video.play();
+        });
+        this.toolbar.emit("mounted");
+        this.emit("mounted", this);
         this.container.onclick = (e) => {
             if (e.target == this.video) {
                 if (this.video.paused) {
@@ -85,17 +91,18 @@ class Player extends BaseEvent {
             this.toolbar.emit("hidetoolbar", e);
         });
         // 视频源数据加载完毕
-        this.container.addEventListener("loadedmetadata", (e) => {
+        this.video.addEventListener("loadedmetadata", (e) => {
             console.log("视频源数据加载完毕", this.video.duration);
             this.toolbar.emit("loadedmetadata", this.video.duration);
         });
         // 更改时间
-        this.container.addEventListener("timeupdate", (e) => {
+        this.video.addEventListener("timeupdate", (e) => {
+            console.log("时间更新了", this.video.currentTime);
             this.toolbar.emit("timeupdate", this.video.currentTime);
         });
         // 当视频可以接着播放，正常播放的时候可以移除error和loading的mask，通常是为了应对再播放器的过程中出现需要缓冲或者播放错误，展示对应mask
         this.video.addEventListener("play", (e) => {
-            console.log(this, 'this.load');
+            // console.log(this, 'this.load');
             // this.loadingMask.removeLoadingMask();
             // this.errorMask.removeErrorMask();
             this.toolbar.emit("play");
@@ -173,7 +180,7 @@ class ToolBar extends BaseEvent {
         this.container.querySelector(`.${styles["video-controls"]}`).className = `${styles["video-controls"]} ${styles["video-controls-hidden"]}`;
     }
     initComponent() {
-        this.progress = new Progress();
+        this.progress = new Progress(this.container);
         this.controller = new Controller(this.container);
     }
     initTemplate() {
@@ -202,6 +209,7 @@ class ToolBar extends BaseEvent {
             this.controller.emit("pause");
         });
         this.on("loadedmetadata", (summary) => {
+            console.log('____load1', summary);
             this.controller.emit("loadedmetadata", summary);
         });
         this.on("timeupdate", (current) => {
@@ -210,13 +218,17 @@ class ToolBar extends BaseEvent {
         this.on("mounted", () => {
             this.video = this.container.querySelector("video");
             this.controller.emit("mounted");
+            this.progress.emit("mounted");
         });
     }
 }
 
-class Progress {
-    constructor() {
+class Progress extends BaseEvent {
+    constructor(container) {
+        super();
+        this.container = container;
         this.init();
+        this.initEvent();
     }
     get template() {
         return this.template_;
@@ -230,6 +242,15 @@ class Progress {
             <div class="${styles["video-dot"]} ${styles["video-dot-hidden"]}"></div>
         </div>
         `;
+    }
+    initEvent() {
+        this.on("mounted", () => {
+            this.progress = this.container.querySelector(`.${styles["video-controls"]} .${styles["video-progress"]}`);
+            this.pretime = this.progress.children[0];
+            this.bufferedProgress = this.progress.children[1];
+            this.completedProgress = this.progress.children[2];
+            this.dot = this.progress.children[3];
+        });
     }
 }
 
@@ -274,22 +295,20 @@ class Controller extends BaseEvent {
     }
     initEvent() {
         this.on("play", () => {
-            // this.videoPlayBtn.className = `${icon["iconfont"]} ${icon["icon-zanting"]}`;
-            console.log(this, 'thiscont');
+            this.videoPlayBtn.className = `${icon["iconfont"]} ${icon["icon-zanting"]}`;
         });
         this.on("pause", () => {
-            // this.videoPlayBtn.className = `${icon["iconfont"]} ${icon["icon-bofang"]}`;
-            console.log(this, 'thiscont');
+            this.videoPlayBtn.className = `${icon["iconfont"]} ${icon["icon-bofang"]}`;
         });
         this.on("mounted", () => {
             this.videoPlayBtn = this.container.querySelector(`.${styles["video-start-pause"]} i`);
             this.currentTime = this.container.querySelector(`.${styles["video-duration-completed"]}`);
             this.summaryTime = this.container.querySelector(`.${styles["video-duration-all"]}`);
         });
-        this.on("loadedmatedata", (summary) => {
+        this.on("loadedmetadata", (summary) => {
             this.summaryTime.innerHTML = formatTime(summary);
         });
-        this.on("updata", (current) => {
+        this.on("timeupdate", (current) => {
             this.currentTime.innerHTML = formatTime(current);
         });
     }
@@ -428,13 +447,13 @@ const styles = {
 };
 
 const icon = {
-    "iconfont": "",
-    "icon-bofang": "",
-    "icon-shezhi": "",
-    "icon-yinliang": "",
-    "icon-quanping": "",
-    "icon-cuowutishi": "",
-    "icon-zanting": ""
+    iconfont: "main_iconfont__23ooR",
+    "icon-bofang": "main_icon-bofang__SU-ss",
+    "icon-shezhi": "main_icon-shezhi__y-8S0",
+    "icon-yinliang": "main_icon-yinliang__ZFc2R",
+    "icon-quanping": "main_icon-quanping__eGMiv",
+    "icon-cuowutishi": "main_icon-cuowutishi__fy-Bm",
+    "icon-zanting": "main_icon-zanting__BtGq5",
 };
 
 export { $warn, BaseEvent, Controller, ERROR_MASK_MAP, ErrorMask, LOADING_MASK_MAP, LoadingMask, Player, Progress, ToolBar, formatTime, icon, styles };

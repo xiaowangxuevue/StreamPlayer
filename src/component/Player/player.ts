@@ -1,5 +1,6 @@
 import { PlayerOptions, $warn, styles, ToolBar, LoadingMask, ErrorMask, EventObject, BaseEvent } from "../../index";
 import "./player.less";
+import "../../main.less"
 class Player extends BaseEvent {
   private playerOptions = {
     url: "",
@@ -31,8 +32,9 @@ class Player extends BaseEvent {
   }
 
   initComponent() {
-    let toolbar = new ToolBar(this.container);
-    this.toolbar = toolbar;
+    this.toolbar = new ToolBar(this.container);
+    this.loadingMask = new LoadingMask(this.container)
+    this.errorMask = new ErrorMask(this.container)
   }
 
   initContainer() {
@@ -49,12 +51,20 @@ class Player extends BaseEvent {
       </div>
     `
     this.container.appendChild(this.toolbar.template);
-    console.log(this.toolbar.template,'toolbar'); 
-    
     this.video = this.container.querySelector("video")!;
   }
 
   initEvent() {
+
+    console.log('开始initEvent',this.container.addEventListener);
+
+
+    this.on("mounted", (ctx: this) => {
+      // ctx.playerOptions.autoplay && ctx.video.play();
+    })
+
+    this.toolbar.emit("mounted");
+    this.emit("mounted", this)
     this.container.onclick = (e: Event) => {
       if (e.target == this.video) {
         if (this.video.paused) {
@@ -72,26 +82,29 @@ class Player extends BaseEvent {
 
     this.container.addEventListener("mousemove", (e: MouseEvent) => {
       this.toolbar.emit("showtoolbar", e)
+
     })
 
     this.container.addEventListener("mouseleave", (e: MouseEvent) => {
       this.toolbar.emit("hidetoolbar", e)
     })
     // 视频源数据加载完毕
-    this.container.addEventListener("loadedmetadata", (e: Event) => {
-      console.log("视频源数据加载完毕", this.video.duration);
+    this.video.addEventListener("loadedmetadata", (e: Event) => {
+      console.log("视频源数据加载完毕",this.video.duration);
       this.toolbar.emit("loadedmetadata", this.video.duration)
     })
     // 更改时间
-    this.container.addEventListener("timeupdate", (e: Event) => {
+    this.video.addEventListener("timeupdate", (e: Event) => {
+      console.log("时间更新了",this.video.currentTime);
+      
       this.toolbar.emit("timeupdate", this.video.currentTime)
     })
 
     // 当视频可以接着播放，正常播放的时候可以移除error和loading的mask，通常是为了应对再播放器的过程中出现需要缓冲或者播放错误，展示对应mask
 
     this.video.addEventListener("play", (e: Event) => {
-      console.log(this,'this.load');
-      
+      // console.log(this, 'this.load');
+
       // this.loadingMask.removeLoadingMask();
       // this.errorMask.removeErrorMask();
       this.toolbar.emit("play")
@@ -115,7 +128,7 @@ class Player extends BaseEvent {
     })
 
 
-    this.video.addEventListener("error", (e:Event) => {
+    this.video.addEventListener("error", (e: Event) => {
       this.loadingMask.removeLoadingMask();
       this.errorMask.removeErrorMask();
       this.errorMask.addErrorMask();

@@ -53,12 +53,12 @@ export class Controller extends BaseEvent {
    
     
     this.on("play",()=>{
-        // this.videoPlayBtn.className = `${icon["iconfont"]} ${icon["icon-zanting"]}`;
+        this.videoPlayBtn.className = `${icon["iconfont"]} ${icon["icon-zanting"]}`;
         
     })
 
     this.on("pause",()=>{
-        // this.videoPlayBtn.className = `${icon["iconfont"]} ${icon["icon-bofang"]}`;
+        this.videoPlayBtn.className = `${icon["iconfont"]} ${icon["icon-bofang"]}`;
 
     })
 
@@ -68,11 +68,11 @@ export class Controller extends BaseEvent {
         this.summaryTime = this.container.querySelector(`.${styles["video-duration-all"]}`)!;
     })
 
-    this.on("loadedmatedata",(summary:number) => {
+    this.on("loadedmetadata",(summary:number) => {
         this.summaryTime.innerHTML = formatTime(summary)
     })
-
-    this.on("updata",(current:number) => {
+ 
+    this.on("timeupdate",(current:number) => {
         this.currentTime.innerHTML = formatTime(current)
     })
 
