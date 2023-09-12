@@ -6,6 +6,8 @@ export class ToolBar extends BaseEvent {
   private progress!: Progress;
   private controller!: Controller;
   private container!: HTMLElement;
+  private video!: HTMLVideoElement;
+  private timer!: null | number
   constructor(container: HTMLElement) {
     super();
     this.container = container;
@@ -20,7 +22,23 @@ export class ToolBar extends BaseEvent {
   }
 
   init() {
-    
+
+  }
+
+  showToolBar(e: MouseEvent) {
+    this.container.querySelector(`.${styles["video-controls"]}`)!.className = `${styles["video-controls"]}`
+    if (e.target !== this.video) {
+      // do nothing
+    } else {
+      this.timer = window.setTimeout(() => {
+        this.hideToolBar()
+      }, 3000)
+    }
+  }
+
+  hideToolBar() {
+    this.container.querySelector(`.${styles["video-controls"]}`)!.className = `${styles["video-controls"]} ${styles["video-controls-hidden"]}`;
+
   }
 
   initComponent() {
@@ -34,15 +52,42 @@ export class ToolBar extends BaseEvent {
     div.innerHTML += this.progress.template as string;
     div.innerHTML += this.controller.template as string;
     this.template_ = div;
+    console.log(div,'divvvvvvvvvv');
+    
   }
 
   initEvent() {
-    this.on("play",()=>{
-        this.controller.emit("play");
+    this.on("showtoolbar", (e: MouseEvent) => {
+      if (this.timer) {
+        clearTimeout(this.timer);
+        this.timer = null;
+      }
+      this.showToolBar(e);
     })
 
-    this.on("pause",()=>{
-        this.controller.emit("pause");
+    this.on("hidetoolbar", () => {
+      this.hideToolBar();
     })
+
+    this.on("play", () => {
+      this.controller.emit("play");
+    });
+
+    this.on("pause", () => {
+      this.controller.emit("pause");
+    });
+
+    this.on("loadedmetadata", (summary: number) => {
+      this.controller.emit("loadedmetadata", summary);
+    });
+
+    this.on("timeupdate", (current: number) => {
+      this.controller.emit("timeupdate", current);
+    });
+
+    this.on("mounted", () => {
+      this.video = this.container.querySelector("video")!;
+      this.controller.emit("mounted");
+    });
   }
 }

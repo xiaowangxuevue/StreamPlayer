@@ -64,6 +64,7 @@
       </div>
     `;
           this.container.appendChild(this.toolbar.template);
+          console.log(this.toolbar.template, 'toolbar');
           this.video = this.container.querySelector("video");
       }
       initEvent() {
@@ -77,14 +78,56 @@
                   }
               }
           };
-          this.video.onplay = (e) => {
+          // 鼠标控制toolbar show
+          this.container.addEventListener("mouseenter", (e) => {
+              this.toolbar.emit("showtoolbar", e);
+          });
+          this.container.addEventListener("mousemove", (e) => {
+              this.toolbar.emit("showtoolbar", e);
+          });
+          this.container.addEventListener("mouseleave", (e) => {
+              this.toolbar.emit("hidetoolbar", e);
+          });
+          // 视频源数据加载完毕
+          this.container.addEventListener("loadedmetadata", (e) => {
+              console.log("视频源数据加载完毕", this.video.duration);
+              this.toolbar.emit("loadedmetadata", this.video.duration);
+          });
+          // 更改时间
+          this.container.addEventListener("timeupdate", (e) => {
+              this.toolbar.emit("timeupdate", this.video.currentTime);
+          });
+          // 当视频可以接着播放，正常播放的时候可以移除error和loading的mask，通常是为了应对再播放器的过程中出现需要缓冲或者播放错误，展示对应mask
+          this.video.addEventListener("play", (e) => {
+              console.log(this, 'this.load');
+              // this.loadingMask.removeLoadingMask();
+              // this.errorMask.removeErrorMask();
               this.toolbar.emit("play");
-          };
-          this.video.onpause = (e) => {
+          });
+          this.video.addEventListener("pause", (e) => {
               this.toolbar.emit("pause");
-          };
-          this.video.onwaiting = (e) => {
-          };
+          });
+          this.video.addEventListener("waiting", (e) => {
+              this.loadingMask.removeLoadingMask();
+              this.errorMask.removeErrorMask();
+              this.loadingMask.addLoadingMask();
+          });
+          // 当视频请求错误
+          this.video.addEventListener("stalled", (e) => {
+              this.loadingMask.removeLoadingMask();
+              this.errorMask.removeErrorMask();
+              this.errorMask.addErrorMask();
+          });
+          this.video.addEventListener("error", (e) => {
+              this.loadingMask.removeLoadingMask();
+              this.errorMask.removeErrorMask();
+              this.errorMask.addErrorMask();
+          });
+          this.video.addEventListener("abort", (e) => {
+              this.loadingMask.removeLoadingMask();
+              this.errorMask.removeErrorMask();
+              this.errorMask.addErrorMask();
+          });
       }
       isTagValidate(ele) {
           if (window.getComputedStyle(ele).display === "block")
@@ -121,6 +164,18 @@
       }
       init() {
       }
+      showToolBar(e) {
+          this.container.querySelector(`.${styles["video-controls"]}`).className = `${styles["video-controls"]}`;
+          if (e.target !== this.video) ;
+          else {
+              this.timer = window.setTimeout(() => {
+                  this.hideToolBar();
+              }, 3000);
+          }
+      }
+      hideToolBar() {
+          this.container.querySelector(`.${styles["video-controls"]}`).className = `${styles["video-controls"]} ${styles["video-controls-hidden"]}`;
+      }
       initComponent() {
           this.progress = new Progress();
           this.controller = new Controller(this.container);
@@ -131,13 +186,34 @@
           div.innerHTML += this.progress.template;
           div.innerHTML += this.controller.template;
           this.template_ = div;
+          console.log(div, 'divvvvvvvvvv');
       }
       initEvent() {
+          this.on("showtoolbar", (e) => {
+              if (this.timer) {
+                  clearTimeout(this.timer);
+                  this.timer = null;
+              }
+              this.showToolBar(e);
+          });
+          this.on("hidetoolbar", () => {
+              this.hideToolBar();
+          });
           this.on("play", () => {
               this.controller.emit("play");
           });
           this.on("pause", () => {
               this.controller.emit("pause");
+          });
+          this.on("loadedmetadata", (summary) => {
+              this.controller.emit("loadedmetadata", summary);
+          });
+          this.on("timeupdate", (current) => {
+              this.controller.emit("timeupdate", current);
+          });
+          this.on("mounted", () => {
+              this.video = this.container.querySelector("video");
+              this.controller.emit("mounted");
           });
       }
   }
@@ -166,6 +242,7 @@
           super();
           this.container = container;
           this.init();
+          this.initEvent();
       }
       get template() {
           return this.template_;
@@ -198,16 +275,26 @@
             </div>
         </div>
     `;
-          this.videoPlayBtn = this.container.querySelector(`.${styles["video-start-pause"]} i`);
-          this.currentTime = this.container.querySelector(`.${styles["video-duration-completed"]}`);
-          this.summaryTime = this.container.querySelector(`.${styles["video-duration-all"]}`);
       }
       initEvent() {
           this.on("play", () => {
-              this.videoPlayBtn.className = `${icon["iconfont"]} ${icon["icon-zanting"]}`;
+              // this.videoPlayBtn.className = `${icon["iconfont"]} ${icon["icon-zanting"]}`;
+              console.log(this, 'thiscont');
           });
           this.on("pause", () => {
-              this.videoPlayBtn.className = `${icon["iconfont"]} ${icon["icon-bofang"]}`;
+              // this.videoPlayBtn.className = `${icon["iconfont"]} ${icon["icon-bofang"]}`;
+              console.log(this, 'thiscont');
+          });
+          this.on("mounted", () => {
+              this.videoPlayBtn = this.container.querySelector(`.${styles["video-start-pause"]} i`);
+              this.currentTime = this.container.querySelector(`.${styles["video-duration-completed"]}`);
+              this.summaryTime = this.container.querySelector(`.${styles["video-duration-all"]}`);
+          });
+          this.on("loadedmatedata", (summary) => {
+              this.summaryTime.innerHTML = formatTime(summary);
+          });
+          this.on("updata", (current) => {
+              this.currentTime.innerHTML = formatTime(current);
           });
       }
   }
@@ -307,11 +394,14 @@
       return addZero(minute) + ":" + addZero(second);
   }
 
+  let LOADING_MASK_MAP = new Array();
+  let ERROR_MASK_MAP = new Array();
+
   const styles = {
       "video-container": "player_video-container__ndwL-",
       "video-wrapper": "player_video-wrapper__zkaDS",
       "video-controls": "toolbar_video-controls__z6g6I",
-      "video-controls-hidden": "",
+      "video-controls-hidden": "toolbar_video-controls-hidden__Fyvfe",
       "video-progress": "pregress_video-progress__QjWkP",
       "video-pretime": "pregress_video-pretime__JInJt",
       "video-buffered": "pregress_video-buffered__N25SV",
@@ -354,7 +444,9 @@
   exports.$warn = $warn;
   exports.BaseEvent = BaseEvent;
   exports.Controller = Controller;
+  exports.ERROR_MASK_MAP = ERROR_MASK_MAP;
   exports.ErrorMask = ErrorMask;
+  exports.LOADING_MASK_MAP = LOADING_MASK_MAP;
   exports.LoadingMask = LoadingMask;
   exports.Player = Player;
   exports.Progress = Progress;

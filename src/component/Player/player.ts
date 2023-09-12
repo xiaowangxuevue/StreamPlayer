@@ -1,6 +1,6 @@
-import { PlayerOptions, $warn,styles, ToolBar, LoadingMask,ErrorMask, EventObject, BaseEvent } from "../../index";
-import  "./player.less";
-class Player extends BaseEvent{
+import { PlayerOptions, $warn, styles, ToolBar, LoadingMask, ErrorMask, EventObject, BaseEvent } from "../../index";
+import "./player.less";
+class Player extends BaseEvent {
   private playerOptions = {
     url: "",
     autoplay: false,
@@ -10,6 +10,8 @@ class Player extends BaseEvent{
   private container!: HTMLElement;
   private toolbar!: ToolBar;
   private video!: HTMLVideoElement;
+  private loadingMask!: LoadingMask;
+  private errorMask!: ErrorMask;
   constructor(options: PlayerOptions) {
     super();
     this.playerOptions = Object.assign(this.playerOptions, options);
@@ -23,11 +25,11 @@ class Player extends BaseEvent{
   init() {
     let container = (this.playerOptions as PlayerOptions).container;
     if (!this.isTagValidate(container)) {
-        $warn("你传入的容器的元素类型不适合，建议传入块元素或者行内块元素，拒绝传入具有交互类型的元素例如input框等表单类型的元素");
+      $warn("你传入的容器的元素类型不适合，建议传入块元素或者行内块元素，拒绝传入具有交互类型的元素例如input框等表单类型的元素");
     }
     this.container = container;
   }
-  
+
   initComponent() {
     let toolbar = new ToolBar(this.container);
     this.toolbar = toolbar;
@@ -47,6 +49,8 @@ class Player extends BaseEvent{
       </div>
     `
     this.container.appendChild(this.toolbar.template);
+    console.log(this.toolbar.template,'toolbar'); 
+    
     this.video = this.container.querySelector("video")!;
   }
 
@@ -59,23 +63,77 @@ class Player extends BaseEvent{
           this.video.pause();
         }
       }
-    }
+    };
 
-    this.video.onplay = (e: Event) => {
+    // 鼠标控制toolbar show
+    this.container.addEventListener("mouseenter", (e: MouseEvent) => {
+      this.toolbar.emit("showtoolbar", e)
+    })
+
+    this.container.addEventListener("mousemove", (e: MouseEvent) => {
+      this.toolbar.emit("showtoolbar", e)
+    })
+
+    this.container.addEventListener("mouseleave", (e: MouseEvent) => {
+      this.toolbar.emit("hidetoolbar", e)
+    })
+    // 视频源数据加载完毕
+    this.container.addEventListener("loadedmetadata", (e: Event) => {
+      console.log("视频源数据加载完毕", this.video.duration);
+      this.toolbar.emit("loadedmetadata", this.video.duration)
+    })
+    // 更改时间
+    this.container.addEventListener("timeupdate", (e: Event) => {
+      this.toolbar.emit("timeupdate", this.video.currentTime)
+    })
+
+    // 当视频可以接着播放，正常播放的时候可以移除error和loading的mask，通常是为了应对再播放器的过程中出现需要缓冲或者播放错误，展示对应mask
+
+    this.video.addEventListener("play", (e: Event) => {
+      console.log(this,'this.load');
+      
+      // this.loadingMask.removeLoadingMask();
+      // this.errorMask.removeErrorMask();
       this.toolbar.emit("play")
-    }
+    })
 
-    this.video.onpause = (e:Event) => {
+    this.video.addEventListener("pause", (e: Event) => {
       this.toolbar.emit("pause")
-    }
+    })
 
-    this.video.onwaiting = (e:Event) => {
+    this.video.addEventListener("waiting", (e: Event) => {
+      this.loadingMask.removeLoadingMask();
+      this.errorMask.removeErrorMask();
+      this.loadingMask.addLoadingMask()
+    })
 
-    }
+    // 当视频请求错误
+    this.video.addEventListener("stalled", (e: Event) => {
+      this.loadingMask.removeLoadingMask();
+      this.errorMask.removeErrorMask();
+      this.errorMask.addErrorMask()
+    })
+
+
+    this.video.addEventListener("error", (e:Event) => {
+      this.loadingMask.removeLoadingMask();
+      this.errorMask.removeErrorMask();
+      this.errorMask.addErrorMask();
+    })
+
+    this.video.addEventListener("abort", (e: Event) => {
+      this.loadingMask.removeLoadingMask();
+      this.errorMask.removeErrorMask();
+      this.errorMask.addErrorMask();
+    })
+
+
+
+
+
 
 
   }
- 
   isTagValidate(ele: HTMLElement): boolean {
     if (window.getComputedStyle(ele).display === "block") return true;
     if (window.getComputedStyle(ele).display === "inline") return false;
