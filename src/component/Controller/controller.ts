@@ -1,24 +1,26 @@
-import { $warn, styles,icon, EventObject, BaseEvent,formatTime } from "../../index";
+import { $warn, styles, icon, EventObject, BaseEvent, formatTime } from "../../index";
 import "./controller.less"
 export class Controller extends BaseEvent {
-  private template_!: HTMLElement | string;
-  private container!: HTMLElement;
-  private videoPlayBtn!: HTMLElement;
-  private currentTime!: HTMLElement;
-  private summaryTime!: HTMLElement;
-  constructor(container: HTMLElement) {
-    super();
-    this.container = container;
-    this.init();
-    this.initEvent() 
-  }
+    private template_!: HTMLElement | string;
+    private container!: HTMLElement;
+    private videoPlayBtn!: HTMLElement;
+    private currentTime!: HTMLElement;
+    private summaryTime!: HTMLElement;
+    private video!: HTMLVideoElement;
+    private fullScreen!: HTMLElement;
+    constructor(container: HTMLElement) {
+        super();
+        this.container = container;
+        this.init();
+        this.initEvent()
+    }
 
-  get template(): HTMLElement | string {
-    return this.template_;
-  }
+    get template(): HTMLElement | string {
+        return this.template_;
+    }
 
-  init() {
-    this.template_ = `
+    init() {
+        this.template_ = `
         <div class="${styles["video-play"]}">
             <div class="${styles["video-subplay"]}">
                 <div class="${styles["video-start-pause"]}">
@@ -46,35 +48,62 @@ export class Controller extends BaseEvent {
         </div>
     `;
 
-  
-  }
 
-  initEvent() {
-   
-    
-    this.on("play",()=>{
-        this.videoPlayBtn.className = `${icon["iconfont"]} ${icon["icon-zanting"]}`;
-        
-    })
+    }
+    initControllerEvent() {
+        this.videoPlayBtn.onclick = (e: MouseEvent) => {
+            if (this.video.paused) {
+                this.video.play();
+            } else if (this.video.played) {
+                this.video.pause();
+            }
+        };
 
-    this.on("pause",()=>{
-        this.videoPlayBtn.className = `${icon["iconfont"]} ${icon["icon-bofang"]}`;
+        this.fullScreen.onclick = () => {
+            if (this.container.requestFullscreen && !document.fullscreenElement) {
+                this.container.requestFullscreen(); //该函数请求全屏
+            } else if (document.fullscreenElement) {
+                document.exitFullscreen(); //退出全屏函数仅仅绑定在document对象上，该点需要切记！！！
+            }
+        };
 
-    })
+    }
 
-    this.on("mounted",() => {
-        this.videoPlayBtn = this.container.querySelector(`.${styles["video-start-pause"]} i`)!;
-        this.currentTime = this.container.querySelector(`.${styles["video-duration-completed"]}`)!;
-        this.summaryTime = this.container.querySelector(`.${styles["video-duration-all"]}`)!;
-    })
 
-    this.on("loadedmetadata",(summary:number) => {
-        this.summaryTime.innerHTML = formatTime(summary)
-    })
- 
-    this.on("timeupdate",(current:number) => {
-        this.currentTime.innerHTML = formatTime(current)
-    })
 
-  }
+    initEvent() {
+
+
+        this.on("play", () => {
+            this.videoPlayBtn.className = `${icon["iconfont"]} ${icon["icon-zanting"]}`;
+
+        })
+
+        this.on("pause", () => {
+            this.videoPlayBtn.className = `${icon["iconfont"]} ${icon["icon-bofang"]}`;
+
+        })
+
+        this.on("loadedmetadata", (summary: number) => {
+            this.summaryTime.innerHTML = formatTime(summary)
+        })
+
+        this.on("timeupdate", (current: number) => {
+            this.currentTime.innerHTML = formatTime(current)
+        })
+
+        this.on("mounted", () => {
+            this.videoPlayBtn = this.container.querySelector(`.${styles["video-start-pause"]} i`)!;
+            this.currentTime = this.container.querySelector(`.${styles["video-duration-completed"]}`)!;
+            this.summaryTime = this.container.querySelector(`.${styles["video-duration-all"]}`)!;
+            this.video = this.container.querySelector("video")!;
+            this.fullScreen = this.container.querySelector(
+                `.${styles["video-fullscreen"]} i`
+            )!;
+
+            this.initControllerEvent();
+        })
+
+
+    }
 }

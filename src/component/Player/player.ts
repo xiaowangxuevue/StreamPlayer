@@ -55,13 +55,9 @@ class Player extends BaseEvent {
   }
 
   initEvent() {
-
-    console.log('开始initEvent',this.container.addEventListener);
-
-
-    this.on("mounted", (ctx: this) => {
-      // ctx.playerOptions.autoplay && ctx.video.play();
-    })
+    // this.on("mounted", (ctx: this) => {
+    //   // ctx.playerOptions.autoplay && ctx.video.play();
+    // })
 
     this.toolbar.emit("mounted");
     this.emit("mounted", this)
@@ -91,6 +87,7 @@ class Player extends BaseEvent {
     // 视频源数据加载完毕
     this.video.addEventListener("loadedmetadata", (e: Event) => {
       console.log("视频源数据加载完毕",this.video.duration);
+      this.playerOptions.autoplay && this.video.play();
       this.toolbar.emit("loadedmetadata", this.video.duration)
     })
     // 更改时间
