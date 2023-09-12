@@ -1,4 +1,4 @@
-import { $warn, styles, BaseEvent } from "../../index";
+import { $warn, styles, BaseEvent, formatTime } from "../../index";
 import "./pregress.less";
 export class Progress extends BaseEvent {
     private template_!: HTMLElement | string;
@@ -32,6 +32,25 @@ export class Progress extends BaseEvent {
             if (!this.mouseDown) {
                 this.dot.className = `${styles["video-dot"]} ${styles["video-dot-hidden"]}`;
             }
+        };
+        //progress time
+        this.progress.onmousemove = (e: MouseEvent) => {
+            let scale = e.offsetX / this.progress.offsetWidth;
+            if (scale < 0) {
+                scale = 0;
+            } else if (scale > 1) {
+                scale = 1;
+            }
+
+            let preTime = formatTime(scale * this.video.duration);
+            this.pretime.style.display = "block";
+            this.pretime.innerHTML = preTime;
+            this.pretime.style.left = e.offsetX - 17 + "px";
+            e.preventDefault();
+        };
+
+        this.progress.onmouseleave = (e: MouseEvent) => {
+            this.pretime.style.display = "none";
         };
         // 鼠标点击
         this.progress.onclick = (e: MouseEvent) => {
@@ -107,15 +126,15 @@ export class Progress extends BaseEvent {
         this.on("timeupdate", (current: number) => {
             let scaleCurr = (this.video.currentTime / this.video.duration) * 100;
             let scaleBuffer =
-              ((this.video.buffered.end(0) + this.video.currentTime) /
-                this.video.duration) *
-              100;
+                ((this.video.buffered.end(0) + this.video.currentTime) /
+                    this.video.duration) *
+                100;
             this.completedProgress.style.width = scaleCurr + "%";
             this.dot.style.left =
-              this.progress.offsetWidth * (scaleCurr / 100) - 5 + "px";
+                this.progress.offsetWidth * (scaleCurr / 100) - 5 + "px";
             this.bufferedProgress.style.width = scaleBuffer + "%";
-          });
-      
-          this.on("loadedmetadata", (summary: number) => {});
+        });
+
+        this.on("loadedmetadata", (summary: number) => { });
     }
 }

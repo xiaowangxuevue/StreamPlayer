@@ -252,6 +252,23 @@ class Progress extends BaseEvent {
                 this.dot.className = `${styles["video-dot"]} ${styles["video-dot-hidden"]}`;
             }
         };
+        this.progress.onmousemove = (e) => {
+            let scale = e.offsetX / this.progress.offsetWidth;
+            if (scale < 0) {
+                scale = 0;
+            }
+            else if (scale > 1) {
+                scale = 1;
+            }
+            let preTime = formatTime(scale * this.video.duration);
+            this.pretime.style.display = "block";
+            this.pretime.innerHTML = preTime;
+            this.pretime.style.left = e.offsetX - 17 + "px";
+            e.preventDefault();
+        };
+        this.progress.onmouseleave = (e) => {
+            this.pretime.style.display = "none";
+        };
         // 鼠标点击
         this.progress.onclick = (e) => {
             let scale = e.offsetX / this.progress.offsetWidth; //0-1
