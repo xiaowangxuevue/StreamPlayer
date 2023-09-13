@@ -1,0 +1,35 @@
+<!-- 这个MPD文件的目的是为了提供有关如何自适应地流式传输媒体内容的信息，以满足不同终端和网络条件的需求。它包括视频和音频的各种表示，以便在不同的情况下选择最合适的表示进行播放。
+ -->
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 一个MPEG-DASH媒体呈现描述文件。 -->
+<MPD   
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="urn:mpeg:dash:schema:mpd:2011"
+    xmlns:scte35="http://www.scte.org/schemas/35/2014SCTE35.xsd" xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd" profiles="urn:mpeg:dash:profile:isoff-live:2011" type="static" minBufferTime="PT5.000S" maxSegmentDuration="PT2.005S" availabilityStartTime="2016-01-20T21:10:02Z" mediaPresentationDuration="PT193.680S">
+    <!-- 代表时间段的元素，定义了一段时间内的媒体内容 -->
+    <Period id="period0">    
+        <!-- 用于定义适应集，其中包含了媒体内容的相关信息。这个MPD文件中有两个适应集，一个用于视频，一个用于音频。 -->
+        <AdaptationSet mimeType="video/mp4" segmentAlignment="true" startWithSAP="1" maxWidth="1920" maxHeight="1080" maxFrameRate="30000/1001" par="1:1">
+            <!-- 定义了如何分段媒体内容以进行自适应流媒体传输 -->
+            <SegmentTemplate timescale="90000" initialization="$RepresentationID$-Header.m4s" media="$RepresentationID$-270146-i-$Number$.m4s" startNumber="1" duration="179704" presentationTimeOffset="0"/>
+            <!-- 码流 定义了不同的媒体表示，每个表示具有不同的属性，如带宽（bandwidth）、编解码器（codecs）、分辨率（width和height）以及帧速率（frameRate）等 -->
+            <Representation id="v1_257" bandwidth="1200000" codecs="avc1.4D401E" width="768" height="432" frameRate="30000/1001" sar="1:1" scanType="progressive"/>
+            <Representation id="v2_257" bandwidth="1850000" codecs="avc1.4D401E" width="1024" height="576" frameRate="30000/1001" sar="1:1" scanType="progressive"/>
+            <Representation id="v3_257" bandwidth="2850000" codecs="avc1.4D401E" width="1280" height="720" frameRate="30000/1001" sar="1:1" scanType="progressive"/>
+            <Representation id="v4_257" bandwidth="200000" codecs="avc1.4D401E" width="320" height="180" frameRate="30000/1001" sar="1:1" scanType="progressive"/>
+            <Representation id="v5_257" bandwidth="300000" codecs="avc1.4D401E" width="320" height="180" frameRate="30000/1001" sar="1:1" scanType="progressive"/>
+            <Representation id="v6_257" bandwidth="4300000" codecs="avc1.4D401E" width="1280" height="720" frameRate="30000/1001" sar="1:1" scanType="progressive"/>
+            <Representation id="v7_257" bandwidth="5300000" codecs="avc1.4D401E" width="1920" height="1080" frameRate="30000/1001" sar="1:1" scanType="progressive"/>
+            <Representation id="v8_257" bandwidth="480000" codecs="avc1.4D401E" width="512" height="288" frameRate="30000/1001" sar="1:1" scanType="progressive"/>
+            <Representation id="v9_257" bandwidth="750000" codecs="avc1.4D401E" width="640" height="360" frameRate="30000/1001" sar="1:1" scanType="progressive"/>
+        </AdaptationSet>
+        <AdaptationSet mimeType="audio/mp4" segmentAlignment="true" startWithSAP="1" lang="qaa">
+            <SegmentTemplate timescale="90000" initialization="$RepresentationID$-Header.m4s" media="$RepresentationID$-270146-i-$Number$.m4s" startNumber="1" duration="179704" presentationTimeOffset="0"/>
+            <Representation id="v4_258" bandwidth="130800" codecs="mp4a.40.2" audioSamplingRate="48000">
+            <!-- ：用于音频适应集中，指定了音频通道的配置信息，如声道数（value="2"表示双声道音频） -->
+                <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+            </Representation>
+        </AdaptationSet>
+    </Period>
+</MPD>

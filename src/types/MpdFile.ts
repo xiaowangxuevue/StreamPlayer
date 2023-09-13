@@ -12,14 +12,46 @@ export type MediaType =
   | "image/png"
   | "image/jpeg";
 /**
+ * @description video类型媒体分辨率
+ */
+
+export type MediaVideoResolve = {
+  "768*432"?:any;
+  "1024*576"?: any;
+  "1280*720"?: any;
+  "320*180"?: any;
+  "1920*1080"?: any;
+  "512*288"?: any;
+  "640*360"?: any;
+};
+
+
+export type mediaAudioResolve = {
+
+}
+
+export type RangeRequest = {
+  type:"range";
+  url: string;
+  range?: string;
+}
+/**
+ * @description 请求整个媒体段
+ */
+export type SegmentRequest = {
+  type:"segement";
+  url:string;
+}
+/**
  * @description mediaPresentationDuration表示媒体文件的总时长
  */
 export type Mpd = {
   tag: "MPD";
   type: "static" | "dynamic";
   children: Array<Period>;
+  maxSegmentDuration: string | null;
   availabilityStartTime: string | null;  // 可用性开始时间
-  mediaPresentationDuration: string | null;  
+  mediaPresentationDuration: string | null;
   minBufferTime: string | null;
   minimumUpdatePeriod: string | null;
 };
@@ -29,7 +61,7 @@ export type Period = {
   id: string | null;
   duration: string | null;
   start: string | null;
-  children: Array<AdaptationSet>; // 适应集合
+  children: Array<AdaptationSet | BaseURL>; // 适应集合
 };
 
 export type BaseURL = {
@@ -83,17 +115,18 @@ export type Initialization = {
 };
 
 export type SegmentList = {
-    tag: "SegmentList";
-    duration: number | null;
-    children: Array<Initialization | SegmentURL>;
+  tag: "SegmentList";
+  duration: number | null;
+  children: Array<Initialization | SegmentURL>;
 }
 
 export type SegmentURL = {
-    tag: "SegmentURL";
-    media: string;
+  tag: "SegmentURL";
+  media: string;
+  mediaRange?: string;
 }
 
 export type MpdFile = {
-    tag: "File";
-    root: Mpd;
+  tag: "File";
+  root: Mpd;
 };

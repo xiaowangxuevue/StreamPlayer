@@ -521,6 +521,9 @@ function formatTime(seconds) {
     let second = seconds % 60;
     return addZero(minute) + ":" + addZero(second);
 }
+function switchToSeconds(time) {
+    return time.hours * 3600 + time.minutes * 60 + time.seconds;
+}
 // 解析MPD文件的时间字符串
 function parseDuration(pt) {
     // Parse time from format "PT#H#M##.##S"
@@ -531,7 +534,7 @@ function parseDuration(pt) {
     var seconds = ptTemp[1].split("M")[1].split("S")[0];
     var hundredths = seconds.split(".");
     //  Display the length of video (taken from .mpd file, since video duration is infinate)
-    return { hours, minutes, seconds: hundredths[0] };
+    return { hours: Number(hours), minutes: Number(minutes), seconds: Number(hundredths[0]) };
 }
 
 let LOADING_MASK_MAP = new Array();
@@ -600,4 +603,4 @@ const icon = {
     "icon-zanting": "main_icon-zanting__BtGq5",
 };
 
-export { $warn, BaseEvent, Controller, ERROR_MASK_MAP, ErrorMask, LOADING_MASK_MAP, LoadingMask, Player, Progress, ToolBar, addZero, formatTime, icon, parseDuration, string2boolean, string2number, styles };
+export { $warn, BaseEvent, Controller, ERROR_MASK_MAP, ErrorMask, LOADING_MASK_MAP, LoadingMask, Player, Progress, ToolBar, addZero, formatTime, icon, parseDuration, string2boolean, string2number, styles, switchToSeconds };

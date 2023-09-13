@@ -1,6 +1,7 @@
 export * from "./types/PlayerOptions";
 export * from "./types/EventObject";
 export * from "./types/MpdFile";
+export * from "./types/Time";
 export * from "./class/BaseEvent";
 export * from "./component/Player/player";
 export * from "./component/ToolBar/toolbar";
