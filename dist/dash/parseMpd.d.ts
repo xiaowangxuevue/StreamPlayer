@@ -1,4 +1,5 @@
 import { AdaptationSet, MediaVideoResolve, RangeRequest, Representation, SegmentRequest } from "../types/MpdFile";
+export declare function parseMpd(mpd: Document): void;
 export declare function parseAdaptationSet(adaptationSet: AdaptationSet, path: string, sumSegment: number | null): MediaVideoResolve;
 export declare function parseRepresentation(representation: Representation, hasTemplate: boolean, path: string, sumSegment: number | null, initializationSegment?: [Function, string[]], mediaSegment?: [Function, string[]]): MediaVideoResolve;
 /**

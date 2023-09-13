@@ -108,6 +108,7 @@ export function initRepresentation(
     let width = Number(representation.getAttribute("width"));
     let height = Number(representation.getAttribute("height"));
     let mimeType = representation.getAttribute("mimeType");
+    let audioSamplingRate = representation.getAttribute("audioSamplingRate");
     let children = new Array<BaseURL | SegmentBase | SegmentList>();
     if (!(bandWidth && codecs && id && width && height)) {
         $warn("传入的MPD文件中Representation标签上不存在属性xxx");
@@ -122,6 +123,7 @@ export function initRepresentation(
                 bandWidth,
                 codecs,
                 id,
+                audioSamplingRate,
                 width,
                 height,
                 mimeType: mimeType as MediaType | null,
@@ -159,6 +161,7 @@ export function initRepresentation(
                 tag: "Representation",
                 bandWidth,
                 codecs,
+                audioSamplingRate,
                 id,
                 width,
                 height,

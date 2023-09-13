@@ -1,6 +1,7 @@
-import { PlayerOptions, $warn, styles, ToolBar, LoadingMask, ErrorMask, EventObject, BaseEvent } from "../../index";
+import { PlayerOptions, $warn, styles, ToolBar, LoadingMask, ErrorMask,BaseEvent } from "../../index";
 import "./player.less";
 import "../../main.less"
+import { parseMpd } from "../../dash/parseMpd";
 class Player extends BaseEvent {
   private playerOptions = {
     url: "",

@@ -15,3 +15,5 @@ export * from "./utils/map";
 export * from "./utils/typeSwitch";
 export * from "./styles/style";
 export * from "./styles/icon";
+export * from "./dash/initMpd";
+export * from "./dash/parseMpd";

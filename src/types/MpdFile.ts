@@ -16,17 +16,18 @@ export type MediaType =
  */
 
 export type MediaVideoResolve = {
-  "768*432"?:any;
-  "1024*576"?: any;
-  "1280*720"?: any;
-  "320*180"?: any;
-  "1920*1080"?: any;
-  "512*288"?: any;
-  "640*360"?: any;
+  "320*180"?: Array<SegmentRequest | RangeRequest>;
+  "512*288"?: Array<SegmentRequest | RangeRequest>;
+  "640*360"?: Array<SegmentRequest | RangeRequest>;
+  "768*432"?: Array<SegmentRequest | RangeRequest>;
+  "1024*576"?: Array<SegmentRequest | RangeRequest>;
+  "1280*720"?: Array<SegmentRequest | RangeRequest>;
+  "1920*1080"?: Array<SegmentRequest | RangeRequest>;
 };
 
 
-export type mediaAudioResolve = {
+export type MediaAudioResolve = {
+  [props:string]:Array<SegmentRequest | RangeRequest>
 
 }
 
@@ -92,11 +93,12 @@ export type SegmentTemplate = {
  */
 export type Representation = {
   tag: "Representation";
-  bandWidth: number;
-  codecs: string;
-  id: string;
-  width: number;
-  height: number;
+  bandWidth: number | null;
+  codecs: string | null;
+  audioSamplingRate: string | null;
+  id: string | null;
+  width: number | null;
+  height: number | null;
   mimeType: MediaType | null;
   children?: Array<BaseURL | SegmentBase | SegmentList>;
 
