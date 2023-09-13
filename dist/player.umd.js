@@ -252,6 +252,7 @@
                   this.dot.className = `${styles["video-dot"]} ${styles["video-dot-hidden"]}`;
               }
           };
+          //progress time
           this.progress.onmousemove = (e) => {
               let scale = e.offsetX / this.progress.offsetWidth;
               if (scale < 0) {
@@ -524,9 +525,40 @@
       let second = seconds % 60;
       return addZero(minute) + ":" + addZero(second);
   }
+  // 解析MPD文件的时间字符串
+  function parseDuration(pt) {
+      // Parse time from format "PT#H#M##.##S"
+      var ptTemp = pt.split("T")[1];
+      ptTemp = ptTemp.split("H");
+      var hours = ptTemp[0];
+      var minutes = ptTemp[1].split("M")[0];
+      var seconds = ptTemp[1].split("M")[1].split("S")[0];
+      var hundredths = seconds.split(".");
+      //  Display the length of video (taken from .mpd file, since video duration is infinate)
+      return { hours, minutes, seconds: hundredths[0] };
+  }
 
   let LOADING_MASK_MAP = new Array();
   let ERROR_MASK_MAP = new Array();
+
+  function string2boolean(s) {
+      if (s === 'true') {
+          return true;
+      }
+      else if (s === 'false') {
+          return false;
+      }
+      else {
+          return null;
+      }
+  }
+  function string2number(s) {
+      let n = Number(s);
+      if (isNaN(n))
+          return n;
+      else
+          return null;
+  }
 
   const styles = {
       "video-container": "player_video-container__ndwL-",
@@ -582,8 +614,12 @@
   exports.Player = Player;
   exports.Progress = Progress;
   exports.ToolBar = ToolBar;
+  exports.addZero = addZero;
   exports.formatTime = formatTime;
   exports.icon = icon;
+  exports.parseDuration = parseDuration;
+  exports.string2boolean = string2boolean;
+  exports.string2number = string2number;
   exports.styles = styles;
 
   Object.defineProperty(exports, '__esModule', { value: true });
