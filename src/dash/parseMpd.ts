@@ -4,6 +4,7 @@ import {
   MediaVideoResolve,
   MeidaAudioResolve,
   RangeRequest,
+  PeriodRequest,
   Representation,
   SegmentRequest,
   SegmentTemplate,
@@ -24,6 +25,8 @@ import { initMpdFile } from "./initMpd";
 
 export function parseMpd(mpd: Document,Base_URL:string=""){
   let mpdModel = initMpdFile(mpd).root;
+  console.log(mpdModel,'model');
+  
   let type = mpdModel.type;
   console.log(parseDuration(mpdModel.mediaPresentationDuration));
   let mediaPresentationDuration = switchToSeconds(
@@ -36,7 +39,9 @@ export function parseMpd(mpd: Document,Base_URL:string=""){
     ? Math.ceil(mediaPresentationDuration / maxSegmentDuration)
     : null;
   // 代表的是整个MPD文档中的需要发送的所有xhr请求地址，包括多个Period对应的视频和音频请求地址
-  let mpdRequest = [];
+  let mpdRequest = new Array<PeriodRequest>();
+  console.log(mpdRequest,'mpdRequestmpdRequest');
+  
   // 遍历文档中的每一个Period，Period代表着一个完整的音视频，不同的Period具有不同内容的音视频，例如广告和正片就属于不同的Period
   mpdModel.children.forEach((period) => {
     let path = "" + Base_URL;

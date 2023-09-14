@@ -11,6 +11,13 @@ export type MediaType =
   | "text/plain"
   | "image/png"
   | "image/jpeg";
+
+export type PeriodRequest = {
+  "videoRequest":MediaVideoResolve;
+  "audioRequest":MeidaAudioResolve;
+}
+
+
 /**
  * @description video类型媒体分辨率
  */

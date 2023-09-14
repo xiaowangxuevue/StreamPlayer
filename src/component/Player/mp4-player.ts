@@ -8,7 +8,6 @@ export class Mp4Player {
         this.initEvent()
     }
     initEvent() {
-        console.log('马上newmp4');
         this.player.toolbar.emit("mounted");
         this.player.emit("mounted", this);
 
