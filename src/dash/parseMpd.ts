@@ -22,6 +22,8 @@ import {
 import { initMpdFile } from "./initMpd";
 
 export function parseMpd(mpd: Document) {
+  console.log(mpd,'mpd');
+  
   let mpdModel = initMpdFile(mpd).root;
   let type = mpdModel.type;
   let mediaPresentationDuration = switchToSeconds(
@@ -78,7 +80,7 @@ export function parseAdaptationSet(
     }
   }
 
-  let mediaResolve: MediaVideoResolve;
+  let mediaResolve: MediaVideoResolve | MediaAudioResolve = {};
   children.forEach((child) => {
     if (checkRepresentation(child)) {
       let obj = parseRepresentation(

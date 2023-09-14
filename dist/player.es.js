@@ -522,19 +522,50 @@ function formatTime(seconds) {
     return addZero(minute) + ":" + addZero(second);
 }
 function switchToSeconds(time) {
-    return time.hours * 3600 + time.minutes * 60 + time.seconds;
+    let sum = 0;
+    if (time.hours)
+        sum += time.hours * 3600;
+    if (time.minutes)
+        sum += time.minutes * 60;
+    if (time.seconds)
+        sum += time.seconds;
+    return sum;
 }
 // 解析MPD文件的时间字符串
 function parseDuration(pt) {
     // Parse time from format "PT#H#M##.##S"
-    var ptTemp = pt.split("T")[1];
-    ptTemp = ptTemp.split("H");
-    var hours = ptTemp[0];
-    var minutes = ptTemp[1].split("M")[0];
-    var seconds = ptTemp[1].split("M")[1].split("S")[0];
-    var hundredths = seconds.split(".");
-    //  Display the length of video (taken from .mpd file, since video duration is infinate)
-    return { hours: Number(hours), minutes: Number(minutes), seconds: Number(hundredths[0]) };
+    let hours, minutes, seconds;
+    for (let i = pt.length - 1; i >= 0; i--) {
+        if (pt[i] === "S") {
+            let j = i;
+            while (pt[i] !== "M" && pt[i] !== "H" && pt[i] !== "T") {
+                i--;
+            }
+            i += 1;
+            seconds = parseInt(pt.slice(i, j));
+        }
+        else if (pt[i] === "M") {
+            let j = i;
+            while (pt[i] !== "H" && pt[i] !== "T") {
+                i--;
+            }
+            i += 1;
+            minutes = parseInt(pt.slice(i, j));
+        }
+        else if (pt[i] === "H") {
+            let j = i;
+            while (pt[i] !== "T") {
+                i--;
+            }
+            i += 1;
+            hours = parseInt(pt.slice(i, j));
+        }
+    }
+    return {
+        hours,
+        minutes,
+        seconds,
+    };
 }
 
 let LOADING_MASK_MAP = new Array();
@@ -755,9 +786,6 @@ function initRepresentation(representation) {
     let mimeType = representation.getAttribute("mimeType");
     let audioSamplingRate = representation.getAttribute("audioSamplingRate");
     let children = new Array();
-    if (!(bandWidth && codecs && id && width && height)) {
-        $warn("传入的MPD文件中Representation标签上不存在属性xxx");
-    }
     if (mimeType && !checkMediaType(mimeType)) {
         $warn("");
     }
@@ -787,7 +815,7 @@ function initRepresentation(representation) {
                     children.push(list);
                 }
             }
-            else {
+            else if (representation.querySelector("SegmentBase")) {
                 //2. BaseURL+SegmentBase 适用于每个rep只有一个Seg的情况
                 let base = initSegmentBase(representation.querySelector("SegmentBase"));
                 if (representation.querySelector("BaseURL")) {
@@ -875,6 +903,7 @@ function initBaseURL(baseURL) {
 }
 
 function parseMpd(mpd) {
+    console.log(mpd, 'mpd');
     let mpdModel = initMpdFile(mpd).root;
     mpdModel.type;
     let mediaPresentationDuration = switchToSeconds(parseDuration(mpdModel.mediaPresentationDuration));
@@ -912,7 +941,7 @@ function parseAdaptationSet(adaptationSet, path = "", sumSegment) {
             break;
         }
     }
-    let mediaResolve;
+    let mediaResolve = {};
     children.forEach((child) => {
         if (checkRepresentation(child)) {
             let obj = parseRepresentation(child, hasTemplate, path, sumSegment, [generateInitializationUrl, initializationFormat], [generateMediaUrl, mediaFormat]);

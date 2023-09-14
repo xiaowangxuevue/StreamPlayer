@@ -48,7 +48,7 @@ export type SegmentRequest = {
  */
 export type Mpd = {
   tag: "MPD";
-  type: "static" | "dynamic";
+  type?: "static" | "dynamic";
   children: Array<Period>;
   maxSegmentDuration: string | null;
   availabilityStartTime: string | null;  // 可用性开始时间

@@ -110,9 +110,7 @@ export function initRepresentation(
     let mimeType = representation.getAttribute("mimeType");
     let audioSamplingRate = representation.getAttribute("audioSamplingRate");
     let children = new Array<BaseURL | SegmentBase | SegmentList>();
-    if (!(bandWidth && codecs && id && width && height)) {
-        $warn("传入的MPD文件中Representation标签上不存在属性xxx");
-    }
+   
     if (mimeType && !checkMediaType(mimeType)) {
         $warn("");
     } else {
@@ -143,7 +141,7 @@ export function initRepresentation(
                 } else {
                     children.push(list);
                 }
-            } else {
+            } else if (representation.querySelector("SegmentBase")){
                 //2. BaseURL+SegmentBase 适用于每个rep只有一个Seg的情况
                 let base = initSegmentBase(
                     representation.querySelector("SegmentBase")!
