@@ -5,6 +5,8 @@ export * from "./types/Time"
 export * from "./types/AxiosRequest"
 export * from "./class/BaseEvent"
 export * from "./component/Player/player";
+export * from "./component/Player/mp4-player"
+export * from "./component/Player/mpd-player"
 export * from "./component/ToolBar/toolbar";
 export * from "./component/Progress/progress";
 export * from "./component/Controller/controller";
@@ -14,6 +16,7 @@ export * from "./utils/warn";
 export * from "./utils/format";
 export * from "./utils/map";
 export * from "./utils/typeSwitch"
+export * from "./utils/getFileExtension"
 export * from "./styles/style";
 export * from "./styles/icon";
 export * from "./dash/initMpd";

@@ -9,3 +9,9 @@ export type AxiosHeader = {
     "Range"?: string;
     "Authroization"?: string;
 };
+export type AxiosReturnType = {
+    status: "success" | "fail";
+    data: JSON | ArrayBuffer | Blob | Document | string | {
+        [props: string]: any;
+    };
+};

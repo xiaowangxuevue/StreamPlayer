@@ -1,17 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-
+   
 </head>
-
 <body>
     <input type="file" id="file">
-    <div>
+    <div id="video">
         <!-- <video id="videoPlayer" controls width="500" height="300"></video> -->
     </div>
     <script src="./dist/player.umd.js"></script>
@@ -21,34 +19,27 @@
         //     var player = dashjs.MediaPlayer().create();
         //     player.initialize(document.querySelector("#videoPlayer"), url, true);
         // })();
+        let player = new Player.Player({
+            url:"https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd",
+            container:document.getElementById("video")
+        })
+
+
         let parseMpd = Player.parseMpd;
         let fileReder = new FileReader();
         let File = document.getElementById("file")
-        File.onchange = function () {
+        File.onchange = function() {
             let file = File.files[0];
             fileReder.readAsText(file);
-            fileReder.onload = function () {
+            fileReder.onload = function() {
                 let data = fileReder.result;
                 let parser = new DOMParser();
-                let document = parser.parseFromString(data, "text/xml");
+                let document = parser.parseFromString(data,"text/xml");
                 let init = Player.initMpdFile(document);
-                let request = Player.parseMpd(document, "https://dash.akamaized.net/envivio/EnvivioDash3/");
-                console.log(request, 'REQUEST')
+                let request = Player.parseMpd(document,"https://dash.akamaized.net/envivio/EnvivioDash3/");
+                console.log(request)
             }
         }
-
-
-
-        let axios = new Player.Axios();
-        console.log(axios);
-        // axios.post("http://localhost/login", { "Content-Type": "application/json" }, "arraybuffer", JSON.stringify({
-        //     username: "zhouzzz",
-        //     password: "ddddd"
-        // })).then((val) => {
-        //     console.log(val,'val')
-        // })
-
     </script>
 </body>
-
 </html>

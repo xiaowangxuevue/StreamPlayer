@@ -22,7 +22,7 @@ import {
 } from "../utils/typeCheck";
 import { initMpdFile } from "./initMpd";
 
-export function parseMpd(mpd: Document,Base_URL:string=""):Object {
+export function parseMpd(mpd: Document,Base_URL:string=""){
   let mpdModel = initMpdFile(mpd).root;
   let type = mpdModel.type;
   console.log(parseDuration(mpdModel.mediaPresentationDuration));
@@ -39,7 +39,7 @@ export function parseMpd(mpd: Document,Base_URL:string=""):Object {
   let mpdRequest = [];
   // 遍历文档中的每一个Period，Period代表着一个完整的音视频，不同的Period具有不同内容的音视频，例如广告和正片就属于不同的Period
   mpdModel.children.forEach((period) => {
-    let path = "";
+    let path = "" + Base_URL;
     let videoRequest: MediaVideoResolve;
     let audioRequest: MeidaAudioResolve;
     for (let i = period.children.length - 1; i >= 0; i--) {
@@ -76,6 +76,7 @@ export function parseMpd(mpd: Document,Base_URL:string=""):Object {
     type,
     mediaPresentationDuration,
     maxSegmentDuration,
+    mpdModel
   };
 }
 
