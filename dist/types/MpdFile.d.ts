@@ -14,7 +14,7 @@ export type MediaVideoResolve = {
     "1280*720"?: Array<SegmentRequest | RangeRequest>;
     "1920*1080"?: Array<SegmentRequest | RangeRequest>;
 };
-export type MediaAudioResolve = {
+export type MeidaAudioResolve = {
     [props: string]: Array<SegmentRequest | RangeRequest>;
 };
 export type RangeRequest = {

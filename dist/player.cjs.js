@@ -907,17 +907,21 @@ function initBaseURL(baseURL) {
 }
 
 function parseMpd(mpd) {
-    console.log(mpd, 'mpd');
     let mpdModel = initMpdFile(mpd).root;
-    mpdModel.type;
+    let type = mpdModel.type;
+    console.log(parseDuration(mpdModel.mediaPresentationDuration));
     let mediaPresentationDuration = switchToSeconds(parseDuration(mpdModel.mediaPresentationDuration));
     let maxSegmentDuration = switchToSeconds(parseDuration(mpdModel.maxSegmentDuration));
     let sumSegment = maxSegmentDuration
         ? Math.ceil(mediaPresentationDuration / maxSegmentDuration)
         : null;
+    // 代表的是整个MPD文档中的需要发送的所有xhr请求地址，包括多个Period对应的视频和音频请求地址
+    let mpdRequest = [];
     // 遍历文档中的每一个Period，Period代表着一个完整的音视频，不同的Period具有不同内容的音视频，例如广告和正片就属于不同的Period
     mpdModel.children.forEach((period) => {
         let path = "";
+        let videoRequest;
+        let audioRequest;
         for (let i = period.children.length - 1; i >= 0; i--) {
             let child = period.children[i];
             if (checkBaseURL(child)) {
@@ -927,35 +931,58 @@ function parseMpd(mpd) {
         }
         period.children.forEach((child) => {
             if (checkAdaptationSet(child)) {
-                parseAdaptationSet(child, path, sumSegment);
+                if (child.mimeType === "audio/mp4") {
+                    audioRequest = parseAdaptationSet(child, path, sumSegment, child.mimeType);
+                }
+                else if (child.mimeType === "video/mp4") {
+                    videoRequest = parseAdaptationSet(child, path, sumSegment, child.mimeType);
+                }
             }
         });
+        mpdRequest.push({ videoRequest, audioRequest });
     });
+    return {
+        mpdRequest,
+        type,
+        mediaPresentationDuration,
+        maxSegmentDuration,
+    };
 }
-function parseAdaptationSet(adaptationSet, path = "", sumSegment) {
+function parseAdaptationSet(adaptationSet, path = "", sumSegment, type) {
     let children = adaptationSet.children;
     let hasTemplate = false;
-    let generateInitializationUrl, initializationFormat, generateMediaUrl, mediaFormat;
+    let template;
     for (let i = children.length - 1; i >= 0; i--) {
         let child = children[i];
         if (checkSegmentTemplate(child)) {
             hasTemplate = true;
-            [generateInitializationUrl, initializationFormat] = generateTemplateTuple(child.initialization);
-            [generateMediaUrl, mediaFormat] = generateTemplateTuple(child.media);
+            template = child;
             break;
         }
     }
     let mediaResolve = {};
     children.forEach((child) => {
         if (checkRepresentation(child)) {
-            let obj = parseRepresentation(child, hasTemplate, path, sumSegment, [generateInitializationUrl, initializationFormat], [generateMediaUrl, mediaFormat]);
+            let generateInitializationUrl, initializationFormat, generateMediaUrl, mediaFormat;
+            if (hasTemplate) {
+                [generateInitializationUrl, initializationFormat] =
+                    generateTemplateTuple(template.initialization);
+                [generateMediaUrl, mediaFormat] = generateTemplateTuple(template.media);
+            }
+            let obj = parseRepresentation(child, hasTemplate, path, sumSegment, type, [generateInitializationUrl, initializationFormat], [generateMediaUrl, mediaFormat]);
             Object.assign(mediaResolve, obj);
         }
     });
     return mediaResolve;
 }
-function parseRepresentation(representation, hasTemplate = false, path = "", sumSegment, initializationSegment, mediaSegment) {
-    let resolve = `${representation.width}*${representation.height}`;
+function parseRepresentation(representation, hasTemplate = false, path = "", sumSegment, type, initializationSegment, mediaSegment) {
+    let resolve;
+    if (type === "video/mp4") {
+        resolve = `${representation.width}*${representation.height}`;
+    }
+    else if (type === "audio/mp4") {
+        resolve = `${representation.audioSamplingRate}`;
+    }
     let obj = {};
     // 一. 如果该适应集 中具有标签SegmentTemplate，则接下来的Representation中请求的Initialization Segment和Media Segment的请求地址一律以SegmentTemplate中的属性为基准
     if (hasTemplate) {
@@ -977,30 +1004,30 @@ function parseRepresentationWithSegmentTemplateOuter(representation, path = "", 
     let [generateInitializationUrl, initializationFormat] = initializationSegment;
     let [generateMediaUrl, mediaFormat] = mediaSegment;
     // 1.处理对于Initialization Segment的请求
-    initializationFormat.forEach((item) => {
-        if (item === "RepresentationID") {
-            item = representation.id;
+    for (let i in initializationFormat) {
+        if (initializationFormat[i] === "RepresentationID") {
+            initializationFormat[i] = representation.id;
         }
-        else if (item === "Number") {
-            item = "1";
+        else if (initializationFormat[i] === "Number") {
+            initializationFormat[i] = "1";
         }
-    });
+    }
     requestArray.push({
         type: "segement",
         url: path + generateInitializationUrl(...initializationFormat),
     });
     // 2.处理对于Media Segment的请求
-    mediaFormat.forEach((item) => {
-        if (item === "RepresentationID") {
-            item = representation.id;
+    for (let i in mediaFormat) {
+        if (mediaFormat[i] === "RepresentationID") {
+            mediaFormat[i] = representation.id;
         }
-        else if (item === "Number") {
-            item = "1";
-        }
-    });
+    }
     for (let index = 1; index <= sumSegment; index++) {
-        mediaFormat.forEach((item) => {
-        });
+        for (let i in mediaFormat) {
+            if (mediaFormat[i] === "Number") {
+                mediaFormat[i] = `${index}`;
+            }
+        }
         requestArray.push({
             type: "segement",
             url: path + generateMediaUrl(...mediaFormat),
@@ -1102,6 +1129,9 @@ function generateTemplateTuple(s) {
             s = s.slice(i + 1);
             i = 0;
             continue;
+        }
+        if (i + 1 === s.length) {
+            splitStr.push(s);
         }
     }
     return [

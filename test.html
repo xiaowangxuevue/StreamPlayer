@@ -20,25 +20,18 @@
         //     player.initialize(document.querySelector("#videoPlayer"), url, true);
         // })();
         let parseMpd = Player.parseMpd;
-        console.log(parseMpd);
         let fileReder = new FileReader();
-        console.log(fileReder,'fileReder');
         let File = document.getElementById("file")
-        console.log(File,'File');
         File.onchange = function() {
             let file = File.files[0];
-            console.log(file,'file');
             fileReder.readAsText(file);
             fileReder.onload = function() {
-                console.log('读取完成',fileReder);
                 let data = fileReder.result;
                 let parser = new DOMParser();
                 let document = parser.parseFromString(data,"text/xml");
-                console.log(document,'document');
                 let init = Player.initMpdFile(document);
-                let request = Player.parseMpd(document);
-                console.log(init)
-                console.log(request)
+                let request = Player.parseMpd(document,"https://dash.akamaized.net/envivio/EnvivioDash3/");
+                console.log(request,'REQUEST')
             }
         }
     </script>

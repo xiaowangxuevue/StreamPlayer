@@ -26,7 +26,7 @@ export type MediaVideoResolve = {
 };
 
 
-export type MediaAudioResolve = {
+export type MeidaAudioResolve = {
   [props:string]:Array<SegmentRequest | RangeRequest>
 
 }
