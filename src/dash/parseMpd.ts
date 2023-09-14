@@ -22,7 +22,7 @@ import {
 } from "../utils/typeCheck";
 import { initMpdFile } from "./initMpd";
 
-export function parseMpd(mpd: Document) {
+export function parseMpd(mpd: Document,Base_URL:string=""):Object {
   let mpdModel = initMpdFile(mpd).root;
   let type = mpdModel.type;
   console.log(parseDuration(mpdModel.mediaPresentationDuration));
@@ -57,7 +57,7 @@ export function parseMpd(mpd: Document) {
             path,
             sumSegment,
             child.mimeType
-          );
+          ) as MeidaAudioResolve
         } else if (child.mimeType === "video/mp4") {
           videoRequest = parseAdaptationSet(
             child,
@@ -84,7 +84,7 @@ export function parseAdaptationSet(
   path: string = "",
   sumSegment: number | null,
   type: MediaType
-) {
+): Object {
   let children = adaptationSet.children;
   let hasTemplate = false;
   let template: SegmentTemplate;
