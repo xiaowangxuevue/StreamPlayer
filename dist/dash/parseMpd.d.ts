@@ -1,10 +1,9 @@
-import { AdaptationSet, MediaType, MediaVideoResolve, RangeRequest, PeriodRequest, Representation, SegmentRequest } from "../types/MpdFile";
+import { AdaptationSet, MediaType, MediaVideoResolve, RangeRequest, PeriodRequest, Representation, SegmentRequest } from "../types/dash/MpdFile";
 export declare function parseMpd(mpd: Document, Base_URL?: string): {
     mpdRequest: PeriodRequest[];
     type: "static" | "dynamic";
     mediaPresentationDuration: number;
     maxSegmentDuration: number;
-    mpdModel: import("../types/MpdFile").Mpd;
 };
 export declare function parseAdaptationSet(adaptationSet: AdaptationSet, path: string, sumSegment: number | null, type: MediaType): Object;
 export declare function parseRepresentation(representation: Representation, hasTemplate: boolean, path: string, sumSegment: number | null, type: MediaType, initializationSegment?: [Function, string[]], mediaSegment?: [Function, string[]]): MediaVideoResolve;

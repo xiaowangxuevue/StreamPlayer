@@ -8,7 +8,7 @@ import {
     SegmentList,
     SegmentTemplate,
     SegmentURL
-} from "../types/MpdFile";
+} from "../types/dash/MpdFile";
 
 export function checkMediaType(s: any): s is MediaType {
     if (!s) return true

@@ -108,748 +108,6 @@
       }
   }
 
-  /******************************************************************************
-  Copyright (c) Microsoft Corporation.
-
-  Permission to use, copy, modify, and/or distribute this software for any
-  purpose with or without fee is hereby granted.
-
-  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-  REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-  AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-  INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-  LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-  OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-  PERFORMANCE OF THIS SOFTWARE.
-  ***************************************************************************** */
-
-  function __awaiter(thisArg, _arguments, P, generator) {
-      function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-      return new (P || (P = Promise))(function (resolve, reject) {
-          function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-          function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-          function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-          step((generator = generator.apply(thisArg, _arguments || [])).next());
-      });
-  }
-
-  function addZero(num) {
-      return num > 9 ? num + "" : "0" + num;
-  }
-  function formatTime(seconds) {
-      seconds = Math.floor(seconds);
-      let minute = Math.floor(seconds / 60);
-      let second = seconds % 60;
-      return addZero(minute) + ":" + addZero(second);
-  }
-  function switchToSeconds(time) {
-      let sum = 0;
-      if (time.hours)
-          sum += time.hours * 3600;
-      if (time.minutes)
-          sum += time.minutes * 60;
-      if (time.seconds)
-          sum += time.seconds;
-      return sum;
-  }
-  // 解析MPD文件的时间字符串
-  function parseDuration(pt) {
-      // Parse time from format "PT#H#M##.##S"
-      let hours, minutes, seconds;
-      for (let i = pt.length - 1; i >= 0; i--) {
-          if (pt[i] === "S") {
-              let j = i;
-              while (pt[i] !== "M" && pt[i] !== "H" && pt[i] !== "T") {
-                  i--;
-              }
-              i += 1;
-              seconds = parseInt(pt.slice(i, j));
-          }
-          else if (pt[i] === "M") {
-              let j = i;
-              while (pt[i] !== "H" && pt[i] !== "T") {
-                  i--;
-              }
-              i += 1;
-              minutes = parseInt(pt.slice(i, j));
-          }
-          else if (pt[i] === "H") {
-              let j = i;
-              while (pt[i] !== "T") {
-                  i--;
-              }
-              i += 1;
-              hours = parseInt(pt.slice(i, j));
-          }
-      }
-      return {
-          hours,
-          minutes,
-          seconds,
-      };
-  }
-
-  function checkMediaType(s) {
-      if (!s)
-          return true;
-      return (s === "video/mp4" ||
-          s === "audio/mp4" ||
-          s === "text/html" ||
-          s === "text/xml" ||
-          s === "text/plain" ||
-          s === "image/png" ||
-          s === "image/jpeg");
-  }
-  /**
-   * @description 类型守卫函数
-   */
-  function checkBaseURL(s) {
-      if (s.tag === "BaseURL" && typeof s.url === "string")
-          return true;
-      return false;
-  }
-  /**
-   * @description 类型守卫函数
-   */
-  function checkAdaptationSet(s) {
-      if (s.tag === "AdaptationSet")
-          return true;
-      return false;
-  }
-  /**
-   * @description 类型守卫函数
-   */
-  function checkSegmentTemplate(s) {
-      return s.tag === "SegmentTemplate";
-  }
-  /**
-   * @description 类型守卫函数
-   */
-  function checkRepresentation(s) {
-      return s.tag === "Representation";
-  }
-  /**
-   * @description 类型守卫函数
-   */
-  function checkSegmentList(s) {
-      return s.tag === "SegmentList";
-  }
-  function checkInitialization(s) {
-      return s.tag === "Initialization";
-  }
-  function checkSegmentURL(s) {
-      return s.tag === "SegmentURL";
-  }
-  function checkSegmentBase(s) {
-      return s.tag === "SegmentBase";
-  }
-  let checkUtils = {
-      checkMediaType,
-      checkBaseURL,
-      checkAdaptationSet,
-      checkSegmentTemplate,
-      checkRepresentation,
-      checkSegmentList,
-      checkInitialization,
-      checkSegmentURL,
-      checkSegmentBase
-  };
-  function findSpecificType(array, type) {
-      array.forEach(item => {
-          if (checkUtils[`check${type}`] && checkUtils[`check${type}`].call(this, item)) {
-              return true;
-          }
-      });
-      return false;
-  }
-
-  function string2boolean(s) {
-      if (s === 'true') {
-          return true;
-      }
-      else if (s === 'false') {
-          return false;
-      }
-      else {
-          return null;
-      }
-  }
-  function string2number(s) {
-      let n = Number(s);
-      if (isNaN(n))
-          return n;
-      else
-          return null;
-  }
-
-  function $warn(msg) {
-      throw new Error(msg);
-  }
-
-  function initMpdFile(mpd) {
-      return {
-          tag: "File",
-          root: initMpd(mpd.querySelector("MPD"))
-      };
-  }
-  function initMpd(mpd) {
-      let type = mpd.getAttribute("type");
-      let availabilityStartTime = mpd.getAttribute("availabilityStartTime");
-      let mediaPresentationDuration = mpd.getAttribute("mediaPresentationDuration");
-      let minBufferTime = mpd.getAttribute("minBufferTime");
-      let minimumUpdatePeriod = mpd.getAttribute("minimumUpdatePeriod");
-      let maxSegmentDuration = mpd.getAttribute('maxSegmentDuration');
-      let children = new Array();
-      mpd.querySelectorAll("Period").forEach(item => {
-          children.push(initPeriod(item));
-      });
-      return {
-          tag: "MPD",
-          type,
-          children,
-          availabilityStartTime,
-          maxSegmentDuration,
-          mediaPresentationDuration,
-          minBufferTime,
-          minimumUpdatePeriod
-      };
-  }
-  function initPeriod(period) {
-      let id = period.getAttribute("id");
-      let duration = period.getAttribute("duration");
-      let start = period.getAttribute("start");
-      let children = new Array();
-      period.querySelectorAll("AdaptationSet").forEach((item) => {
-          children.push(initAdaptationSet(item));
-      });
-      return {
-          tag: "Period",
-          id,
-          duration,
-          start,
-          children,
-      };
-  }
-  function initAdaptationSet(adaptationSet) {
-      let segmentAlignment = string2boolean(adaptationSet.getAttribute("segmentAlignment"));
-      let mimeType = adaptationSet.getAttribute("mimeType");
-      if (checkMediaType(mimeType)) {
-          let startWithSAP = string2number(adaptationSet.getAttribute("startWithSAP"));
-          let segmentTemplate = adaptationSet.querySelector("SegmentTemplate");
-          let children = new Array();
-          if (segmentTemplate) {
-              children.push(initSegmentTemplate(segmentTemplate));
-          }
-          adaptationSet.querySelectorAll("Representation").forEach((item) => {
-              children.push(initRepresentation(item));
-          });
-          return {
-              tag: "AdaptationSet",
-              children,
-              segmentAlignment,
-              mimeType,
-              startWithSAP,
-          };
-      }
-      else {
-          $warn("传入的MPD文件中的AdaptationSet标签上的属性mimeType的值不合法，应该为MIME类型");
-      }
-  }
-  function initRepresentation(representation) {
-      let bandWidth = Number(representation.getAttribute("bandWidth"));
-      let codecs = representation.getAttribute("codecs");
-      let id = representation.getAttribute("id");
-      let width = Number(representation.getAttribute("width"));
-      let height = Number(representation.getAttribute("height"));
-      let mimeType = representation.getAttribute("mimeType");
-      let audioSamplingRate = representation.getAttribute("audioSamplingRate");
-      let children = new Array();
-      if (mimeType && !checkMediaType(mimeType)) {
-          $warn("");
-      }
-      else {
-          //如果representation没有子节点
-          if (representation.childNodes.length === 0) {
-              return {
-                  tag: "Representation",
-                  bandWidth,
-                  codecs,
-                  id,
-                  audioSamplingRate,
-                  width,
-                  height,
-                  mimeType: mimeType,
-              };
-          }
-          else {
-              //对于Representation标签的children普遍认为有两种可能
-              if (representation.querySelector("SegmentList")) {
-                  //1. (BaseURL)+SegmentList
-                  let list = initSegmentList(representation.querySelector("SegmentList"));
-                  if (representation.querySelector("BaseURL")) {
-                      children.push(initBaseURL(representation.querySelector("BaseURL")), list);
-                  }
-                  else {
-                      children.push(list);
-                  }
-              }
-              else if (representation.querySelector("SegmentBase")) {
-                  //2. BaseURL+SegmentBase 适用于每个rep只有一个Seg的情况
-                  let base = initSegmentBase(representation.querySelector("SegmentBase"));
-                  if (representation.querySelector("BaseURL")) {
-                      children.push(initBaseURL(representation.querySelector("BaseURL")), base);
-                  }
-                  else {
-                      $warn("传入的MPD文件中Representation中的子节点结构错误");
-                  }
-              }
-              return {
-                  tag: "Representation",
-                  bandWidth,
-                  codecs,
-                  audioSamplingRate,
-                  id,
-                  width,
-                  height,
-                  mimeType: mimeType,
-                  children,
-              };
-          }
-      }
-  }
-  function initSegmentTemplate(segmentTemplate) {
-      let initialization = segmentTemplate.getAttribute("initialization");
-      let media = segmentTemplate.getAttribute("media");
-      return {
-          tag: "SegmentTemplate",
-          initialization,
-          media,
-      };
-  }
-  function initSegmentBase(segmentBase) {
-      let range = segmentBase.getAttribute("indexRange");
-      if (!range) {
-          $warn("传入的MPD文件中SegmentBase标签上不存在属性indexRange");
-      }
-      let initialization = initInitialization(segmentBase.querySelector("Initialization"));
-      return {
-          tag: "SegmentBase",
-          indexRange: range,
-          child: initialization,
-      };
-  }
-  function initSegmentList(segmentList) {
-      let duration = segmentList.getAttribute("duration");
-      if (!duration) {
-          $warn("传入的MPD文件中SegmentList标签上不存在属性duration");
-      }
-      duration = Number(duration);
-      let children = [
-          initInitialization(segmentList.querySelector("Initialization")),
-      ];
-      segmentList.querySelectorAll("SegmentURL").forEach((item) => {
-          children.push(initSegmentURL(item));
-      });
-      return {
-          tag: "SegmentList",
-          duration: duration,
-          children,
-      };
-  }
-  function initInitialization(initialization) {
-      return {
-          tag: "Initialization",
-          sourceURL: initialization.getAttribute("sourceURL"),
-          range: initialization.getAttribute("range"),
-      };
-  }
-  function initSegmentURL(segmentURL) {
-      let media = segmentURL.getAttribute("media");
-      if (!media) {
-          $warn("传入的MPD文件中SegmentURL标签上不存在属性media");
-      }
-      return {
-          tag: "SegmentURL",
-          media,
-      };
-  }
-  function initBaseURL(baseURL) {
-      return {
-          tag: "BaseURL",
-          url: baseURL.innerHTML,
-      };
-  }
-
-  function parseMpd(mpd, Base_URL = "") {
-      let mpdModel = initMpdFile(mpd).root;
-      console.log(mpdModel, 'model');
-      let type = mpdModel.type;
-      console.log(parseDuration(mpdModel.mediaPresentationDuration));
-      let mediaPresentationDuration = switchToSeconds(parseDuration(mpdModel.mediaPresentationDuration));
-      let maxSegmentDuration = switchToSeconds(parseDuration(mpdModel.maxSegmentDuration));
-      let sumSegment = maxSegmentDuration
-          ? Math.ceil(mediaPresentationDuration / maxSegmentDuration)
-          : null;
-      // 代表的是整个MPD文档中的需要发送的所有xhr请求地址，包括多个Period对应的视频和音频请求地址
-      let mpdRequest = new Array();
-      console.log(mpdRequest, 'mpdRequestmpdRequest');
-      // 遍历文档中的每一个Period，Period代表着一个完整的音视频，不同的Period具有不同内容的音视频，例如广告和正片就属于不同的Period
-      mpdModel.children.forEach((period) => {
-          let path = "" + Base_URL;
-          let videoRequest;
-          let audioRequest;
-          for (let i = period.children.length - 1; i >= 0; i--) {
-              let child = period.children[i];
-              if (checkBaseURL(child)) {
-                  path += child.url;
-                  break;
-              }
-          }
-          period.children.forEach((child) => {
-              if (checkAdaptationSet(child)) {
-                  if (child.mimeType === "audio/mp4") {
-                      audioRequest = parseAdaptationSet(child, path, sumSegment, child.mimeType);
-                  }
-                  else if (child.mimeType === "video/mp4") {
-                      videoRequest = parseAdaptationSet(child, path, sumSegment, child.mimeType);
-                  }
-              }
-          });
-          mpdRequest.push({ videoRequest, audioRequest });
-      });
-      return {
-          mpdRequest,
-          type,
-          mediaPresentationDuration,
-          maxSegmentDuration,
-          mpdModel
-      };
-  }
-  function parseAdaptationSet(adaptationSet, path = "", sumSegment, type) {
-      let children = adaptationSet.children;
-      let hasTemplate = false;
-      let template;
-      for (let i = children.length - 1; i >= 0; i--) {
-          let child = children[i];
-          if (checkSegmentTemplate(child)) {
-              hasTemplate = true;
-              template = child;
-              break;
-          }
-      }
-      let mediaResolve = {};
-      children.forEach((child) => {
-          if (checkRepresentation(child)) {
-              let generateInitializationUrl, initializationFormat, generateMediaUrl, mediaFormat;
-              if (hasTemplate) {
-                  [generateInitializationUrl, initializationFormat] =
-                      generateTemplateTuple(template.initialization);
-                  [generateMediaUrl, mediaFormat] = generateTemplateTuple(template.media);
-              }
-              let obj = parseRepresentation(child, hasTemplate, path, sumSegment, type, [generateInitializationUrl, initializationFormat], [generateMediaUrl, mediaFormat]);
-              Object.assign(mediaResolve, obj);
-          }
-      });
-      return mediaResolve;
-  }
-  function parseRepresentation(representation, hasTemplate = false, path = "", sumSegment, type, initializationSegment, mediaSegment) {
-      let resolve;
-      if (type === "video/mp4") {
-          resolve = `${representation.width}*${representation.height}`;
-      }
-      else if (type === "audio/mp4") {
-          resolve = `${representation.audioSamplingRate}`;
-      }
-      let obj = {};
-      // 一. 如果该适应集 中具有标签SegmentTemplate，则接下来的Representation中请求的Initialization Segment和Media Segment的请求地址一律以SegmentTemplate中的属性为基准
-      if (hasTemplate) {
-          obj[resolve] = parseRepresentationWithSegmentTemplateOuter(representation, path, sumSegment, initializationSegment, mediaSegment);
-      }
-      else {
-          //二. 如果没有SegmentTemplate标签，则根据Representation中的子结构具有三种情况,前提是Representation中必须具有子标签，否则报错
-          //情况1.(BaseURL)+SegmentList
-          if (findSpecificType(representation.children, "SegmentList")) ;
-          else if (findSpecificType(representation.children, "SegmentBase")) ;
-      }
-      return obj;
-  }
-  /**
-   * @description 应对Representation外部具有SegmentTemplate的结构这种情况
-   */
-  function parseRepresentationWithSegmentTemplateOuter(representation, path = "", sumSegment, initializationSegment, mediaSegment) {
-      let requestArray = new Array();
-      let [generateInitializationUrl, initializationFormat] = initializationSegment;
-      let [generateMediaUrl, mediaFormat] = mediaSegment;
-      // 1.处理对于Initialization Segment的请求
-      for (let i in initializationFormat) {
-          if (initializationFormat[i] === "RepresentationID") {
-              initializationFormat[i] = representation.id;
-          }
-          else if (initializationFormat[i] === "Number") {
-              initializationFormat[i] = "1";
-          }
-      }
-      requestArray.push({
-          type: "segement",
-          url: path + generateInitializationUrl(...initializationFormat),
-      });
-      // 2.处理对于Media Segment的请求
-      for (let i in mediaFormat) {
-          if (mediaFormat[i] === "RepresentationID") {
-              mediaFormat[i] = representation.id;
-          }
-      }
-      for (let index = 1; index <= sumSegment; index++) {
-          let copy = [...mediaFormat];
-          for (let i in mediaFormat) {
-              if (copy[i] === "Number") {
-                  copy[i] = `${index}`;
-              }
-          }
-          requestArray.push({
-              type: "segement",
-              url: path + generateMediaUrl(...copy),
-          });
-      }
-      return requestArray;
-  }
-  /**
-   * @description 应对Representation内部具有(BaseURL)+SegmentList的结构这种情况
-   */
-  function parseRepresentationWithSegmentList(representation, path) {
-      let children = representation.children;
-      let segmentList;
-      let requestArray = new Array();
-      for (let i = children.length - 1; i >= 0; i--) {
-          let child = children[i];
-          if (checkBaseURL(child)) {
-              path += child;
-              break;
-          }
-      }
-      for (let i = children.length - 1; i >= 0; i--) {
-          let child = children[i];
-          if (checkSegmentList(child)) {
-              segmentList = child;
-              break;
-          }
-      }
-      for (let i = segmentList.length - 1; i >= 0; i--) {
-          let child = segmentList[i];
-          if (checkInitialization(child)) {
-              requestArray.push({
-                  type: "range",
-                  url: path + child.sourceURL,
-              });
-              break;
-          }
-      }
-      segmentList.forEach((segment) => {
-          if (checkSegmentURL(segment)) {
-              if (segment.media) {
-                  requestArray.push({
-                      type: "segement",
-                      url: path + segment.media,
-                  });
-              }
-              else {
-                  requestArray.push({
-                      type: "range",
-                      url: path,
-                      range: segment.mediaRange,
-                  });
-              }
-          }
-      });
-      return requestArray;
-  }
-  /**
-   * @description 应对Representation内部具有(BaseURL)+SegmentBase的结构这种情况
-   */
-  function parseRepresentationWithSegmentBase(representation, path) {
-      let children = representation.children;
-      let requestArray = new Array();
-      for (let i = children.length - 1; i >= 0; i--) {
-          let child = children[i];
-          if (checkBaseURL(child)) {
-              path += child.url;
-              break;
-          }
-      }
-      for (let i = children.length - 1; i >= 0; i--) {
-          let child = children[i];
-          if (checkSegmentBase(child)) {
-              requestArray.push({
-                  type: "range",
-                  url: path,
-                  range: child.child.range,
-              });
-              requestArray.push({
-                  type: "range",
-                  url: path,
-                  range: child.indexRange,
-              });
-          }
-      }
-      return requestArray;
-  }
-  /**
-   * @description 生成模板函数和占位符
-   */
-  function generateTemplateTuple(s) {
-      let splitStr = [];
-      let format = [];
-      for (let i = 0; i < s.length; i++) {
-          let str = s.slice(0, i + 1);
-          if (/\$.+?\$/.test(str)) {
-              format.push(str.match(/\$(.+?)\$/)[1]);
-              splitStr.push(str.replace(/\$.+?\$/, ""), "%format%");
-              s = s.slice(i + 1);
-              i = 0;
-              continue;
-          }
-          if (i + 1 === s.length) {
-              splitStr.push(s);
-          }
-      }
-      return [
-          (...args) => {
-              let index = 0;
-              let str = "";
-              splitStr.forEach((item) => {
-                  if (item === "%format%") {
-                      str += args[index];
-                      index++;
-                  }
-                  else {
-                      str += item;
-                  }
-              });
-              return str;
-          },
-          format,
-      ];
-  }
-
-  function sendRequest(url, method, header, responseType = 'text', data) {
-      return new Promise((res, rej) => {
-          let xhr = new XMLHttpRequest();
-          xhr.open(method, url);
-          for (let index in header) {
-              xhr.setRequestHeader(index, header[index]);
-          }
-          xhr.responseType = responseType;
-          xhr.onreadystatechange = function () {
-              if (xhr.readyState === 4) {
-                  if ((xhr.status >= 200 && xhr.status < 300) || xhr.status === 304) {
-                      res({
-                          status: "success",
-                          data: xhr.response
-                      });
-                  }
-                  else {
-                      rej({
-                          status: 'fail',
-                          data: xhr.response,
-                      });
-                  }
-              }
-          };
-          xhr.send(data);
-      });
-  }
-  class Axios {
-      constructor(url, method, header, responseType, data) {
-          this.url = url;
-          this.method = method;
-          this.header = header;
-          this.responseType = responseType;
-          this.data = data;
-      }
-      get(url, header, responseType) {
-          return sendRequest(url, "get", header, responseType);
-      }
-      post(url, header, responseType, data) {
-          return sendRequest(url, "post", header, responseType, data);
-      }
-  }
-
-  class MpdPlayer {
-      constructor(player) {
-          this.player = player;
-          this.axios = new Axios();
-          this.mpdUrl = this.player.playerOptions.url;
-          this.init();
-      }
-      init() {
-          return __awaiter(this, void 0, void 0, function* () {
-              this.player.video.controls = true;
-              yield this.getMpdFile(this.mpdUrl);
-              // 遍历每一个Period
-              this.requestInfo.mpdRequest.forEach((child) => __awaiter(this, void 0, void 0, function* () {
-                  // let videoResolve = child.videoRequest["1920*1080"];
-                  // let audioResolve = child.audioRequest["48000"];
-                  // let val = await Promise.all([
-                  //   this.getInitializationSegment(videoResolve[0].url),
-                  //   this.getInitializationSegment(audioResolve[0].url),
-                  // ]);
-                  // console.log(val)
-                  yield this.handlePeriod(child);
-              }));
-          });
-      }
-      initEvent() {
-          this.player.toolbar.emit("mounted");
-          this.player.emit("mounted", this);
-      }
-      /**
-       * @description 获取并且解析MPD文件
-       */
-      getMpdFile(url) {
-          return __awaiter(this, void 0, void 0, function* () {
-              let val = yield this.axios.get(url, {}, "text");
-              let parser = new DOMParser();
-              let document = parser.parseFromString(val.data, "text/xml");
-              let result = parseMpd(document, "https://dash.akamaized.net/envivio/EnvivioDash3/");
-              this.mpd = document;
-              this.requestInfo = result;
-          });
-      }
-      handlePeriod(child) {
-          return __awaiter(this, void 0, void 0, function* () {
-              let videoResolve = child.videoRequest["1920*1080"];
-              let audioResolve = child.audioRequest["48000"];
-              yield this.handleInitializationSegment(videoResolve[0].url, audioResolve[0].url);
-              yield this.handleMediaSegment(videoResolve.slice(1), audioResolve.slice(1));
-          });
-      }
-      handleInitializationSegment(videoUrl, audioUrl) {
-          return __awaiter(this, void 0, void 0, function* () {
-              yield Promise.all([
-                  this.getSegment(videoUrl),
-                  this.getSegment(audioUrl),
-              ]);
-          });
-      }
-      handleMediaSegment(videoRequest, audioRequest) {
-          return __awaiter(this, void 0, void 0, function* () {
-              for (let i = 0; i < Math.min(videoRequest.length, audioRequest.length); i++) {
-                  let val = yield Promise.all([
-                      this.getSegment(videoRequest[i].url),
-                      this.getSegment(audioRequest[i].url),
-                  ]);
-                  console.log(i + 1, val);
-              }
-          });
-      }
-      /**
-       * @description 根据解析到的MPD文件获取初始段（Initialization Segment）
-       */
-      getSegment(url) {
-          return this.axios.get(url, {}, "arraybuffer");
-      }
-  }
-
   class Player extends BaseEvent {
       constructor(options) {
           super();
@@ -867,9 +125,7 @@
           if (getFileExtension(this.playerOptions.url) === "mp4") {
               new Mp4Player(this);
           }
-          else if (getFileExtension(this.playerOptions.url) === "mpd") {
-              new MpdPlayer(this);
-          }
+          else if (getFileExtension(this.playerOptions.url) === "mpd") ;
       }
       init() {
           let container = this.playerOptions.container;
@@ -919,6 +175,96 @@
               return true;
           }
           return true;
+      }
+  }
+
+  // import { parseMpd } from "../../dash/parseMpd";
+  // import { Axios } from "../../axios/Axios";
+  // import { Player } from "./player";
+  // import { AxiosReturnType } from "../../types/AxiosRequest";
+  // import { PeriodRequest, RangeRequest, SegmentRequest } from "../../types/dash/MpdFile";
+  // export class MpdPlayer {
+  //   private player: Player;
+  //   private mpd: Document;
+  //   private requestInfo: any;
+  //   private mpdUrl: string;
+  //   private axios: Axios;
+  //   constructor(player: Player) {
+  //     this.player = player;
+  //     this.axios = new Axios();
+  //     this.mpdUrl = this.player.playerOptions.url;
+  //     this.init();
+  //   }
+  //   async init() {
+  //     this.player.video.controls = true
+  //     await this.getMpdFile(this.mpdUrl);
+  //     // 遍历每一个Period
+  //     this.requestInfo.mpdRequest.forEach(async (child) => {
+  //       // let videoResolve = child.videoRequest["1920*1080"];
+  //       // let audioResolve = child.audioRequest["48000"];
+  //       // let val = await Promise.all([
+  //       //   this.getInitializationSegment(videoResolve[0].url),
+  //       //   this.getInitializationSegment(audioResolve[0].url),
+  //       // ]);
+  //       // console.log(val)
+  //       await this.handlePeriod(child)
+  //     });
+  //   }
+  //   initEvent() {
+  //     this.player.toolbar.emit("mounted");
+  //     this.player.emit("mounted", this);
+  //   }
+  //   /**
+  //    * @description 获取并且解析MPD文件
+  //    */
+  //   async getMpdFile(url: string) {
+  //     let val = await this.axios.get(url, {}, "text");
+  //     let parser = new DOMParser();
+  //     let document = parser.parseFromString(val.data as string , "text/xml");
+  //     let result = parseMpd(
+  //       document,
+  //       "https://dash.akamaized.net/envivio/EnvivioDash3/"
+  //     );
+  //     this.mpd = document;
+  //     this.requestInfo = result;
+  //   }
+  //   async handlePeriod(child: PeriodRequest) {
+  //     let videoResolve = child.videoRequest["1920*1080"];
+  //     let audioResolve = child.audioRequest["48000"];
+  //     await this.handleInitializationSegment(
+  //       videoResolve[0].url,
+  //       audioResolve[0].url
+  //     );
+  //     await this.handleMediaSegment(videoResolve.slice(1),audioResolve.slice(1));
+  //   }
+  //   async handleInitializationSegment(videoUrl: string, audioUrl: string) {
+  //     let val = await Promise.all([
+  //       this.getSegment(videoUrl),
+  //       this.getSegment(audioUrl),
+  //     ]);
+  //   }
+  //   async handleMediaSegment(videoRequest: (SegmentRequest | RangeRequest)[], audioRequest: (SegmentRequest | RangeRequest)[]) {
+  //     for (
+  //       let i = 0;
+  //       i < Math.min(videoRequest.length, audioRequest.length);
+  //       i++
+  //     ) {
+  //       let val = await Promise.all([
+  //         this.getSegment(videoRequest[i].url),
+  //         this.getSegment(audioRequest[i].url),
+  //       ]);
+  //       console.log(i + 1, val);
+  //     }
+  //   }
+  //   /**
+  //    * @description 根据解析到的MPD文件获取初始段（Initialization Segment）
+  //    */
+  //   getSegment(url: string):Promise<AxiosReturnType> {
+  //     return this.axios.get(url, {}, "arraybuffer")
+  //   }
+  // }
+  class MpdPlayer {
+      constructor() {
       }
   }
 
@@ -1278,8 +624,87 @@
       }
   }
 
+  function $warn(msg) {
+      throw new Error(msg);
+  }
+
+  function addZero(num) {
+      return num > 9 ? num + "" : "0" + num;
+  }
+  function formatTime(seconds) {
+      seconds = Math.floor(seconds);
+      let minute = Math.floor(seconds / 60);
+      let second = seconds % 60;
+      return addZero(minute) + ":" + addZero(second);
+  }
+  function switchToSeconds(time) {
+      let sum = 0;
+      if (time.hours)
+          sum += time.hours * 3600;
+      if (time.minutes)
+          sum += time.minutes * 60;
+      if (time.seconds)
+          sum += time.seconds;
+      return sum;
+  }
+  // 解析MPD文件的时间字符串
+  function parseDuration(pt) {
+      // Parse time from format "PT#H#M##.##S"
+      let hours, minutes, seconds;
+      for (let i = pt.length - 1; i >= 0; i--) {
+          if (pt[i] === "S") {
+              let j = i;
+              while (pt[i] !== "M" && pt[i] !== "H" && pt[i] !== "T") {
+                  i--;
+              }
+              i += 1;
+              seconds = parseInt(pt.slice(i, j));
+          }
+          else if (pt[i] === "M") {
+              let j = i;
+              while (pt[i] !== "H" && pt[i] !== "T") {
+                  i--;
+              }
+              i += 1;
+              minutes = parseInt(pt.slice(i, j));
+          }
+          else if (pt[i] === "H") {
+              let j = i;
+              while (pt[i] !== "T") {
+                  i--;
+              }
+              i += 1;
+              hours = parseInt(pt.slice(i, j));
+          }
+      }
+      return {
+          hours,
+          minutes,
+          seconds,
+      };
+  }
+
   let LOADING_MASK_MAP = new Array();
   let ERROR_MASK_MAP = new Array();
+
+  function string2boolean(s) {
+      if (s === 'true') {
+          return true;
+      }
+      else if (s === 'false') {
+          return false;
+      }
+      else {
+          return null;
+      }
+  }
+  function string2number(s) {
+      let n = Number(s);
+      if (isNaN(n))
+          return n;
+      else
+          return null;
+  }
 
   const styles = {
       "video-container": "player_video-container__ndwL-",
@@ -1324,6 +749,567 @@
       "icon-cuowutishi": "main_icon-cuowutishi__fy-Bm",
       "icon-zanting": "main_icon-zanting__BtGq5",
   };
+
+  function checkMediaType(s) {
+      if (!s)
+          return true;
+      return (s === "video/mp4" ||
+          s === "audio/mp4" ||
+          s === "text/html" ||
+          s === "text/xml" ||
+          s === "text/plain" ||
+          s === "image/png" ||
+          s === "image/jpeg");
+  }
+  /**
+   * @description 类型守卫函数
+   */
+  function checkBaseURL(s) {
+      if (s.tag === "BaseURL" && typeof s.url === "string")
+          return true;
+      return false;
+  }
+  /**
+   * @description 类型守卫函数
+   */
+  function checkAdaptationSet(s) {
+      if (s.tag === "AdaptationSet")
+          return true;
+      return false;
+  }
+  /**
+   * @description 类型守卫函数
+   */
+  function checkSegmentTemplate(s) {
+      return s.tag === "SegmentTemplate";
+  }
+  /**
+   * @description 类型守卫函数
+   */
+  function checkRepresentation(s) {
+      return s.tag === "Representation";
+  }
+  /**
+   * @description 类型守卫函数
+   */
+  function checkSegmentList(s) {
+      return s.tag === "SegmentList";
+  }
+  function checkInitialization(s) {
+      return s.tag === "Initialization";
+  }
+  function checkSegmentURL(s) {
+      return s.tag === "SegmentURL";
+  }
+  function checkSegmentBase(s) {
+      return s.tag === "SegmentBase";
+  }
+  let checkUtils = {
+      checkMediaType,
+      checkBaseURL,
+      checkAdaptationSet,
+      checkSegmentTemplate,
+      checkRepresentation,
+      checkSegmentList,
+      checkInitialization,
+      checkSegmentURL,
+      checkSegmentBase
+  };
+  function findSpecificType(array, type) {
+      array.forEach(item => {
+          if (checkUtils[`check${type}`] && checkUtils[`check${type}`].call(this, item)) {
+              return true;
+          }
+      });
+      return false;
+  }
+
+  function initMpdFile(mpd) {
+      return {
+          tag: "File",
+          root: initMpd(mpd.querySelector("MPD"))
+      };
+  }
+  function initMpd(mpd) {
+      let type = mpd.getAttribute("type");
+      let availabilityStartTime = mpd.getAttribute("availabilityStartTime");
+      let mediaPresentationDuration = mpd.getAttribute("mediaPresentationDuration");
+      let minBufferTime = mpd.getAttribute("minBufferTime");
+      let minimumUpdatePeriod = mpd.getAttribute("minimumUpdatePeriod");
+      let maxSegmentDuration = mpd.getAttribute('maxSegmentDuration');
+      let children = new Array();
+      mpd.querySelectorAll("Period").forEach(item => {
+          children.push(initPeriod(item));
+      });
+      return {
+          tag: "MPD",
+          type,
+          children,
+          availabilityStartTime,
+          maxSegmentDuration,
+          mediaPresentationDuration,
+          minBufferTime,
+          minimumUpdatePeriod
+      };
+  }
+  function initPeriod(period) {
+      let id = period.getAttribute("id");
+      let duration = period.getAttribute("duration");
+      let start = period.getAttribute("start");
+      let children = new Array();
+      period.querySelectorAll("AdaptationSet").forEach((item) => {
+          children.push(initAdaptationSet(item));
+      });
+      return {
+          tag: "Period",
+          id,
+          duration,
+          start,
+          children,
+      };
+  }
+  function initAdaptationSet(adaptationSet) {
+      let segmentAlignment = string2boolean(adaptationSet.getAttribute("segmentAlignment"));
+      let mimeType = adaptationSet.getAttribute("mimeType");
+      if (checkMediaType(mimeType)) {
+          let startWithSAP = string2number(adaptationSet.getAttribute("startWithSAP"));
+          let segmentTemplate = adaptationSet.querySelector("SegmentTemplate");
+          let children = new Array();
+          if (segmentTemplate) {
+              children.push(initSegmentTemplate(segmentTemplate));
+          }
+          adaptationSet.querySelectorAll("Representation").forEach((item) => {
+              children.push(initRepresentation(item));
+          });
+          return {
+              tag: "AdaptationSet",
+              children,
+              segmentAlignment,
+              mimeType,
+              startWithSAP,
+          };
+      }
+      else {
+          $warn("传入的MPD文件中的AdaptationSet标签上的属性mimeType的值不合法，应该为MIME类型");
+      }
+  }
+  function initRepresentation(representation) {
+      let bandWidth = Number(representation.getAttribute("bandWidth"));
+      let codecs = representation.getAttribute("codecs");
+      let id = representation.getAttribute("id");
+      let width = Number(representation.getAttribute("width"));
+      let height = Number(representation.getAttribute("height"));
+      let mimeType = representation.getAttribute("mimeType");
+      let audioSamplingRate = representation.getAttribute("audioSamplingRate");
+      let children = new Array();
+      if (mimeType && !checkMediaType(mimeType)) {
+          $warn("");
+      }
+      else {
+          //如果representation没有子节点
+          if (representation.childNodes.length === 0) {
+              return {
+                  tag: "Representation",
+                  bandWidth,
+                  codecs,
+                  id,
+                  audioSamplingRate,
+                  width,
+                  height,
+                  mimeType: mimeType,
+              };
+          }
+          else {
+              //对于Representation标签的children普遍认为有两种可能
+              if (representation.querySelector("SegmentList")) {
+                  //1. (BaseURL)+SegmentList
+                  let list = initSegmentList(representation.querySelector("SegmentList"));
+                  if (representation.querySelector("BaseURL")) {
+                      children.push(initBaseURL(representation.querySelector("BaseURL")), list);
+                  }
+                  else {
+                      children.push(list);
+                  }
+              }
+              else if (representation.querySelector("SegmentBase")) {
+                  //2. BaseURL+SegmentBase 适用于每个rep只有一个Seg的情况
+                  let base = initSegmentBase(representation.querySelector("SegmentBase"));
+                  if (representation.querySelector("BaseURL")) {
+                      children.push(initBaseURL(representation.querySelector("BaseURL")), base);
+                  }
+                  else {
+                      $warn("传入的MPD文件中Representation中的子节点结构错误");
+                  }
+              }
+              return {
+                  tag: "Representation",
+                  bandWidth,
+                  codecs,
+                  audioSamplingRate,
+                  id,
+                  width,
+                  height,
+                  mimeType: mimeType,
+                  children,
+              };
+          }
+      }
+  }
+  function initSegmentTemplate(segmentTemplate) {
+      let initialization = segmentTemplate.getAttribute("initialization");
+      let media = segmentTemplate.getAttribute("media");
+      return {
+          tag: "SegmentTemplate",
+          initialization,
+          media,
+      };
+  }
+  function initSegmentBase(segmentBase) {
+      let range = segmentBase.getAttribute("indexRange");
+      if (!range) {
+          $warn("传入的MPD文件中SegmentBase标签上不存在属性indexRange");
+      }
+      let initialization = initInitialization(segmentBase.querySelector("Initialization"));
+      return {
+          tag: "SegmentBase",
+          indexRange: range,
+          child: initialization,
+      };
+  }
+  function initSegmentList(segmentList) {
+      let duration = segmentList.getAttribute("duration");
+      if (!duration) {
+          $warn("传入的MPD文件中SegmentList标签上不存在属性duration");
+      }
+      duration = Number(duration);
+      let children = [
+          initInitialization(segmentList.querySelector("Initialization")),
+      ];
+      segmentList.querySelectorAll("SegmentURL").forEach((item) => {
+          children.push(initSegmentURL(item));
+      });
+      return {
+          tag: "SegmentList",
+          duration: duration,
+          children,
+      };
+  }
+  function initInitialization(initialization) {
+      return {
+          tag: "Initialization",
+          sourceURL: initialization.getAttribute("sourceURL"),
+          range: initialization.getAttribute("range"),
+      };
+  }
+  function initSegmentURL(segmentURL) {
+      let media = segmentURL.getAttribute("media");
+      if (!media) {
+          $warn("传入的MPD文件中SegmentURL标签上不存在属性media");
+      }
+      return {
+          tag: "SegmentURL",
+          media,
+      };
+  }
+  function initBaseURL(baseURL) {
+      return {
+          tag: "BaseURL",
+          url: baseURL.innerHTML,
+      };
+  }
+
+  function parseMpd(mpd, Base_URL = "") {
+      let mpdModel = initMpdFile(mpd).root;
+      console.log(mpdModel, 'model');
+      let type = mpdModel.type;
+      console.log(parseDuration(mpdModel.mediaPresentationDuration));
+      let mediaPresentationDuration = switchToSeconds(parseDuration(mpdModel.mediaPresentationDuration));
+      let maxSegmentDuration = switchToSeconds(parseDuration(mpdModel.maxSegmentDuration));
+      let sumSegment = maxSegmentDuration
+          ? Math.ceil(mediaPresentationDuration / maxSegmentDuration)
+          : null;
+      // 代表的是整个MPD文档中的需要发送的所有xhr请求地址，包括多个Period对应的视频和音频请求地址
+      let mpdRequest = new Array();
+      console.log(mpdRequest, 'mpdRequestmpdRequest');
+      // 遍历文档中的每一个Period，Period代表着一个完整的音视频，不同的Period具有不同内容的音视频，例如广告和正片就属于不同的Period
+      mpdModel.children.forEach((period) => {
+          let path = "" + Base_URL;
+          let videoRequest;
+          let audioRequest;
+          for (let i = period.children.length - 1; i >= 0; i--) {
+              let child = period.children[i];
+              if (checkBaseURL(child)) {
+                  path += child.url;
+                  break;
+              }
+          }
+          period.children.forEach((child) => {
+              if (checkAdaptationSet(child)) {
+                  if (child.mimeType === "audio/mp4") {
+                      audioRequest = parseAdaptationSet(child, path, sumSegment, child.mimeType);
+                  }
+                  else if (child.mimeType === "video/mp4") {
+                      videoRequest = parseAdaptationSet(child, path, sumSegment, child.mimeType);
+                  }
+              }
+          });
+          mpdRequest.push({ videoRequest, audioRequest });
+      });
+      return {
+          mpdRequest,
+          type,
+          mediaPresentationDuration,
+          maxSegmentDuration,
+      };
+  }
+  function parseAdaptationSet(adaptationSet, path = "", sumSegment, type) {
+      let children = adaptationSet.children;
+      let hasTemplate = false;
+      let template;
+      for (let i = children.length - 1; i >= 0; i--) {
+          let child = children[i];
+          if (checkSegmentTemplate(child)) {
+              hasTemplate = true;
+              template = child;
+              break;
+          }
+      }
+      let mediaResolve = {};
+      children.forEach((child) => {
+          if (checkRepresentation(child)) {
+              let generateInitializationUrl, initializationFormat, generateMediaUrl, mediaFormat;
+              if (hasTemplate) {
+                  [generateInitializationUrl, initializationFormat] =
+                      generateTemplateTuple(template.initialization);
+                  [generateMediaUrl, mediaFormat] = generateTemplateTuple(template.media);
+              }
+              let obj = parseRepresentation(child, hasTemplate, path, sumSegment, type, [generateInitializationUrl, initializationFormat], [generateMediaUrl, mediaFormat]);
+              Object.assign(mediaResolve, obj);
+          }
+      });
+      return mediaResolve;
+  }
+  function parseRepresentation(representation, hasTemplate = false, path = "", sumSegment, type, initializationSegment, mediaSegment) {
+      let resolve;
+      if (type === "video/mp4") {
+          resolve = `${representation.width}*${representation.height}`;
+      }
+      else if (type === "audio/mp4") {
+          resolve = `${representation.audioSamplingRate}`;
+      }
+      let obj = {};
+      // 一. 如果该适应集 中具有标签SegmentTemplate，则接下来的Representation中请求的Initialization Segment和Media Segment的请求地址一律以SegmentTemplate中的属性为基准
+      if (hasTemplate) {
+          obj[resolve] = parseRepresentationWithSegmentTemplateOuter(representation, path, sumSegment, initializationSegment, mediaSegment);
+      }
+      else {
+          //二. 如果没有SegmentTemplate标签，则根据Representation中的子结构具有三种情况,前提是Representation中必须具有子标签，否则报错
+          //情况1.(BaseURL)+SegmentList
+          if (findSpecificType(representation.children, "SegmentList")) ;
+          else if (findSpecificType(representation.children, "SegmentBase")) ;
+      }
+      return obj;
+  }
+  /**
+   * @description 应对Representation外部具有SegmentTemplate的结构这种情况
+   */
+  function parseRepresentationWithSegmentTemplateOuter(representation, path = "", sumSegment, initializationSegment, mediaSegment) {
+      let requestArray = new Array();
+      let [generateInitializationUrl, initializationFormat] = initializationSegment;
+      let [generateMediaUrl, mediaFormat] = mediaSegment;
+      // 1.处理对于Initialization Segment的请求
+      for (let i in initializationFormat) {
+          if (initializationFormat[i] === "RepresentationID") {
+              initializationFormat[i] = representation.id;
+          }
+          else if (initializationFormat[i] === "Number") {
+              initializationFormat[i] = "1";
+          }
+      }
+      requestArray.push({
+          type: "segement",
+          url: path + generateInitializationUrl(...initializationFormat),
+      });
+      // 2.处理对于Media Segment的请求
+      for (let i in mediaFormat) {
+          if (mediaFormat[i] === "RepresentationID") {
+              mediaFormat[i] = representation.id;
+          }
+      }
+      for (let index = 1; index <= sumSegment; index++) {
+          let copy = [...mediaFormat];
+          for (let i in mediaFormat) {
+              if (copy[i] === "Number") {
+                  copy[i] = `${index}`;
+              }
+          }
+          requestArray.push({
+              type: "segement",
+              url: path + generateMediaUrl(...copy),
+          });
+      }
+      return requestArray;
+  }
+  /**
+   * @description 应对Representation内部具有(BaseURL)+SegmentList的结构这种情况
+   */
+  function parseRepresentationWithSegmentList(representation, path) {
+      let children = representation.children;
+      let segmentList;
+      let requestArray = new Array();
+      for (let i = children.length - 1; i >= 0; i--) {
+          let child = children[i];
+          if (checkBaseURL(child)) {
+              path += child;
+              break;
+          }
+      }
+      for (let i = children.length - 1; i >= 0; i--) {
+          let child = children[i];
+          if (checkSegmentList(child)) {
+              segmentList = child;
+              break;
+          }
+      }
+      for (let i = segmentList.length - 1; i >= 0; i--) {
+          let child = segmentList[i];
+          if (checkInitialization(child)) {
+              requestArray.push({
+                  type: "range",
+                  url: path + child.sourceURL,
+              });
+              break;
+          }
+      }
+      segmentList.forEach((segment) => {
+          if (checkSegmentURL(segment)) {
+              if (segment.media) {
+                  requestArray.push({
+                      type: "segement",
+                      url: path + segment.media,
+                  });
+              }
+              else {
+                  requestArray.push({
+                      type: "range",
+                      url: path,
+                      range: segment.mediaRange,
+                  });
+              }
+          }
+      });
+      return requestArray;
+  }
+  /**
+   * @description 应对Representation内部具有(BaseURL)+SegmentBase的结构这种情况
+   */
+  function parseRepresentationWithSegmentBase(representation, path) {
+      let children = representation.children;
+      let requestArray = new Array();
+      for (let i = children.length - 1; i >= 0; i--) {
+          let child = children[i];
+          if (checkBaseURL(child)) {
+              path += child.url;
+              break;
+          }
+      }
+      for (let i = children.length - 1; i >= 0; i--) {
+          let child = children[i];
+          if (checkSegmentBase(child)) {
+              requestArray.push({
+                  type: "range",
+                  url: path,
+                  range: child.child.range,
+              });
+              requestArray.push({
+                  type: "range",
+                  url: path,
+                  range: child.indexRange,
+              });
+          }
+      }
+      return requestArray;
+  }
+  /**
+   * @description 生成模板函数和占位符
+   */
+  function generateTemplateTuple(s) {
+      let splitStr = [];
+      let format = [];
+      for (let i = 0; i < s.length; i++) {
+          let str = s.slice(0, i + 1);
+          if (/\$.+?\$/.test(str)) {
+              format.push(str.match(/\$(.+?)\$/)[1]);
+              splitStr.push(str.replace(/\$.+?\$/, ""), "%format%");
+              s = s.slice(i + 1);
+              i = 0;
+              continue;
+          }
+          if (i + 1 === s.length) {
+              splitStr.push(s);
+          }
+      }
+      return [
+          (...args) => {
+              let index = 0;
+              let str = "";
+              splitStr.forEach((item) => {
+                  if (item === "%format%") {
+                      str += args[index];
+                      index++;
+                  }
+                  else {
+                      str += item;
+                  }
+              });
+              return str;
+          },
+          format,
+      ];
+  }
+
+  function sendRequest(url, method, header, responseType = 'text', data) {
+      return new Promise((res, rej) => {
+          let xhr = new XMLHttpRequest();
+          xhr.open(method, url);
+          for (let index in header) {
+              xhr.setRequestHeader(index, header[index]);
+          }
+          xhr.responseType = responseType;
+          xhr.onreadystatechange = function () {
+              if (xhr.readyState === 4) {
+                  if ((xhr.status >= 200 && xhr.status < 300) || xhr.status === 304) {
+                      res({
+                          status: "success",
+                          data: xhr.response
+                      });
+                  }
+                  else {
+                      rej({
+                          status: 'fail',
+                          data: xhr.response,
+                      });
+                  }
+              }
+          };
+          xhr.send(data);
+      });
+  }
+  class Axios {
+      constructor(url, method, header, responseType, data) {
+          this.url = url;
+          this.method = method;
+          this.header = header;
+          this.responseType = responseType;
+          this.data = data;
+      }
+      get(url, header, responseType) {
+          return sendRequest(url, "get", header, responseType);
+      }
+      post(url, header, responseType, data) {
+          return sendRequest(url, "post", header, responseType, data);
+      }
+  }
 
   exports.$warn = $warn;
   exports.Axios = Axios;
