@@ -30,7 +30,7 @@ class Player extends BaseEvent {
       new Mp4Player(this);
     } else if(getFileExtension(this.playerOptions.url) === "mpd") {
    
-      // new MpdPlayer(this)
+      new MpdPlayer(this)
     }
   }
 
