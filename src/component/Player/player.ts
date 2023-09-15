@@ -63,6 +63,8 @@ class Player extends BaseEvent {
     `
     this.container.appendChild(this.toolbar.template);
     this.video = this.container.querySelector("video")!;
+    this.video.height = this.container.clientHeight;
+    this.video.width = this.container.clientWidth;
   }
 
  

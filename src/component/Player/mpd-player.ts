@@ -17,6 +17,7 @@ export class MpdPlayer {
   }
 
   async init() {
+    this.player.video.controls = true
     await this.getMpdFile(this.mpdUrl);
     // 遍历每一个Period
     this.requestInfo.mpdRequest.forEach(async (child) => {
@@ -29,6 +30,11 @@ export class MpdPlayer {
       // console.log(val)
       await this.handlePeriod(child)
     });
+  }
+
+  initEvent() {
+    this.player.toolbar.emit("mounted");
+    this.player.emit("mounted", this);
   }
   /**
    * @description 获取并且解析MPD文件
