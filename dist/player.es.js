@@ -335,7 +335,11 @@ class DashParser {
     }
     parse(manifest) {
         let xml = this.string2xml(manifest);
-        return this.parseDOMChildren("Document", xml);
+        let Mpd = this.parseDOMChildren("MpdDocument", xml);
+        // this.mergeNodeSegementTemplate(Mpd);
+        console.log(xml, 'xml');
+        console.log(Mpd, 'mpd');
+        return Mpd;
     }
     parseDOMChildren(name, node) {
         //如果node的类型为文档类型
@@ -397,6 +401,47 @@ class DashParser {
                 text: node.nodeValue
             };
         }
+    }
+    mergeNode(node, compare) {
+        if (node[compare.tag]) {
+            let target = node[`${compare.tag}_asArray`];
+            target.forEach(element => {
+                for (let key in compare) {
+                    if (!element.hasOwnProperty(key)) {
+                        element[key] = compare[key];
+                    }
+                }
+            });
+        }
+        else {
+            node[compare.tag] = compare;
+            node.__children = node.__children || [];
+            node.__children.push(compare);
+            node[`${compare.tag}__asArray`] = [compare];
+        }
+    }
+    mergeNodeSegementTemplate(Mpd) {
+        let segmentTemplate = null;
+        Mpd["Period_asArray"].forEach(Period => {
+            if (Period["SegmentTemplate_asArray"]) {
+                segmentTemplate = Period["SegmentTemplate_asArray"][0];
+            }
+            Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
+                let template = segmentTemplate;
+                if (segmentTemplate) {
+                    this.mergeNode(AdaptationSet, segmentTemplate);
+                }
+                if (AdaptationSet["SegmentTemplate_asArray"]) {
+                    segmentTemplate = AdaptationSet["SegmentTemplate_asArray"][0];
+                }
+                AdaptationSet["Representation_asArray"].forEach(Representation => {
+                    if (segmentTemplate) {
+                        this.mergeNode(Representation, segmentTemplate);
+                    }
+                });
+                segmentTemplate = template;
+            });
+        });
     }
 }
 const factory$1 = FactoryMaker.getSingleFactory(DashParser);
