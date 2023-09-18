@@ -225,7 +225,7 @@ class EventBus {
         }
     }
 }
-const factory$4 = FactoryMaker.getSingleFactory(EventBus);
+const factory$5 = FactoryMaker.getSingleFactory(EventBus);
 
 const EventConstants = {
     MANIFEST_LOADED: "manifestLoaded"
@@ -282,7 +282,7 @@ class XHRLoader {
         xhr.send();
     }
 }
-const factory$3 = FactoryMaker.getSingleFactory(XHRLoader);
+const factory$4 = FactoryMaker.getSingleFactory(XHRLoader);
 
 class URLLoader {
     constructor(ctx, ...args) {
@@ -294,8 +294,8 @@ class URLLoader {
         this.xhrLoader.loadManifest(config);
     }
     setup() {
-        this.xhrLoader = factory$3({}).getInstance();
-        this.eventBus = factory$4({}).getInstance();
+        this.xhrLoader = factory$4({}).getInstance();
+        this.eventBus = factory$5({}).getInstance();
     }
     // 每调用一次load函数就发送一次请求
     load(config) {
@@ -314,7 +314,7 @@ class URLLoader {
         });
     }
 }
-const factory$2 = FactoryMaker.getSingleFactory(URLLoader);
+const factory$3 = FactoryMaker.getSingleFactory(URLLoader);
 
 var DOMNodeTypes;
 (function (DOMNodeTypes) {
@@ -325,10 +325,25 @@ var DOMNodeTypes;
     DOMNodeTypes[DOMNodeTypes["DOCUMENT_NODE"] = 9] = "DOCUMENT_NODE";
 })(DOMNodeTypes || (DOMNodeTypes = {}));
 
+class SegmentTemplateParser {
+    constructor(ctx, ...args) {
+        this.config = ctx.context;
+        this.setup();
+    }
+    setup() {
+    }
+}
+const factory$2 = FactoryMaker.getSingleFactory(SegmentTemplateParser);
+
 class DashParser {
     constructor(ctx, ...args) {
         this.config = {};
+        this.templateReg = /\$(.+)\$/;
         this.config = ctx.context;
+        this.setup();
+    }
+    setup() {
+        this.segmentTemplateParser = factory$2({}).create();
     }
     string2xml(s) {
         let parser = new DOMParser();
@@ -398,10 +413,10 @@ class DashParser {
             }
             console.log(result["#text_asArray"], 'resultdd');
             // 3.如果该Element节点中含有text节点，则需要合并为一个整体
-            // result["#text_asArray"].forEach(text=>{
-            //   result.__text = result.__text || "";
-            //   result.__text += `${text.text}/n`
-            // })
+            result["#text_asArray"] && result["#text_asArray"].forEach(text => {
+                result.__text = result.__text || "";
+                result.__text += `${text.text}/n`;
+            });
             // 4.解析node上挂载的属性
             for (let prop of node.attributes) {
                 result[prop.name] = prop.value;
@@ -456,6 +471,48 @@ class DashParser {
             });
         });
     }
+    parseNodeSegmentTemplate(Mpd) {
+        Mpd["Period_asArray"].forEach(Period => {
+            Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
+                AdaptationSet["Representation_asArray"].forEach(Representation => {
+                    let SegmentTemplate = Representation["SegmentTemplate"];
+                    this.generateInitializationURL(SegmentTemplate, Representation);
+                    this.generateMediaURL(SegmentTemplate, Representation);
+                });
+            });
+        });
+    }
+    generateInitializationURL(SegmentTemplate, parent) {
+        // 格式  $RepresentationID$-Header.m4s
+        let initialization = SegmentTemplate.initialization;
+        SegmentTemplate.media;
+        let r;
+        let formatArray = new Array();
+        let replaceArray = new Array();
+        if (this.templateReg.test(initialization)) {
+            while (r = this.templateReg.exec(initialization)) {
+                formatArray.push(r[0]);
+                if (r[1] === "Number") {
+                    r[1] = '1';
+                }
+                else if (r[1] === "RepresentationID") {
+                    r[1] = parent.id;
+                }
+                replaceArray.push(r[1]);
+            }
+            let index = 0;
+            while (index < replaceArray.length) {
+                initialization.replace(formatArray[index], replaceArray[index]);
+                index++;
+            }
+        }
+        parent.initializationURL = initialization;
+    }
+    generateMediaURL(SegmentTemplate, parent) {
+        SegmentTemplate.media;
+        new Array();
+        new Array();
+    }
 }
 const factory$1 = FactoryMaker.getSingleFactory(DashParser);
 
@@ -471,8 +528,8 @@ class MediaPlayer {
     }
     //初始化类
     setup() {
-        this.urlLoader = factory$2().getInstance();
-        this.eventBus = factory$4().getInstance();
+        this.urlLoader = factory$3().getInstance();
+        this.eventBus = factory$5().getInstance();
         // ignoreRoot -> 忽略Document节点，从MPD开始作为根节点
         this.dashParser = factory$1({ ignoreRoot: true }).getInstance();
     }

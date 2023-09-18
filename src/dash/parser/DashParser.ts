@@ -1,11 +1,19 @@
 import { DOMNodeTypes, ManifestObjectNode } from "../../types/dash/DomNodeTypes";
 import { FactoryObject } from "../../types/dash/Factory";
-import { SegmentTemplate } from "../../types/dash/MpdFile";
+import { Representation, SegmentTemplate } from "../../types/dash/MpdFile";
+import SegmentTemplateParserFactory, { SegmentTemplateParser } from "./SegmentTemplateParser";
 import FactoryMaker from "../FactoryMaker";
 class DashParser {
   private config: FactoryObject = {};
+  private segmentTemplateParser: SegmentTemplateParser;
+  private templateReg: RegExp = /\$(.+)\$/;
   constructor(ctx: FactoryObject, ...args: any[]) {
     this.config = ctx.context;
+    this.setup();
+  }
+
+  setup() {
+    this.segmentTemplateParser = SegmentTemplateParserFactory({}).create();
   }
 
   string2xml(s: string): Document {
@@ -15,20 +23,20 @@ class DashParser {
   }
 
 
-  parse(manifest: string): ManifestObjectNode["MpdDocument"] | ManifestObjectNode["Mpd"] {  
+  parse(manifest: string): ManifestObjectNode["MpdDocument"] | ManifestObjectNode["Mpd"] {
     let xml = this.string2xml(manifest);
-    console.log(xml,'xml')
+    console.log(xml, 'xml')
     let Mpd;
-    if(this.config.override){
+    if (this.config.override) {
       Mpd = this.parseDOMChildren("Mpd", xml);
     } else {
-      Mpd = this.parseDOMChildren("MpdDocument",xml);
+      Mpd = this.parseDOMChildren("MpdDocument", xml);
     }
     this.mergeNodeSegementTemplate(Mpd);
     return Mpd
   }
 
-  parseDOMChildren<T extends string>(name: T, node: Node): ManifestObjectNode[T] {    
+  parseDOMChildren<T extends string>(name: T, node: Node): ManifestObjectNode[T] {
     //如果node的类型为文档类型
     if (node.nodeType === DOMNodeTypes.DOCUMENT_NODE) {
       let result = {
@@ -52,7 +60,7 @@ class DashParser {
       }
       return result;
     } else if (node.nodeType === DOMNodeTypes.ELEMENT_NODE) {
-      let result:FactoryObject = {
+      let result: FactoryObject = {
         tag: node.nodeName,
         __chilren: [],
       };
@@ -79,13 +87,13 @@ class DashParser {
             : [result[key]];
         }
       }
-      console.log(result["#text_asArray"],'resultdd');
-      
+      console.log(result["#text_asArray"], 'resultdd');
+
       // 3.如果该Element节点中含有text节点，则需要合并为一个整体
-      // result["#text_asArray"].forEach(text=>{
-      //   result.__text = result.__text || "";
-      //   result.__text += `${text.text}/n`
-      // })
+      result["#text_asArray"] && result["#text_asArray"].forEach(text => {
+        result.__text = result.__text || "";
+        result.__text += `${text.text}/n`
+      })
 
       // 4.解析node上挂载的属性
       for (let prop of (node as Element).attributes) {
@@ -142,7 +150,61 @@ class DashParser {
     })
   }
 
+  parseNodeSegmentTemplate(Mpd: FactoryObject) {
+    Mpd["Period_asArray"].forEach(Period => {
+      Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
+        AdaptationSet["Representation_asArray"].forEach(Representation => {
+          let SegmentTemplate = Representation["SegmentTemplate"];
+          this.generateInitializationURL(SegmentTemplate, Representation)
+          this.generateMediaURL(SegmentTemplate, Representation)
+
+        })
+      })
+    })
+
+  }
+
+  generateInitializationURL(SegmentTemplate: SegmentTemplate, parent: Representation) {
+    // 格式  $RepresentationID$-Header.m4s
+    let initialization = SegmentTemplate.initialization;
+    let media = SegmentTemplate.media;
+    let r;
+    let formatArray = new Array<string>();
+    let replaceArray = new Array<string>();
+    if (this.templateReg.test(initialization)) {
+      while (r = this.templateReg.exec(initialization)) {
+        formatArray.push(r[0]);
+        if (r[1] === "Number") {
+          r[1] = '1';
+        } else if (r[1] === "RepresentationID") {
+          r[1] = parent.id!;
+        }
+        replaceArray.push(r[1])
+      }
+
+      let index = 0;
+      while (index < replaceArray.length) {
+        initialization.replace(formatArray[index], replaceArray[index]);
+        index++
+      }
+    }
+    parent.initializationURL = initialization;
+
+
+  }
+
+  generateMediaURL(SegmentTemplate: SegmentTemplate, parent: Representation) {
+    let meida = SegmentTemplate.media;
+    let r;
+    let formatArray = new Array<string>();
+    let replaceArray = new Array<string>();
+
+  }
 }
+
+
+
+
 
 const factory = FactoryMaker.getSingleFactory(DashParser);
 export default factory;
