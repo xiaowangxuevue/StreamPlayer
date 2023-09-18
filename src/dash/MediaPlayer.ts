@@ -16,12 +16,14 @@ class MediaPlayer {
         this.config = ctx.context;
         this.setup();
         this.initializeEvent();
+        
     }
 
     //初始化类
     setup() {
         this.urlLoader = URLLoaderFactory().getInstance();
         this.eventBus = EventBusFactory().getInstance();
+        // ignoreRoot -> 忽略Document节点，从MPD开始作为根节点
         this.dashParser = DashParserFactory({ignoreRoot:true}).getInstance();
     }
 
@@ -35,8 +37,11 @@ class MediaPlayer {
     }
 
     onManifestLoaded(data:string) { 
-        let manifest = this.dashParser.parse(data);
-        console.log(manifest);
+
+        let manifest = this.dashParser.parse(data);  //解析后的manifest
+
+        console.log('解析后',manifest)
+        
     }
 
     /**
@@ -44,10 +49,12 @@ class MediaPlayer {
      * @param url 
      */
     public attachSource(url:string) {
+        
         this.urlLoader.load({url,responseType:"text"});
     }
 }
 
 const factory = FactoryMaker.getClassFactory(MediaPlayer);
+
 
 export default factory;

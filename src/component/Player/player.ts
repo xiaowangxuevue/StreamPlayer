@@ -22,7 +22,7 @@ class Player extends BaseEvent {
     this.init();
     this.initComponent();
     this.initContainer();
-    console.log('马上开始');
+
       
     if(getFileExtension(this.playerOptions.url) === "mp4") {
   

@@ -61,12 +61,13 @@ export type MpdDocument = {
 export type Mpd = {
   tag: "MPD";
   type?: "static" | "dynamic";
-  children: Array<Period>;
-  maxSegmentDuration: string | null;
-  availabilityStartTime: string | null;  // 可用性开始时间
-  mediaPresentationDuration: string | null;
-  minBufferTime: string | null;
-  minimumUpdatePeriod: string | null;
+  children?: Array<Period>;
+  maxSegmentDuration?: string | null;
+  availabilityStartTime?: string | null;  // 可用性开始时间
+  mediaPresentationDuration?: string | null;
+  minBufferTime?: string | null;
+  minimumUpdatePeriod?: string | null;
+  [props:string]:any;
 };
 
 export type Period = {

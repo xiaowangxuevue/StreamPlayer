@@ -193,7 +193,6 @@ class EventBus {
     on(type, listener, scope) {
         if (!this.__events[type]) {
             this.__events[type] = [{ cb: listener, scope }];
-            console.log(this.__events[type]);
             return;
         }
         if (this.__events[type].filter(event => {
@@ -215,7 +214,6 @@ class EventBus {
         });
     }
     trigger(type, ...payload) {
-        console.log(this.__events);
         if (this.__events[type]) {
             this.__events[type].forEach(event => {
                 event.cb.call(event.scope, ...payload);
@@ -305,7 +303,6 @@ class URLLoader {
             success: function (data) {
                 request.getResponseTime = new Date().getTime();
                 ctx.eventBus.trigger(EventConstants.MANIFEST_LOADED, data);
-                console.log(this, data);
             },
             error: function (error) {
                 console.log(this, error);
@@ -331,14 +328,19 @@ class DashParser {
     }
     string2xml(s) {
         let parser = new DOMParser();
-        return parser.parseFromString(s, "text/xml");
+        return parser.parseFromString(s, "text/xml"); // 将字符串解析为text/xml格式
     }
     parse(manifest) {
         let xml = this.string2xml(manifest);
-        let Mpd = this.parseDOMChildren("MpdDocument", xml);
-        // this.mergeNodeSegementTemplate(Mpd);
         console.log(xml, 'xml');
-        console.log(Mpd, 'mpd');
+        let Mpd;
+        if (this.config.override) {
+            Mpd = this.parseDOMChildren("Mpd", xml);
+        }
+        else {
+            Mpd = this.parseDOMChildren("MpdDocument", xml);
+        }
+        this.mergeNodeSegementTemplate(Mpd);
         return Mpd;
     }
     parseDOMChildren(name, node) {
@@ -382,6 +384,7 @@ class DashParser {
                     result[child.nodeName].push(this.parseDOMChildren(child.nodeName, child));
                 }
             }
+            // 2.将node中具有多个相同的标签的子标签合并为一个数组
             for (let key in result) {
                 if (key !== "tag" && key !== "__children") {
                     result[key + "_asArray"] = Array.isArray(result[key])
@@ -389,7 +392,13 @@ class DashParser {
                         : [result[key]];
                 }
             }
-            // 2.解析node上挂载的属性
+            console.log(result["#text_asArray"], 'resultdd');
+            // 3.如果该Element节点中含有text节点，则需要合并为一个整体
+            // result["#text_asArray"].forEach(text=>{
+            //   result.__text = result.__text || "";
+            //   result.__text += `${text.text}/n`
+            // })
+            // 4.解析node上挂载的属性
             for (let prop of node.attributes) {
                 result[prop.name] = prop.value;
             }
@@ -460,6 +469,7 @@ class MediaPlayer {
     setup() {
         this.urlLoader = factory$2().getInstance();
         this.eventBus = factory$4().getInstance();
+        // ignoreRoot -> 忽略Document节点，从MPD开始作为根节点
         this.dashParser = factory$1({ ignoreRoot: true }).getInstance();
     }
     initializeEvent() {
@@ -469,8 +479,8 @@ class MediaPlayer {
         this.eventBus.off(EventConstants.MANIFEST_LOADED, this.onManifestLoaded, this);
     }
     onManifestLoaded(data) {
-        let manifest = this.dashParser.parse(data);
-        console.log(manifest);
+        let manifest = this.dashParser.parse(data); //解析后的manifest
+        console.log('解析后', manifest);
     }
     /**
      * @description 发送MPD文件的网络请求，我要做的事情很纯粹，具体实现细节由各个Loader去具体实现
@@ -503,7 +513,6 @@ class Player extends BaseEvent {
         this.init();
         this.initComponent();
         this.initContainer();
-        console.log('马上开始');
         if (getFileExtension(this.playerOptions.url) === "mp4") {
             new Mp4Player(this);
         }
@@ -599,7 +608,6 @@ class ToolBar extends BaseEvent {
         div.innerHTML += this.progress.template;
         div.innerHTML += this.controller.template;
         this.template_ = div;
-        console.log(div, 'divvvvvvvvvv');
     }
     initEvent() {
         this.on("showtoolbar", (e) => {
@@ -619,7 +627,6 @@ class ToolBar extends BaseEvent {
             this.controller.emit("pause");
         });
         this.on("loadedmetadata", (summary) => {
-            console.log('____load1', summary);
             this.controller.emit("loadedmetadata", summary);
             this.progress.emit("loadedmetadata", summary);
         });

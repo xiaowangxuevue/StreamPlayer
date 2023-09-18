@@ -13,6 +13,7 @@ class URLLoader {
     constructor(ctx:FactoryObject,...args:any[]) {
         this.config = ctx.context;
         this.setup();
+        
     }
     private _loadManifest(config:XHRConfig) {
         this.xhrLoader.loadManifest(config);
@@ -20,12 +21,13 @@ class URLLoader {
 
     setup() {
         this.xhrLoader = XHRLoaderFactory({}).getInstance();
+        
         this.eventBus = EventBusFactory({}).getInstance()
     }
     // 每调用一次load函数就发送一次请求
-    load(config: URLConfig) {
+    load(config: URLConfig) {  // type , url
         //一个HTTPRequest对象才对应一个请求
-        let request = new HTTPRequest(config);
+        let request = new HTTPRequest(config);  
         let ctx =this
 
         this._loadManifest({
@@ -33,7 +35,6 @@ class URLLoader {
             success: function(data) {
                 request.getResponseTime = new Date().getTime();
                 ctx.eventBus.trigger(EventConstants.MANIFEST_LOADED,data)
-                console.log(this , data);
             },
             error: function(error) {
                 console.log(this , error)

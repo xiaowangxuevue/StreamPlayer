@@ -52,8 +52,6 @@ export class ToolBar extends BaseEvent {
     div.innerHTML += this.progress.template as string;
     div.innerHTML += this.controller.template as string;
     this.template_ = div;
-    console.log(div, 'divvvvvvvvvv');
-
   }
 
   initEvent() {
@@ -78,7 +76,6 @@ export class ToolBar extends BaseEvent {
     });
 
     this.on("loadedmetadata", (summary: number) => {
-      console.log('____load1', summary);
       this.controller.emit("loadedmetadata", summary);
       this.progress.emit("loadedmetadata", summary);
     });

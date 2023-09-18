@@ -6,6 +6,7 @@ class EventBus {
     constructor(ctx: FactoryObject, ...args: any[]) {
         this.config = ctx.context;
         this.setup();
+    
     }
 
     setup() {
@@ -15,7 +16,6 @@ class EventBus {
     on(type: string, listener: Function, scope: FactoryObject): void | never {
         if (!this.__events[type]) {
             this.__events[type] = [{ cb: listener, scope }]
-            console.log(this.__events[type])
             return;
         }
 
@@ -44,7 +44,6 @@ class EventBus {
     }
 
     trigger(type:string,...payload:any[]): void | never {
-        console.log(this.__events);
         if(this.__events[type]) {
             this.__events[type].forEach(event => {
                 event.cb.call(event.scope,...payload);

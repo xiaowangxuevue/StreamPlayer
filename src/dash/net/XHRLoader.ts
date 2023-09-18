@@ -15,6 +15,8 @@ class XHRLoader {
 
 
     loadManifest(config: XHRConfig) {
+   
+        
         let request = config.request;
         let xhr = new XMLHttpRequest();
         if (request.header) {
@@ -25,8 +27,12 @@ class XHRLoader {
         xhr.open(request.method || "get", request.url);
         xhr.responseType = request.responseType || "arraybuffer";
         xhr.onreadystatechange = (e) => {
+     
+            
             if (xhr.readyState === 4) {
                 if ((xhr.status >= 200 && xhr.status < 300) || (xhr.status === 304)) {
+    
+                    
                     config.success && config.success.call(xhr, xhr.response);
                 } else {
                     config.error && config.error.call(xhr, e);
