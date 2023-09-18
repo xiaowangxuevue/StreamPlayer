@@ -7,7 +7,9 @@ import {
     SegmentBase,
     SegmentList,
     SegmentTemplate,
-    SegmentURL
+    SegmentURL,
+    Mpd,
+    Period
 } from "../types/dash/MpdFile";
 
 export function checkMediaType(s: any): s is MediaType {
@@ -21,6 +23,16 @@ export function checkMediaType(s: any): s is MediaType {
         s === "image/png" ||
         s === "image/jpeg"
     )
+}
+
+export function checkMpd (s:any): s is Mpd {
+    if(s.tag === 'MPD') return true;
+    return false
+}
+
+export function checkPeriod (s:any): s is Period {
+    if(s.tag === 'Period') return true;
+    return false
 }
 
 /**

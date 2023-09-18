@@ -49,6 +49,7 @@ const FactoryMaker = (function () {
                 ctx.__single_instanceMap[classConstructor.name] = instance;
               }
               return instance;
+            
             },
           }
         }

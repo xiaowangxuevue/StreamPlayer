@@ -79,6 +79,8 @@ export type AdaptationSet = {
 export type SegmentTemplate = {
     tag: "SegmentTemplate";
     initialization?: string;
+    timescale?: number;
+    duration?: number;
     media?: string;
     [props: string]: any;
 };

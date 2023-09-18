@@ -1,8 +1,9 @@
 import { DOMNodeTypes, ManifestObjectNode } from "../../types/dash/DomNodeTypes";
 import { FactoryObject } from "../../types/dash/Factory";
-import { Mpd, Representation, SegmentTemplate } from "../../types/dash/MpdFile";
+import { AdaptationSet, Mpd, Period, SegmentTemplate } from "../../types/dash/MpdFile";
 import SegmentTemplateParserFactory, { SegmentTemplateParser } from "./SegmentTemplateParser";
 import FactoryMaker from "../FactoryMaker";
+import { checkMpd, checkPeriod, checkUtils } from "../../utils/typeCheck";
 import { parseDuration, switchToSeconds } from "../../utils/format";
 class DashParser {
   private config: FactoryObject = {};
@@ -13,7 +14,7 @@ class DashParser {
   }
 
   setup() {
-    this.segmentTemplateParser = SegmentTemplateParserFactory({}).getInstance();
+    this.segmentTemplateParser = SegmentTemplateParserFactory().getInstance();
   }
 
   string2xml(s: string): Document {
@@ -22,7 +23,7 @@ class DashParser {
     return parser.parseFromString(s, "text/xml");   // 将字符串解析为text/xml格式
   }
 
-
+  // 解析请求到的xml类型的文本字符串，生成MPD对象，方便后续的解析
   parse(manifest: string): ManifestObjectNode["MpdDocument"] | ManifestObjectNode["Mpd"] {
     let xml = this.string2xml(manifest);
     console.log(xml, 'xml')
@@ -33,9 +34,10 @@ class DashParser {
       Mpd = this.parseDOMChildren("MpdDocument", xml);
     }
     this.mergeNodeSegementTemplate(Mpd);
+
     console.log('从这开始', Mpd);
 
-    this.setDurationForRepresentation(Mpd);
+    this.segmentTemplateParser.parse(Mpd);
     return Mpd
   }
 
@@ -154,39 +156,41 @@ class DashParser {
   }
 
   // 给每个Representation对象上挂载duration属性
-  setDurationForRepresentation(Mpd: Mpd) {
-    //  1.如果只有一个Period
-    if (Mpd["Period_asArray"].length === 1) {
-      let totalDuration = this.getTotalDuration(Mpd);
-      // 193
-      Mpd["Period_asArray"].forEach(Period => {
-        Period.duration = Period.duration || totalDuration;
-        Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
-          AdaptationSet.duration = totalDuration;
-          AdaptationSet["Representation_asArray"].forEach(Representtation => {
-            Representtation.duration = totalDuration;
+  static setDurationForRepresentation(Mpd: Mpd | Period | AdaptationSet) {
+    if (checkMpd(Mpd)) {
+      //1. 如果只有一个Period
+      if (Mpd["Period_asArray"].length === 1) {
+        let totalDuration = DashParser.getTotalDuration(Mpd);
+        Mpd["Period_asArray"].forEach(Period => {
+          Period.duration = Period.duration || totalDuration;
+          Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
+            AdaptationSet.duration = totalDuration;
+            AdaptationSet["Representation_asArray"].forEach(Representation => {
+              Representation.duration = totalDuration;
+            })
           })
         })
-      })
-
-
-    } else {
-      Mpd["Period_asArray"].forEach(Period => {
-        if (!Period.duration) throw new Error("MPD文件格式错误");
-        let duration = Period.duration;
-        Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
-          AdaptationSet.duration = duration;
-          AdaptationSet["Representation_asArray"].forEach(Representation => {
-            Representation.duration = duration;
+      } else {
+        Mpd["Period_asArray"].forEach(Period => {
+          if (!Period.duration) {
+            throw new Error("MPD文件格式错误");
+          }
+          let duration = Period.duration;
+          Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
+            AdaptationSet.duration = duration;
+            AdaptationSet["Representation_asArray"].forEach(Representation => {
+              Representation.duration = duration;
+            })
           })
         })
-      });
+      }
+    } else if (checkPeriod(Mpd)) {
+      //ToDo
 
     }
-
   }
 
-  getTotalDuration(Mpd: Mpd): number | never {
+  static getTotalDuration(Mpd: Mpd): number | never {
     let totalDuration = 0;
     let MpdDuration = NaN;
     if (Mpd.mediaPresentationDuration) {
