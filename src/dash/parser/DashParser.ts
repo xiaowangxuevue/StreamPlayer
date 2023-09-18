@@ -3,7 +3,7 @@ import { FactoryObject } from "../../types/dash/Factory";
 import { AdaptationSet, Mpd, Period, SegmentTemplate } from "../../types/dash/MpdFile";
 import SegmentTemplateParserFactory, { SegmentTemplateParser } from "./SegmentTemplateParser";
 import FactoryMaker from "../FactoryMaker";
-import { checkMpd, checkPeriod, checkUtils } from "../../utils/typeCheck";
+import { checkMpd, checkPeriod } from "../../utils/typeCheck";
 import { parseDuration, switchToSeconds } from "../../utils/format";
 class DashParser {
   private config: FactoryObject = {};
