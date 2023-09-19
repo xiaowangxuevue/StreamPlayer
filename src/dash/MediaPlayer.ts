@@ -16,6 +16,7 @@ class MediaPlayer {
     private urlLoader: URLLoader;  //类型为URLLoader
     private eventBus: EventBus;
     private dashParser:DashParser;
+    private video:HTMLVideoElement;
     private mediaPlayerController:MediaPlayerController;
     private streamController:StreamController;
     constructor(ctx:FactoryObject,...args:any[]) {
