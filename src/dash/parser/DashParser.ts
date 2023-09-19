@@ -1,6 +1,6 @@
 import { DOMNodeTypes, ManifestObjectNode } from "../../types/dash/DomNodeTypes";
 import { FactoryObject } from "../../types/dash/Factory";
-import { AdaptationSet, Mpd, Period, SegmentTemplate } from "../../types/dash/MpdFile";
+import { Mpd, SegmentTemplate } from "../../types/dash/MpdFile";
 import SegmentTemplateParserFactory, { SegmentTemplateParser } from "./SegmentTemplateParser";
 import FactoryMaker from "../FactoryMaker";
 import EventBusFactory, { EventBus } from "../event/EventBus";
@@ -109,7 +109,6 @@ class DashParser {
             : [result[key]];
         }
       }
-      console.log(result["#text_asArray"], 'resultdd');
 
       // 3.如果该Element节点中含有text节点，则需要合并为一个整体
       result["#text_asArray"] && result["#text_asArray"].forEach(text => {
@@ -175,11 +174,19 @@ class DashParser {
   setResolvePowerForRepresentation(Mpd: Mpd) {
     Mpd["Period_asArray"].forEach(Period => {
       Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
-        AdaptationSet["Representation_asArray"].forEach(Representation => {
-          if (Representation.width && Representation.height) {
-            Representation.resolvePower = `${Representation.width}*${Representation.height}`;
-          }
-        })
+        if(AdaptationSet.mimeType === "video/mp4") {
+          AdaptationSet["Representation_asArray"].forEach(Representation=>{
+            if(Representation.width && Representation.height) {
+              Representation.resolvePower = `${Representation.width}*${Representation.height}`;
+            }
+          })
+        } else if(AdaptationSet.mimeType === "audio/mp4") {
+          AdaptationSet["Representation_asArray"].forEach(Representation=>{
+            if(Representation.audioSamplingRate) {
+              Representation.resolvePower = Representation.audioSamplingRate;
+            }
+          })
+        }
       })
     })
   }
@@ -192,7 +199,7 @@ class DashParser {
   }
 
 
-  // 给每个Representation对象上挂载duration属性
+  // 给每个Representation对象上挂载duration属性,此处的duration指的是Representation所属的Period所代表的媒体的总时长
   setDurationForRepresentation(Mpd: Mpd) {
     //1. 如果只有一个Period
     if(Mpd["Period_asArray"].length === 1) {

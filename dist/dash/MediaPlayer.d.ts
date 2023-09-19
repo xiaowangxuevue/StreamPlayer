@@ -7,12 +7,14 @@ declare class MediaPlayer {
     private urlLoader;
     private eventBus;
     private dashParser;
+    private mediaPlayerController;
     private streamController;
     constructor(ctx: FactoryObject, ...args: any[]);
     setup(): void;
     initializeEvent(): void;
     resetEvent(): void;
     onManifestLoaded(data: string): void;
+    onSegmentLoaded(data: ArrayBuffer[]): void;
     /**
      * @description 发送MPD文件的网络请求，我要做的事情很纯粹，具体实现细节由各个Loader去具体实现
      * @param url

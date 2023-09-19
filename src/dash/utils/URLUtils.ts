@@ -16,7 +16,7 @@ class URLUtils {
             let url = urls[index];
             // 如果url不以/或者./,../这种形式开头的话
             if(/^(?!(\.|\/))/.test(url)) {
-                if(str[str.length - 1] !== '/' && str ! == "") {
+                if(str[str.length - 1] !== '/' && str !== "") {
                     str += '/';
                 }
             } else if(/^\/.+/.test(url)) {

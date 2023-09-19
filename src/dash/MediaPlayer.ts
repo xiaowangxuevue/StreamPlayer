@@ -1,10 +1,10 @@
 import { FactoryObject } from "../types/dash/Factory";
-import { Mpd } from "../types/dash/MpdFile";
 import EventBusFactory, { EventBus } from "./event/EventBus";
 import { EventConstants } from "./event/EventConstants";
 import FactoryMaker from "./FactoryMaker";
 import URLLoaderFactory, { URLLoader } from "./net/URLLoader";
 import DashParserFactory,{ DashParser } from "./parser/DashParser";
+import MediaPlayerControllerFactory, { MediaPlayerController } from "./vo/MediaPlayerController";
 import StreamControllerFactory, {
     StreamController
 } from "./stream/StreamController"
@@ -16,6 +16,7 @@ class MediaPlayer {
     private urlLoader: URLLoader;  //类型为URLLoader
     private eventBus: EventBus;
     private dashParser:DashParser;
+    private mediaPlayerController:MediaPlayerController;
     private streamController:StreamController;
     constructor(ctx:FactoryObject,...args:any[]) {
         this.config = ctx.context;
@@ -36,10 +37,12 @@ class MediaPlayer {
 
     initializeEvent() {
         this.eventBus.on(EventConstants.MANIFEST_LOADED,this.onManifestLoaded,this);
+        this.eventBus.on(EventConstants.SEGEMTN_LOADED,this.onSegmentLoaded,this);
     }
 
     resetEvent() {
         this.eventBus.off(EventConstants.MANIFEST_LOADED,this.onManifestLoaded,this);
+        this.eventBus.off(EventConstants.SEGEMTN_LOADED,this.onSegmentLoaded,this);
     }
 
     onManifestLoaded(data:string) { 
@@ -49,6 +52,13 @@ class MediaPlayer {
         console.log('解析后',manifest)
 
         this.eventBus.trigger(EventConstants.MANIFEST_PARSE_COMPLETED,manifest)
+    }
+
+    onSegmentLoaded(data:ArrayBuffer[]) {
+        console.log("加载segment成功",data);
+        let videoBuffer = data[0];
+        let audioBuffer = data[1];
+        
     }
 
     /**
