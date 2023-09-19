@@ -1,16 +1,12 @@
 import { FactoryObject } from "../../types/dash/Factory";
 import FactoryMaker from "../FactoryMaker";
 import { Representation, SegmentTemplate, Mpd, Period, AdaptationSet } from "../../types/dash/MpdFile";
-import { parseDuration, switchToSeconds } from "../../utils/format";
-import { DashParser } from "./DashParser";
 /* 
  @description 该类仅仅用于处理MPD文件中具有SegmentTemplate此种情况
 */
 
 class SegmentTemplateParser {
   private config: FactoryObject;
-  private dashParser: DashParser;
-  private templateReg: RegExp = /\$(.+)?\$/;
   constructor(ctx: FactoryObject, ...args: any[]) {
     this.config = ctx.context;
     this.setup();
@@ -21,36 +17,10 @@ class SegmentTemplateParser {
   }
 
   parse(Mpd: Mpd | Period | AdaptationSet) {
-    DashParser.setDurationForRepresentation(Mpd);
-    this.setSegmentDurationForRepresentation(Mpd as Mpd)
     this.parseNodeSegmentTemplate(Mpd as Mpd);
 
   }
 
-  setSegmentDurationForRepresentation(Mpd: Mpd) {
-    let maxSegmentDuration = switchToSeconds(parseDuration(Mpd.maxSegmentDuration));
-    Mpd["Period_asArray"].forEach(Period => {
-      Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
-        AdaptationSet["Representation_asArray"].forEach(Representation => {
-          if (Representation["SegmentTemplate"]) {
-            if ((Representation["SegmentTemplate"] as SegmentTemplate).duration) {
-              let duration = (Representation["SegmentTemplate"] as SegmentTemplate).duration
-              let timescale = (Representation["SegmentTemplate"] as SegmentTemplate).timescale || 1;
-              Representation.segmentDuration = (duration / timescale).toFixed(1);
-              console.log(duration, '1', timescale, '2');
-
-            } else {
-              if (maxSegmentDuration) {
-                Representation.segmentDuration = maxSegmentDuration;
-              } else {
-                throw new Error("MPD文件格式错误")
-              }
-            }
-          }
-        })
-      })
-    })
-  }
 
   parseNodeSegmentTemplate(Mpd: FactoryObject) {
     Mpd["Period_asArray"].forEach(Period => {

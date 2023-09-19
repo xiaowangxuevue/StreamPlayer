@@ -3,18 +3,30 @@ import { FactoryObject } from "../../types/dash/Factory";
 import { AdaptationSet, Mpd, Period, SegmentTemplate } from "../../types/dash/MpdFile";
 import SegmentTemplateParserFactory, { SegmentTemplateParser } from "./SegmentTemplateParser";
 import FactoryMaker from "../FactoryMaker";
-import { checkMpd, checkPeriod } from "../../utils/typeCheck";
+import EventBusFactory, { EventBus } from "../event/EventBus";
+import { EventConstants } from "../event/EventConstants";
+import URLUtilsFactory, { URLUtils } from "../utils/URLUtils";
 import { parseDuration, switchToSeconds } from "../../utils/format";
 class DashParser {
   private config: FactoryObject = {};
   private segmentTemplateParser: SegmentTemplateParser;
+  private eventBus: EventBus;
+  private mpdURL:string;
+  private URLUtils:URLUtils;
   constructor(ctx: FactoryObject, ...args: any[]) {
     this.config = ctx.context;
     this.setup();
+    this.initialEvent()
   }
 
   setup() {
     this.segmentTemplateParser = SegmentTemplateParserFactory().getInstance();
+    this.eventBus = EventBusFactory().getInstance();
+    this.URLUtils = URLUtilsFactory().getInstance();
+  }
+
+  initialEvent() {
+    this.eventBus.on(EventConstants.SOURCE_ATTACHED, this.onSourceAttached, this);
   }
 
   string2xml(s: string): Document {
@@ -36,11 +48,16 @@ class DashParser {
     this.mergeNodeSegementTemplate(Mpd);
     this.setResolvePowerForRepresentation(Mpd);
     console.log('从这开始', Mpd);
+    this.setDurationForRepresentation(Mpd);
+    this.setSegmentDurationForRepresentation(Mpd);
+    this.setBaseURLForMpd(Mpd);
 
     this.segmentTemplateParser.parse(Mpd);
     return Mpd
   }
-
+  onSourceAttached(url:string) {
+    this.mpdURL = url;
+  }
   parseDOMChildren<T extends string>(name: T, node: Node): ManifestObjectNode[T] {
     //如果node的类型为文档类型
     if (node.nodeType === DOMNodeTypes.DOCUMENT_NODE) {
@@ -154,7 +171,7 @@ class DashParser {
       })
     })
   }
-
+  // 给每个Representation上挂载分辨率属性
   setResolvePowerForRepresentation(Mpd: Mpd) {
     Mpd["Period_asArray"].forEach(Period => {
       Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
@@ -166,43 +183,47 @@ class DashParser {
       })
     })
   }
+  setBaseURLForMpd(Mpd:Mpd) {
+
+    
+    Mpd.baseURL = this.URLUtils.sliceLastURLPath(this.mpdURL);
+
+    console.log('来了老弟！',Mpd.baseURL);
+  }
+
 
   // 给每个Representation对象上挂载duration属性
-  static setDurationForRepresentation(Mpd: Mpd | Period | AdaptationSet) {
-    if (checkMpd(Mpd)) {
-      //1. 如果只有一个Period
-      if (Mpd["Period_asArray"].length === 1) {
-        let totalDuration = DashParser.getTotalDuration(Mpd);
-        Mpd["Period_asArray"].forEach(Period => {
+  setDurationForRepresentation(Mpd: Mpd) {
+    //1. 如果只有一个Period
+    if(Mpd["Period_asArray"].length === 1) {
+        let totalDuration = this.getTotalDuration(Mpd);
+        Mpd["Period_asArray"].forEach(Period=>{
           Period.duration = Period.duration || totalDuration;
-          Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
+          Period["AdaptationSet_asArray"].forEach(AdaptationSet=>{
             AdaptationSet.duration = totalDuration;
-            AdaptationSet["Representation_asArray"].forEach(Representation => {
+            AdaptationSet["Representation_asArray"].forEach(Representation=>{
               Representation.duration = totalDuration;
             })
           })
         })
       } else {
-        Mpd["Period_asArray"].forEach(Period => {
-          if (!Period.duration) {
+        Mpd["Period_asArray"].forEach(Period=>{
+          if(!Period.duration) {
             throw new Error("MPD文件格式错误");
           }
           let duration = Period.duration;
-          Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
+          Period["AdaptationSet_asArray"].forEach(AdaptationSet=>{
             AdaptationSet.duration = duration;
-            AdaptationSet["Representation_asArray"].forEach(Representation => {
+            AdaptationSet["Representation_asArray"].forEach(Representation=>{
               Representation.duration = duration;
             })
           })
         })
       }
-    } else if (checkPeriod(Mpd)) {
-      //ToDo
-
-    }
   }
+  
 
-  static getTotalDuration(Mpd: Mpd): number | never {
+   getTotalDuration(Mpd: Mpd): number | never {
     let totalDuration = 0;
     let MpdDuration = NaN;
     if (Mpd.mediaPresentationDuration) {
@@ -228,6 +249,32 @@ class DashParser {
 
     return totalDuration;
   }
+
+  setSegmentDurationForRepresentation(Mpd: Mpd) {
+    let maxSegmentDuration = switchToSeconds(parseDuration(Mpd.maxSegmentDuration));
+    Mpd["Period_asArray"].forEach(Period => {
+      Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
+        AdaptationSet["Representation_asArray"].forEach(Representation => {
+          if (Representation["SegmentTemplate"]) {
+            if ((Representation["SegmentTemplate"] as SegmentTemplate).duration) {
+              let duration = (Representation["SegmentTemplate"] as SegmentTemplate).duration
+              let timescale = (Representation["SegmentTemplate"] as SegmentTemplate).timescale || 1;
+              Representation.segmentDuration = (duration / timescale).toFixed(1);
+              console.log(duration, '1', timescale, '2');
+
+            } else {
+              if (maxSegmentDuration) {
+                Representation.segmentDuration = maxSegmentDuration;
+              } else {
+                throw new Error("MPD文件格式错误")
+              }
+            }
+          }
+        })
+      })
+    })
+  }
+
 }
 
 

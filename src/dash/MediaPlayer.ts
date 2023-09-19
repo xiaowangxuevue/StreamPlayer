@@ -48,9 +48,7 @@ class MediaPlayer {
 
         console.log('解析后',manifest)
 
-        let res = this.streamController.generateSegmentRequestStruct(manifest as Mpd);
-        console.log(res,'strem-res');
-        
+        this.eventBus.trigger(EventConstants.MANIFEST_PARSE_COMPLETED,manifest)
     }
 
     /**
@@ -58,7 +56,7 @@ class MediaPlayer {
      * @param url 
      */
     public attachSource(url:string) {
-        
+        this.eventBus.trigger(EventConstants.SOURCE_ATTACHED,url);
         this.urlLoader.load({url,responseType:"text"},'Manifest');
     }
 }

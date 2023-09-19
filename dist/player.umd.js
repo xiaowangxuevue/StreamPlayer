@@ -228,7 +228,9 @@
   const factory$8 = FactoryMaker.getSingleFactory(EventBus);
 
   const EventConstants = {
-      MANIFEST_LOADED: "manifestLoaded"
+      MANIFEST_LOADED: "manifestLoaded",
+      MANIFEST_PARSE_COMPLETED: "manifestParseCompleted",
+      SOURCE_ATTACHED: "sourceAttached"
   };
 
   class HTTPRequest {
@@ -293,6 +295,9 @@
       _loadManifest(config) {
           this.xhrLoader.load(config);
       }
+      _loadSegment(config) {
+          this.xhrLoader.load(config);
+      }
       setup() {
           this.xhrLoader = factory$7({}).getInstance();
           this.eventBus = factory$8({}).getInstance();
@@ -303,7 +308,7 @@
           let request = new HTTPRequest(config);
           let ctx = this;
           if (type === "Manifest") {
-              this._loadManifest({
+              ctx._loadManifest({
                   request: request,
                   success: function (data) {
                       request.getResponseTime = new Date().getTime();
@@ -312,6 +317,19 @@
                   error: function (error) {
                       console.log(this, error);
                   }
+              });
+          }
+          else if (type === "Segment") {
+              return new Promise((res, rej) => {
+                  ctx._loadSegment({
+                      request: request,
+                      success: function (data) {
+                          res(data);
+                      },
+                      error: function (error) {
+                          rej(error);
+                      }
+                  });
               });
           }
       }
@@ -327,102 +345,18 @@
       DOMNodeTypes[DOMNodeTypes["DOCUMENT_NODE"] = 9] = "DOCUMENT_NODE";
   })(DOMNodeTypes || (DOMNodeTypes = {}));
 
-  function addZero(num) {
-      return num > 9 ? num + "" : "0" + num;
-  }
-  function formatTime(seconds) {
-      seconds = Math.floor(seconds);
-      let minute = Math.floor(seconds / 60);
-      let second = seconds % 60;
-      return addZero(minute) + ":" + addZero(second);
-  }
-  function switchToSeconds(time) {
-      let sum = 0;
-      if (time.hours)
-          sum += time.hours * 3600;
-      if (time.minutes)
-          sum += time.minutes * 60;
-      if (time.seconds)
-          sum += time.seconds;
-      return sum;
-  }
-  // 解析MPD文件的时间字符串
-  function parseDuration(pt) {
-      // Parse time from format "PT#H#M##.##S"
-      let hours = 0, minutes = 0, seconds = 0;
-      for (let i = pt.length - 1; i >= 0; i--) {
-          if (pt[i] === "S") {
-              let j = i;
-              while (pt[i] !== "M" && pt[i] !== "H" && pt[i] !== "T") {
-                  i--;
-              }
-              i += 1;
-              seconds = parseInt(pt.slice(i, j));
-          }
-          else if (pt[i] === "M") {
-              let j = i;
-              while (pt[i] !== "H" && pt[i] !== "T") {
-                  i--;
-              }
-              i += 1;
-              minutes = parseInt(pt.slice(i, j));
-          }
-          else if (pt[i] === "H") {
-              let j = i;
-              while (pt[i] !== "T") {
-                  i--;
-              }
-              i += 1;
-              hours = parseInt(pt.slice(i, j));
-          }
-      }
-      return {
-          hours,
-          minutes,
-          seconds,
-      };
-  }
-
   /*
    @description 该类仅仅用于处理MPD文件中具有SegmentTemplate此种情况
   */
   class SegmentTemplateParser {
       constructor(ctx, ...args) {
-          this.templateReg = /\$(.+)?\$/;
           this.config = ctx.context;
           this.setup();
       }
       setup() {
       }
       parse(Mpd) {
-          DashParser.setDurationForRepresentation(Mpd);
-          this.setSegmentDurationForRepresentation(Mpd);
           this.parseNodeSegmentTemplate(Mpd);
-      }
-      setSegmentDurationForRepresentation(Mpd) {
-          let maxSegmentDuration = switchToSeconds(parseDuration(Mpd.maxSegmentDuration));
-          Mpd["Period_asArray"].forEach(Period => {
-              Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
-                  AdaptationSet["Representation_asArray"].forEach(Representation => {
-                      if (Representation["SegmentTemplate"]) {
-                          if (Representation["SegmentTemplate"].duration) {
-                              let duration = Representation["SegmentTemplate"].duration;
-                              let timescale = Representation["SegmentTemplate"].timescale || 1;
-                              Representation.segmentDuration = (duration / timescale).toFixed(1);
-                              console.log(duration, '1', timescale, '2');
-                          }
-                          else {
-                              if (maxSegmentDuration) {
-                                  Representation.segmentDuration = maxSegmentDuration;
-                              }
-                              else {
-                                  throw new Error("MPD文件格式错误");
-                              }
-                          }
-                      }
-                  });
-              });
-          });
       }
       parseNodeSegmentTemplate(Mpd) {
           Mpd["Period_asArray"].forEach(Period => {
@@ -500,15 +434,99 @@
   }
   const factory$5 = FactoryMaker.getSingleFactory(SegmentTemplateParser);
 
-  function checkMpd(s) {
-      if (s.tag === 'MPD')
-          return true;
-      return false;
+  class URLUtils {
+      constructor(ctx, ...args) {
+          this.config = ctx.context;
+      }
+      setup() { }
+      resolve(...urls) {
+          let index = 0;
+          let str = "";
+          while (index < urls.length) {
+              let url = urls[index];
+              // 如果url不以/或者./,../这种形式开头的话
+              if (/^(?!(\.|\/))/.test(url)) {
+                  if (str[str.length - 1] !== '/' && str == "") {
+                      str += '/';
+                  }
+              }
+              else if (/^\/.+/.test(url)) {
+                  // 如果url以/开头
+                  if (str[str.length - 1] === "/") {
+                      url = url.slice(1);
+                  }
+              }
+              else if (/^(\.).+/.test(url)) ;
+              str += url;
+              index++;
+          }
+          return str;
+      }
+      sliceLastURLPath(url) {
+          for (let i = url.length - 1; i >= 0; i--) {
+              if (url[i] === "/") {
+                  return url.slice(0, i);
+              }
+          }
+          return url;
+      }
   }
-  function checkPeriod(s) {
-      if (s.tag === 'Period')
-          return true;
-      return false;
+  const factory$4 = FactoryMaker.getSingleFactory(URLUtils);
+
+  function addZero(num) {
+      return num > 9 ? num + "" : "0" + num;
+  }
+  function formatTime(seconds) {
+      seconds = Math.floor(seconds);
+      let minute = Math.floor(seconds / 60);
+      let second = seconds % 60;
+      return addZero(minute) + ":" + addZero(second);
+  }
+  function switchToSeconds(time) {
+      let sum = 0;
+      if (time.hours)
+          sum += time.hours * 3600;
+      if (time.minutes)
+          sum += time.minutes * 60;
+      if (time.seconds)
+          sum += time.seconds;
+      return sum;
+  }
+  // 解析MPD文件的时间字符串
+  function parseDuration(pt) {
+      // Parse time from format "PT#H#M##.##S"
+      let hours = 0, minutes = 0, seconds = 0;
+      for (let i = pt.length - 1; i >= 0; i--) {
+          if (pt[i] === "S") {
+              let j = i;
+              while (pt[i] !== "M" && pt[i] !== "H" && pt[i] !== "T") {
+                  i--;
+              }
+              i += 1;
+              seconds = parseInt(pt.slice(i, j));
+          }
+          else if (pt[i] === "M") {
+              let j = i;
+              while (pt[i] !== "H" && pt[i] !== "T") {
+                  i--;
+              }
+              i += 1;
+              minutes = parseInt(pt.slice(i, j));
+          }
+          else if (pt[i] === "H") {
+              let j = i;
+              while (pt[i] !== "T") {
+                  i--;
+              }
+              i += 1;
+              hours = parseInt(pt.slice(i, j));
+          }
+      }
+      return {
+          hours,
+          minutes,
+          seconds,
+      };
   }
 
   class DashParser {
@@ -516,9 +534,15 @@
           this.config = {};
           this.config = ctx.context;
           this.setup();
+          this.initialEvent();
       }
       setup() {
           this.segmentTemplateParser = factory$5().getInstance();
+          this.eventBus = factory$8().getInstance();
+          this.URLUtils = factory$4().getInstance();
+      }
+      initialEvent() {
+          this.eventBus.on(EventConstants.SOURCE_ATTACHED, this.onSourceAttached, this);
       }
       string2xml(s) {
           let parser = new DOMParser();
@@ -538,8 +562,14 @@
           this.mergeNodeSegementTemplate(Mpd);
           this.setResolvePowerForRepresentation(Mpd);
           console.log('从这开始', Mpd);
+          this.setDurationForRepresentation(Mpd);
+          this.setSegmentDurationForRepresentation(Mpd);
+          this.setBaseURLForMpd(Mpd);
           this.segmentTemplateParser.parse(Mpd);
           return Mpd;
+      }
+      onSourceAttached(url) {
+          this.mpdURL = url;
       }
       parseDOMChildren(name, node) {
           //如果node的类型为文档类型
@@ -650,6 +680,7 @@
               });
           });
       }
+      // 给每个Representation上挂载分辨率属性
       setResolvePowerForRepresentation(Mpd) {
           Mpd["Period_asArray"].forEach(Period => {
               Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
@@ -661,40 +692,41 @@
               });
           });
       }
-      // 给每个Representation对象上挂载duration属性
-      static setDurationForRepresentation(Mpd) {
-          if (checkMpd(Mpd)) {
-              //1. 如果只有一个Period
-              if (Mpd["Period_asArray"].length === 1) {
-                  let totalDuration = DashParser.getTotalDuration(Mpd);
-                  Mpd["Period_asArray"].forEach(Period => {
-                      Period.duration = Period.duration || totalDuration;
-                      Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
-                          AdaptationSet.duration = totalDuration;
-                          AdaptationSet["Representation_asArray"].forEach(Representation => {
-                              Representation.duration = totalDuration;
-                          });
-                      });
-                  });
-              }
-              else {
-                  Mpd["Period_asArray"].forEach(Period => {
-                      if (!Period.duration) {
-                          throw new Error("MPD文件格式错误");
-                      }
-                      let duration = Period.duration;
-                      Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
-                          AdaptationSet.duration = duration;
-                          AdaptationSet["Representation_asArray"].forEach(Representation => {
-                              Representation.duration = duration;
-                          });
-                      });
-                  });
-              }
-          }
-          else if (checkPeriod(Mpd)) ;
+      setBaseURLForMpd(Mpd) {
+          Mpd.baseURL = this.URLUtils.sliceLastURLPath(this.mpdURL);
+          console.log('来了老弟！', Mpd.baseURL);
       }
-      static getTotalDuration(Mpd) {
+      // 给每个Representation对象上挂载duration属性
+      setDurationForRepresentation(Mpd) {
+          //1. 如果只有一个Period
+          if (Mpd["Period_asArray"].length === 1) {
+              let totalDuration = this.getTotalDuration(Mpd);
+              Mpd["Period_asArray"].forEach(Period => {
+                  Period.duration = Period.duration || totalDuration;
+                  Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
+                      AdaptationSet.duration = totalDuration;
+                      AdaptationSet["Representation_asArray"].forEach(Representation => {
+                          Representation.duration = totalDuration;
+                      });
+                  });
+              });
+          }
+          else {
+              Mpd["Period_asArray"].forEach(Period => {
+                  if (!Period.duration) {
+                      throw new Error("MPD文件格式错误");
+                  }
+                  let duration = Period.duration;
+                  Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
+                      AdaptationSet.duration = duration;
+                      AdaptationSet["Representation_asArray"].forEach(Representation => {
+                          Representation.duration = duration;
+                      });
+                  });
+              });
+          }
+      }
+      getTotalDuration(Mpd) {
           let totalDuration = 0;
           let MpdDuration = NaN;
           if (Mpd.mediaPresentationDuration) {
@@ -717,8 +749,58 @@
           }
           return totalDuration;
       }
+      setSegmentDurationForRepresentation(Mpd) {
+          let maxSegmentDuration = switchToSeconds(parseDuration(Mpd.maxSegmentDuration));
+          Mpd["Period_asArray"].forEach(Period => {
+              Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
+                  AdaptationSet["Representation_asArray"].forEach(Representation => {
+                      if (Representation["SegmentTemplate"]) {
+                          if (Representation["SegmentTemplate"].duration) {
+                              let duration = Representation["SegmentTemplate"].duration;
+                              let timescale = Representation["SegmentTemplate"].timescale || 1;
+                              Representation.segmentDuration = (duration / timescale).toFixed(1);
+                              console.log(duration, '1', timescale, '2');
+                          }
+                          else {
+                              if (maxSegmentDuration) {
+                                  Representation.segmentDuration = maxSegmentDuration;
+                              }
+                              else {
+                                  throw new Error("MPD文件格式错误");
+                              }
+                          }
+                      }
+                  });
+              });
+          });
+      }
   }
-  const factory$4 = FactoryMaker.getSingleFactory(DashParser);
+  const factory$3 = FactoryMaker.getSingleFactory(DashParser);
+
+  /******************************************************************************
+  Copyright (c) Microsoft Corporation.
+
+  Permission to use, copy, modify, and/or distribute this software for any
+  purpose with or without fee is hereby granted.
+
+  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+  REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+  AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+  INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+  LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+  OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+  PERFORMANCE OF THIS SOFTWARE.
+  ***************************************************************************** */
+
+  function __awaiter(thisArg, _arguments, P, generator) {
+      function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+      return new (P || (P = Promise))(function (resolve, reject) {
+          function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+          function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+          function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+          step((generator = generator.apply(thisArg, _arguments || [])).next());
+      });
+  }
 
   class URLNode {
       constructor(url) {
@@ -776,7 +858,9 @@
               if (path[i] >= root.children.length || path[i] < 0) {
                   throw new Error("传入的路径不正确");
               }
-              baseURL += root.children[path[i]].url;
+              if (root.children[path[i]].url) {
+                  baseURL += root.children[path[i]].url;
+              }
               root = root.children[path[i]];
           }
           if (root.children.length > 0) {
@@ -785,48 +869,28 @@
           return baseURL;
       }
   }
-  const factory$3 = FactoryMaker.getSingleFactory(BaseURLParser);
-
-  class URLUtils {
-      constructor(ctx, ...args) {
-          this.config = ctx.context;
-      }
-      setup() { }
-      resolve(...urls) {
-          let index = 0;
-          let str = "";
-          while (index < urls.length) {
-              let url = urls[index];
-              // 如果url不以/或者./,../这种形式开头的话
-              if (/^(?!(\.|\/))/.test(url)) {
-                  if (str[str.length - 1] !== '/') {
-                      str += '/';
-                  }
-              }
-              else if (/^\/.+/.test(url)) {
-                  // 如果url以/开头
-                  if (str[str.length - 1] === "/") {
-                      url = url.slice(1);
-                  }
-              }
-              else if (/^(\.).+/.test(url)) ;
-              str += url;
-              index++;
-          }
-          return str;
-      }
-  }
-  const factory$2 = FactoryMaker.getSingleFactory(URLUtils);
+  const factory$2 = FactoryMaker.getSingleFactory(BaseURLParser);
 
   class StreamController {
       constructor(ctx, ...args) {
           this.config = {};
-          this.config = ctx.factory;
+          this.config = ctx.context;
+          console.log(this.config);
           this.setup();
+          this.initialEvent();
+      }
+      initialEvent() {
+          this.eventBus.on(EventConstants.MANIFEST_PARSE_COMPLETED, this.onManifestParseCompleted, this);
       }
       setup() {
-          this.baseURLParser = factory$3().getInstance();
-          this.URLUtils = factory$2().getInstance();
+          this.baseURLParser = factory$2().getInstance();
+          this.URLUtils = factory$4().getInstance();
+          this.eventBus = factory$8().getInstance();
+          this.urlLoader = factory$6().getInstance();
+      }
+      onManifestParseCompleted(mainifest) {
+          this.segmentRequestStruct = this.generateSegmentRequestStruct(mainifest);
+          console.log(this.segmentRequestStruct);
       }
       generateBaseURLPath(Mpd) {
           this.baseURLPath = this.baseURLParser.parseManifestForBaseURL(Mpd);
@@ -861,7 +925,6 @@
                   }
               }
               MpdSegmentRequest.request.push(PeriodSegmentRequest);
-              console.log(PeriodSegmentRequest, 'PeriodSeg');
           }
           return MpdSegmentRequest;
       }
@@ -871,10 +934,22 @@
           for (let k = 0; k < AdaptationSet["Representation_asArray"].length; k++) {
               let Representation = AdaptationSet["Representation_asArray"][k];
               let url = this.URLUtils.resolve(baseURL, this.baseURLParser.getBaseURLByPath([i, j, k], this.baseURLPath));
-              res[Representation.resolvePower] = [Representation.initializationURL, Representation.mediaURL];
+              res[Representation.resolvePower] = [];
+              res[Representation.resolvePower].push(this.URLUtils.resolve(url, Representation.initializationURL));
+              res[Representation.resolvePower].push(Representation.mediaURL.map(item => {
+                  return this.URLUtils.resolve(url, item);
+              }));
               console.log(url, '/////////', res);
           }
           return res;
+      }
+      loadSegment(videoURL, audioURL) {
+          return __awaiter(this, void 0, void 0, function* () {
+              let p1 = this.urlLoader.load({ url: videoURL, responseType: "arraybuffer" }, "Segment");
+              let p2 = this.urlLoader.load({ url: audioURL, responseType: "arraybuffer" }, "Segment");
+              let p = yield Promise.all([p1, p2]);
+              console.log(p, 'ppp');
+          });
       }
   }
   const factory$1 = FactoryMaker.getClassFactory(StreamController);
@@ -894,7 +969,7 @@
           this.urlLoader = factory$6().getInstance();
           this.eventBus = factory$8().getInstance();
           // ignoreRoot -> 忽略Document节点，从MPD开始作为根节点
-          this.dashParser = factory$4({ ignoreRoot: true }).getInstance();
+          this.dashParser = factory$3({ ignoreRoot: true }).getInstance();
           this.streamController = factory$1().create();
       }
       initializeEvent() {
@@ -906,14 +981,14 @@
       onManifestLoaded(data) {
           let manifest = this.dashParser.parse(data); //解析后的manifest
           console.log('解析后', manifest);
-          let res = this.streamController.generateSegmentRequestStruct(manifest);
-          console.log(res, 'strem-res');
+          this.eventBus.trigger(EventConstants.MANIFEST_PARSE_COMPLETED, manifest);
       }
       /**
        * @description 发送MPD文件的网络请求，我要做的事情很纯粹，具体实现细节由各个Loader去具体实现
        * @param url
        */
       attachSource(url) {
+          this.eventBus.trigger(EventConstants.SOURCE_ATTACHED, url);
           this.urlLoader.load({ url, responseType: "text" }, 'Manifest');
       }
   }
