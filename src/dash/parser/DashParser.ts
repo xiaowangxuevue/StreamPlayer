@@ -34,7 +34,7 @@ class DashParser {
       Mpd = this.parseDOMChildren("MpdDocument", xml);
     }
     this.mergeNodeSegementTemplate(Mpd);
-
+    this.setResolvePowerForRepresentation(Mpd);
     console.log('从这开始', Mpd);
 
     this.segmentTemplateParser.parse(Mpd);
@@ -151,6 +151,18 @@ class DashParser {
           }
         })
         segmentTemplate = template;
+      })
+    })
+  }
+
+  setResolvePowerForRepresentation(Mpd: Mpd) {
+    Mpd["Period_asArray"].forEach(Period => {
+      Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
+        AdaptationSet["Representation_asArray"].forEach(Representation => {
+          if (Representation.width && Representation.height) {
+            Representation.resolvePower = `${Representation.width}*${Representation.height}`;
+          }
+        })
       })
     })
   }

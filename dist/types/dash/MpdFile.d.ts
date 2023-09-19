@@ -2,37 +2,9 @@
  * @description MIME类型
  */
 export type MediaType = "video/mp4" | "audio/mp4" | "text/html" | "text/xml" | "text/plain" | "image/png" | "image/jpeg";
-export type PeriodRequest = {
-    "videoRequest": MediaVideoResolve;
-    "audioRequest": MeidaAudioResolve;
-};
 /**
  * @description video类型媒体分辨率
  */
-export type MediaVideoResolve = {
-    "320*180"?: Array<SegmentRequest | RangeRequest>;
-    "512*288"?: Array<SegmentRequest | RangeRequest>;
-    "640*360"?: Array<SegmentRequest | RangeRequest>;
-    "768*432"?: Array<SegmentRequest | RangeRequest>;
-    "1024*576"?: Array<SegmentRequest | RangeRequest>;
-    "1280*720"?: Array<SegmentRequest | RangeRequest>;
-    "1920*1080"?: Array<SegmentRequest | RangeRequest>;
-};
-export type MeidaAudioResolve = {
-    [props: string]: Array<SegmentRequest | RangeRequest>;
-};
-export type RangeRequest = {
-    type: "range";
-    url: string;
-    range?: string;
-};
-/**
- * @description 请求整个媒体段
- */
-export type SegmentRequest = {
-    type: "segement";
-    url: string;
-};
 export type MpdDocument = {
     tag: 'Document';
     root: Mpd;

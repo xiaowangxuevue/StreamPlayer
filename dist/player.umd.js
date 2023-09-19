@@ -225,7 +225,7 @@
           }
       }
   }
-  const factory$5 = FactoryMaker.getSingleFactory(EventBus);
+  const factory$8 = FactoryMaker.getSingleFactory(EventBus);
 
   const EventConstants = {
       MANIFEST_LOADED: "manifestLoaded"
@@ -250,7 +250,7 @@
       }
       setup() {
       }
-      loadManifest(config) {
+      load(config) {
           let request = config.request;
           let xhr = new XMLHttpRequest();
           if (request.header) {
@@ -282,7 +282,7 @@
           xhr.send();
       }
   }
-  const factory$4 = FactoryMaker.getSingleFactory(XHRLoader);
+  const factory$7 = FactoryMaker.getSingleFactory(XHRLoader);
 
   class URLLoader {
       constructor(ctx, ...args) {
@@ -291,30 +291,32 @@
           this.setup();
       }
       _loadManifest(config) {
-          this.xhrLoader.loadManifest(config);
+          this.xhrLoader.load(config);
       }
       setup() {
-          this.xhrLoader = factory$4({}).getInstance();
-          this.eventBus = factory$5({}).getInstance();
+          this.xhrLoader = factory$7({}).getInstance();
+          this.eventBus = factory$8({}).getInstance();
       }
       // 每调用一次load函数就发送一次请求
-      load(config) {
+      load(config, type) {
           //一个HTTPRequest对象才对应一个请求
           let request = new HTTPRequest(config);
           let ctx = this;
-          this._loadManifest({
-              request: request,
-              success: function (data) {
-                  request.getResponseTime = new Date().getTime();
-                  ctx.eventBus.trigger(EventConstants.MANIFEST_LOADED, data);
-              },
-              error: function (error) {
-                  console.log(this, error);
-              }
-          });
+          if (type === "Manifest") {
+              this._loadManifest({
+                  request: request,
+                  success: function (data) {
+                      request.getResponseTime = new Date().getTime();
+                      ctx.eventBus.trigger(EventConstants.MANIFEST_LOADED, data);
+                  },
+                  error: function (error) {
+                      console.log(this, error);
+                  }
+              });
+          }
       }
   }
-  const factory$3 = FactoryMaker.getSingleFactory(URLLoader);
+  const factory$6 = FactoryMaker.getSingleFactory(URLLoader);
 
   var DOMNodeTypes;
   (function (DOMNodeTypes) {
@@ -470,6 +472,7 @@
           let replaceArray = new Array();
           parent.mediaURL = new Array();
           if (templateReg.test(media)) {
+              templateReg.lastIndex = 0;
               while (r = templateReg.exec(media)) {
                   formatArray.push(r[0]);
                   if (r[1] === "Number") {
@@ -495,7 +498,7 @@
           }
       }
   }
-  const factory$2 = FactoryMaker.getSingleFactory(SegmentTemplateParser);
+  const factory$5 = FactoryMaker.getSingleFactory(SegmentTemplateParser);
 
   function checkMpd(s) {
       if (s.tag === 'MPD')
@@ -515,7 +518,7 @@
           this.setup();
       }
       setup() {
-          this.segmentTemplateParser = factory$2().getInstance();
+          this.segmentTemplateParser = factory$5().getInstance();
       }
       string2xml(s) {
           let parser = new DOMParser();
@@ -533,6 +536,7 @@
               Mpd = this.parseDOMChildren("MpdDocument", xml);
           }
           this.mergeNodeSegementTemplate(Mpd);
+          this.setResolvePowerForRepresentation(Mpd);
           console.log('从这开始', Mpd);
           this.segmentTemplateParser.parse(Mpd);
           return Mpd;
@@ -646,6 +650,17 @@
               });
           });
       }
+      setResolvePowerForRepresentation(Mpd) {
+          Mpd["Period_asArray"].forEach(Period => {
+              Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
+                  AdaptationSet["Representation_asArray"].forEach(Representation => {
+                      if (Representation.width && Representation.height) {
+                          Representation.resolvePower = `${Representation.width}*${Representation.height}`;
+                      }
+                  });
+              });
+          });
+      }
       // 给每个Representation对象上挂载duration属性
       static setDurationForRepresentation(Mpd) {
           if (checkMpd(Mpd)) {
@@ -703,10 +718,169 @@
           return totalDuration;
       }
   }
-  const factory$1 = FactoryMaker.getSingleFactory(DashParser);
+  const factory$4 = FactoryMaker.getSingleFactory(DashParser);
+
+  class URLNode {
+      constructor(url) {
+          this.children = [];
+          this.url = url || null;
+      }
+      setChild(index, child) {
+          this.children[index] = child;
+      }
+      getChild(index) {
+          return this.children[index];
+      }
+  }
+  class BaseURLParser {
+      constructor(ctx, ...args) {
+          this.config = {};
+          this.config = ctx.context;
+          this.setup();
+      }
+      setup() {
+      }
+      parseManifestForBaseURL(manifest) {
+          let root = new URLNode(null);
+          //1. 首先遍历每一个Period，规定BaseURL节点只可能出现在Period,AdaptationSet,Representation中
+          manifest["Period_asArray"].forEach((p, pId) => {
+              let url = null;
+              if (p["BaseURL_asArray"]) {
+                  url = p["BaseURL_asArray"][0];
+              }
+              let periodNode = new URLNode(url);
+              root.setChild(pId, periodNode);
+              p["AdaptationSet_asArray"].forEach((a, aId) => {
+                  let url = null;
+                  if (a["BaseURL_asArray"]) {
+                      url = a["BaseURL_asArray"][0];
+                  }
+                  let adaptationSetNode = new URLNode(url);
+                  periodNode.setChild(aId, adaptationSetNode);
+                  a["Representation_asArray"].forEach((r, rId) => {
+                      let url = null;
+                      if (r["BaseURL_asArray"]) {
+                          url = r["BaseURL_asArray"][0];
+                      }
+                      let representationNode = new URLNode(url);
+                      adaptationSetNode.setChild(rId, representationNode);
+                  });
+              });
+          });
+          return root;
+      }
+      getBaseURLByPath(path, urlNode) {
+          let baseURL = "";
+          let root = urlNode;
+          for (let i = 0; i < path.length; i++) {
+              if (path[i] >= root.children.length || path[i] < 0) {
+                  throw new Error("传入的路径不正确");
+              }
+              baseURL += root.children[path[i]].url;
+              root = root.children[path[i]];
+          }
+          if (root.children.length > 0) {
+              throw new Error("传入的路径不正确");
+          }
+          return baseURL;
+      }
+  }
+  const factory$3 = FactoryMaker.getSingleFactory(BaseURLParser);
+
+  class URLUtils {
+      constructor(ctx, ...args) {
+          this.config = ctx.context;
+      }
+      setup() { }
+      resolve(...urls) {
+          let index = 0;
+          let str = "";
+          while (index < urls.length) {
+              let url = urls[index];
+              // 如果url不以/或者./,../这种形式开头的话
+              if (/^(?!(\.|\/))/.test(url)) {
+                  if (str[str.length - 1] !== '/') {
+                      str += '/';
+                  }
+              }
+              else if (/^\/.+/.test(url)) {
+                  // 如果url以/开头
+                  if (str[str.length - 1] === "/") {
+                      url = url.slice(1);
+                  }
+              }
+              else if (/^(\.).+/.test(url)) ;
+              str += url;
+              index++;
+          }
+          return str;
+      }
+  }
+  const factory$2 = FactoryMaker.getSingleFactory(URLUtils);
+
+  class StreamController {
+      constructor(ctx, ...args) {
+          this.config = {};
+          this.config = ctx.factory;
+          this.setup();
+      }
+      setup() {
+          this.baseURLParser = factory$3().getInstance();
+          this.URLUtils = factory$2().getInstance();
+      }
+      generateBaseURLPath(Mpd) {
+          this.baseURLPath = this.baseURLParser.parseManifestForBaseURL(Mpd);
+      }
+      generateSegmentRequestStruct(Mpd) {
+          this.generateBaseURLPath(Mpd);
+          let baseURL = Mpd["baseURL"] || "";
+          let MpdSegmentRequest = {
+              type: "MpdSegmentRequest",
+              request: []
+          };
+          for (let i = 0; i < Mpd["Period_asArray"].length; i++) {
+              let Period = Mpd["Period_asArray"][i];
+              let PeriodSegmentRequest = {
+                  VideoSegmentRequest: [],
+                  AudioSegmentRequest: []
+              };
+              for (let j = 0; j < Period["AdaptationSet_asArray"].length; j++) {
+                  let AdaptationSet = Period["AdaptationSet_asArray"][j];
+                  let res = this.generateAdaptationSetVideoOrAudioSegmentRequest(AdaptationSet, baseURL, i, j);
+                  if (AdaptationSet.mimeType === "video/mp4") {
+                      PeriodSegmentRequest.VideoSegmentRequest.push({
+                          type: "video",
+                          video: res
+                      });
+                  }
+                  else if (AdaptationSet.mimeType === "audio/mp4") {
+                      PeriodSegmentRequest.AudioSegmentRequest.push({
+                          lang: "en",
+                          audio: res
+                      });
+                  }
+              }
+              MpdSegmentRequest.request.push(PeriodSegmentRequest);
+              console.log(PeriodSegmentRequest, 'PeriodSeg');
+          }
+          return MpdSegmentRequest;
+      }
+      generateAdaptationSetVideoOrAudioSegmentRequest(AdaptationSet, baseURL, i, j) {
+          console.log(AdaptationSet, baseURL, i, j, '7997');
+          let res = {};
+          for (let k = 0; k < AdaptationSet["Representation_asArray"].length; k++) {
+              let Representation = AdaptationSet["Representation_asArray"][k];
+              let url = this.URLUtils.resolve(baseURL, this.baseURLParser.getBaseURLByPath([i, j, k], this.baseURLPath));
+              res[Representation.resolvePower] = [Representation.initializationURL, Representation.mediaURL];
+              console.log(url, '/////////', res);
+          }
+          return res;
+      }
+  }
+  const factory$1 = FactoryMaker.getClassFactory(StreamController);
 
   /**
-   * @description 整个dash处理流程的入口类MediaPlayer
+   * @description 整个dash处理流程的入口类MediaPlayer,类似与项目的中转中心，用于接收任务然后分配给不同解析器去完成
    */
   class MediaPlayer {
       constructor(ctx, ...args) {
@@ -717,10 +891,11 @@
       }
       //初始化类
       setup() {
-          this.urlLoader = factory$3().getInstance();
-          this.eventBus = factory$5().getInstance();
+          this.urlLoader = factory$6().getInstance();
+          this.eventBus = factory$8().getInstance();
           // ignoreRoot -> 忽略Document节点，从MPD开始作为根节点
-          this.dashParser = factory$1({ ignoreRoot: true }).getInstance();
+          this.dashParser = factory$4({ ignoreRoot: true }).getInstance();
+          this.streamController = factory$1().create();
       }
       initializeEvent() {
           this.eventBus.on(EventConstants.MANIFEST_LOADED, this.onManifestLoaded, this);
@@ -731,13 +906,15 @@
       onManifestLoaded(data) {
           let manifest = this.dashParser.parse(data); //解析后的manifest
           console.log('解析后', manifest);
+          let res = this.streamController.generateSegmentRequestStruct(manifest);
+          console.log(res, 'strem-res');
       }
       /**
        * @description 发送MPD文件的网络请求，我要做的事情很纯粹，具体实现细节由各个Loader去具体实现
        * @param url
        */
       attachSource(url) {
-          this.urlLoader.load({ url, responseType: "text" });
+          this.urlLoader.load({ url, responseType: "text" }, 'Manifest');
       }
   }
   const factory = FactoryMaker.getClassFactory(MediaPlayer);

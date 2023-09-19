@@ -103,6 +103,7 @@ class SegmentTemplateParser {
     let replaceArray = new Array<string>();
     parent.mediaURL = new Array<string>();
     if (templateReg.test(media)) {
+      templateReg.lastIndex = 0
       while (r = templateReg.exec(media)) {
         formatArray.push(r[0]);
         if (r[1] === "Number") {

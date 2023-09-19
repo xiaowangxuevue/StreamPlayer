@@ -1,17 +1,22 @@
 import { FactoryObject } from "../types/dash/Factory";
+import { Mpd } from "../types/dash/MpdFile";
 import EventBusFactory, { EventBus } from "./event/EventBus";
 import { EventConstants } from "./event/EventConstants";
 import FactoryMaker from "./FactoryMaker";
 import URLLoaderFactory, { URLLoader } from "./net/URLLoader";
 import DashParserFactory,{ DashParser } from "./parser/DashParser";
+import StreamControllerFactory, {
+    StreamController
+} from "./stream/StreamController"
 /**
- * @description 整个dash处理流程的入口类MediaPlayer
+ * @description 整个dash处理流程的入口类MediaPlayer,类似与项目的中转中心，用于接收任务然后分配给不同解析器去完成
  */
 class MediaPlayer {
     private config: FactoryObject = {};
     private urlLoader: URLLoader;  //类型为URLLoader
     private eventBus: EventBus;
-    private dashParser:DashParser
+    private dashParser:DashParser;
+    private streamController:StreamController;
     constructor(ctx:FactoryObject,...args:any[]) {
         this.config = ctx.context;
         this.setup();
@@ -25,6 +30,7 @@ class MediaPlayer {
         this.eventBus = EventBusFactory().getInstance();
         // ignoreRoot -> 忽略Document节点，从MPD开始作为根节点
         this.dashParser = DashParserFactory({ignoreRoot:true}).getInstance();
+        this.streamController = StreamControllerFactory().create()
     }
 
 
@@ -41,6 +47,9 @@ class MediaPlayer {
         let manifest = this.dashParser.parse(data);  //解析后的manifest
 
         console.log('解析后',manifest)
+
+        let res = this.streamController.generateSegmentRequestStruct(manifest as Mpd);
+        console.log(res,'strem-res');
         
     }
 
@@ -50,7 +59,7 @@ class MediaPlayer {
      */
     public attachSource(url:string) {
         
-        this.urlLoader.load({url,responseType:"text"});
+        this.urlLoader.load({url,responseType:"text"},'Manifest');
     }
 }
 

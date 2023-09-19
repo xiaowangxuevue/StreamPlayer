@@ -14,7 +14,7 @@ class XHRLoader {
     }
 
 
-    loadManifest(config: XHRConfig) {
+    load(config: XHRConfig) {
    
         
         let request = config.request;

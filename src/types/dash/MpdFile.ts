@@ -12,44 +12,44 @@ export type MediaType =
   | "image/png"
   | "image/jpeg";
 
-export type PeriodRequest = {
-  "videoRequest":MediaVideoResolve;
-  "audioRequest":MeidaAudioResolve;
-}
+// export type PeriodRequest = {
+//   "videoRequest":MediaVideoResolve;
+//   "audioRequest":MeidaAudioResolve;
+// }
 
 
 /**
  * @description video类型媒体分辨率
  */
 
-export type MediaVideoResolve = {
-  "320*180"?: Array<SegmentRequest | RangeRequest>;
-  "512*288"?: Array<SegmentRequest | RangeRequest>;
-  "640*360"?: Array<SegmentRequest | RangeRequest>;
-  "768*432"?: Array<SegmentRequest | RangeRequest>;
-  "1024*576"?: Array<SegmentRequest | RangeRequest>;
-  "1280*720"?: Array<SegmentRequest | RangeRequest>;
-  "1920*1080"?: Array<SegmentRequest | RangeRequest>;
-};
+// export type MediaVideoResolve = {
+//   "320*180"?: Array<SegmentRequest | RangeRequest>;
+//   "512*288"?: Array<SegmentRequest | RangeRequest>;
+//   "640*360"?: Array<SegmentRequest | RangeRequest>;
+//   "768*432"?: Array<SegmentRequest | RangeRequest>;
+//   "1024*576"?: Array<SegmentRequest | RangeRequest>;
+//   "1280*720"?: Array<SegmentRequest | RangeRequest>;
+//   "1920*1080"?: Array<SegmentRequest | RangeRequest>;
+// };
 
 
-export type MeidaAudioResolve = {
-  [props:string]:Array<SegmentRequest | RangeRequest>
+// export type MeidaAudioResolve = {
+//   [props:string]:Array<SegmentRequest | RangeRequest>
 
-}
+// }
 
-export type RangeRequest = {
-  type:"range";
-  url: string;
-  range?: string;
-}
-/**
- * @description 请求整个媒体段
- */
-export type SegmentRequest = {
-  type:"segement";
-  url:string;
-}
+// export type RangeRequest = {
+//   type:"range";
+//   url: string;
+//   range?: string;
+// }
+// /**
+//  * @description 请求整个媒体段
+//  */
+// export type SegmentRequest = {
+//   type:"segement";
+//   url:string;
+// }
 
 export type MpdDocument = {
   tag:'Document';
