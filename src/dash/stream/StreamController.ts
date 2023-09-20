@@ -22,8 +22,6 @@ class StreamController {
     constructor(ctx: FactoryObject, ...args: any[]) {
 
         this.config = ctx.context;
-        console.log(this.config);
-
         this.setup();
         this.initialEvent();
 
@@ -43,18 +41,15 @@ class StreamController {
         console.log(this.segmentRequestStruct,'Struct');
         this.startStream(manifest)
     }
-
+    // 初始化播放流，一次至多加载23Segment过来
     startStream(Mpd:Mpd) {
         Mpd["Period_asArray"].forEach(async(p,pid) => {
-            console.log(p,pid,'pidppp');
-            
             let ires = await this.loadInitialSegment(pid);
             this.eventBus.trigger(EventConstants.SEGEMTN_LOADED,ires);
             let number = this.segmentRequestStruct.request[pid].VideoSegmentRequest[0].video[this.videoResolvePower][1].length;
-            for(let i =0;i < number;i++){
+            for(let i =0;i < (number >=23 ? 23 : number);i++){
                 let mres = await this.loadMediaSegment(pid,i);
                 this.eventBus.trigger(EventConstants.SEGEMTN_LOADED,mres)
-
             }
             
         })

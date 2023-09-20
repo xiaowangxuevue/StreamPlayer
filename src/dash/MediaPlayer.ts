@@ -5,6 +5,7 @@ import FactoryMaker from "./FactoryMaker";
 import URLLoaderFactory, { URLLoader } from "./net/URLLoader";
 import DashParserFactory,{ DashParser } from "./parser/DashParser";
 import MediaPlayerControllerFactory, { MediaPlayerController } from "./vo/MediaPlayerController";
+import MediaPlayerBufferFactory,{ MediaPlayerBuffer } from "./vo/MediaPlayerBuffer";
 import StreamControllerFactory, {
     StreamController
 } from "./stream/StreamController"
@@ -17,6 +18,7 @@ class MediaPlayer {
     private eventBus: EventBus;
     private dashParser:DashParser;
     private video:HTMLVideoElement;
+    private buffer:MediaPlayerBuffer;
     private mediaPlayerController:MediaPlayerController;
     private streamController:StreamController;
     constructor(ctx:FactoryObject,...args:any[]) {
@@ -33,6 +35,7 @@ class MediaPlayer {
         // ignoreRoot -> 忽略Document节点，从MPD开始作为根节点
         this.dashParser = DashParserFactory({ignoreRoot:true}).getInstance();
         this.streamController = StreamControllerFactory().create()
+        this.buffer = MediaPlayerBufferFactory().getInstance();
     }
 
 
@@ -59,7 +62,11 @@ class MediaPlayer {
         console.log("加载segment成功",data);
         let videoBuffer = data[0];
         let audioBuffer = data[1];
-        
+        this.buffer.push({
+            video:videoBuffer,
+            audio:audioBuffer
+        })
+        this.eventBus.trigger(EventConstants.BUFFER_APPENDED);
     }
 
     /**
@@ -69,6 +76,13 @@ class MediaPlayer {
     public attachSource(url:string) {
         this.eventBus.trigger(EventConstants.SOURCE_ATTACHED,url);
         this.urlLoader.load({url,responseType:"text"},'Manifest');
+    }
+
+    public attachVideo(video:HTMLVideoElement) {
+        console.log(video,'videooo');
+        
+        this.video = video;
+        this.mediaPlayerController = MediaPlayerControllerFactory({video:video}).create();
     }
 }
 

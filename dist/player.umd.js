@@ -225,13 +225,14 @@
           }
       }
   }
-  const factory$8 = FactoryMaker.getSingleFactory(EventBus);
+  const factory$a = FactoryMaker.getSingleFactory(EventBus);
 
   const EventConstants = {
       MANIFEST_LOADED: "manifestLoaded",
       MANIFEST_PARSE_COMPLETED: "manifestParseCompleted",
       SOURCE_ATTACHED: "sourceAttached",
-      SEGEMTN_LOADED: "segmentLoaded"
+      SEGEMTN_LOADED: "segmentLoaded",
+      BUFFER_APPENDED: "bufferAppended"
   };
 
   class HTTPRequest {
@@ -285,7 +286,7 @@
           xhr.send();
       }
   }
-  const factory$7 = FactoryMaker.getSingleFactory(XHRLoader);
+  const factory$9 = FactoryMaker.getSingleFactory(XHRLoader);
 
   class URLLoader {
       constructor(ctx, ...args) {
@@ -300,8 +301,8 @@
           this.xhrLoader.load(config);
       }
       setup() {
-          this.xhrLoader = factory$7({}).getInstance();
-          this.eventBus = factory$8({}).getInstance();
+          this.xhrLoader = factory$9({}).getInstance();
+          this.eventBus = factory$a({}).getInstance();
       }
       // 每调用一次load函数就发送一次请求
       load(config, type) {
@@ -335,7 +336,7 @@
           }
       }
   }
-  const factory$6 = FactoryMaker.getSingleFactory(URLLoader);
+  const factory$8 = FactoryMaker.getSingleFactory(URLLoader);
 
   var DOMNodeTypes;
   (function (DOMNodeTypes) {
@@ -433,7 +434,7 @@
           }
       }
   }
-  const factory$5 = FactoryMaker.getSingleFactory(SegmentTemplateParser);
+  const factory$7 = FactoryMaker.getSingleFactory(SegmentTemplateParser);
 
   class URLUtils {
       constructor(ctx, ...args) {
@@ -472,7 +473,7 @@
           return url;
       }
   }
-  const factory$4 = FactoryMaker.getSingleFactory(URLUtils);
+  const factory$6 = FactoryMaker.getSingleFactory(URLUtils);
 
   function addZero(num) {
       return num > 9 ? num + "" : "0" + num;
@@ -538,9 +539,9 @@
           this.initialEvent();
       }
       setup() {
-          this.segmentTemplateParser = factory$5().getInstance();
-          this.eventBus = factory$8().getInstance();
-          this.URLUtils = factory$4().getInstance();
+          this.segmentTemplateParser = factory$7().getInstance();
+          this.eventBus = factory$a().getInstance();
+          this.URLUtils = factory$6().getInstance();
       }
       initialEvent() {
           this.eventBus.on(EventConstants.SOURCE_ATTACHED, this.onSourceAttached, this);
@@ -784,7 +785,94 @@
           });
       }
   }
-  const factory$3 = FactoryMaker.getSingleFactory(DashParser);
+  const factory$5 = FactoryMaker.getSingleFactory(DashParser);
+
+  class MediaPlayerBuffer {
+      constructor(ctx, ...args) {
+          this.config = {};
+          this.arrayBuffer = new Array();
+          this.config = ctx.context;
+      }
+      push(buffer) {
+          this.arrayBuffer.push(buffer);
+      }
+      clear() {
+          this.arrayBuffer = [];
+      }
+      isEmpty() {
+          return this.arrayBuffer.length === 0;
+      }
+      delete(buffer) {
+          if (this.arrayBuffer.includes(buffer)) {
+              let index = this.arrayBuffer.indexOf(buffer);
+              this.arrayBuffer.splice(index, 1);
+          }
+      }
+      top() {
+          return this.arrayBuffer[0] || null;
+      }
+      pop() {
+          this.arrayBuffer.length && this.arrayBuffer.pop();
+      }
+  }
+  const factory$4 = FactoryMaker.getSingleFactory(MediaPlayerBuffer);
+
+  class MediaPlayerController {
+      constructor(ctx, ...args) {
+          this.config = {};
+          this.config = ctx.context;
+          if (this.config.video) {
+              this.video = this.config.video;
+          }
+          this.setup();
+          this.initEvent();
+          this.initPlayer();
+          console.log(this, 'MPc');
+      }
+      setup() {
+          this.mediaSource = new MediaSource();
+          this.buffer = factory$4().getInstance();
+          this.eventBus = factory$a().getInstance();
+      }
+      initEvent() {
+          this.eventBus.on(EventConstants.BUFFER_APPENDED, () => {
+              if (!this.videoSourceBuffer.updating && !this.audioSourceBuffer.updating) {
+                  this.appendSource();
+              }
+          }, this);
+      }
+      initPlayer() {
+          this.video.src = window.URL.createObjectURL(this.mediaSource);
+          this.video.pause();
+          this.mediaSource.addEventListener("sourceopen", this.onSourceopen.bind(this));
+      }
+      appendSource() {
+          let data = this.buffer.top();
+          if (data) {
+              this.buffer.delete(data);
+              this.appendVideoSource(data.video);
+              this.appendAudioSource(data.audio);
+          }
+      }
+      appendVideoSource(data) {
+          this.videoSourceBuffer.appendBuffer(new Uint8Array(data));
+      }
+      appendAudioSource(data) {
+          this.audioSourceBuffer.appendBuffer(new Uint8Array(data));
+      }
+      onSourceopen(e) {
+          this.videoSourceBuffer = this.mediaSource.addSourceBuffer('video/mp4; codecs="avc1.64001E"');
+          this.audioSourceBuffer = this.mediaSource.addSourceBuffer('audio/mp4; codecs="mp4a.40.2"');
+          this.videoSourceBuffer.addEventListener("updateend", this.onUpdateend.bind(this));
+          this.audioSourceBuffer.addEventListener("updateend", this.onUpdateend.bind(this));
+      }
+      onUpdateend() {
+          if (!this.videoSourceBuffer.updating && !this.audioSourceBuffer.updating) {
+              this.appendSource();
+          }
+      }
+  }
+  const factory$3 = FactoryMaker.getClassFactory(MediaPlayerController);
 
   /******************************************************************************
   Copyright (c) Microsoft Corporation.
@@ -887,7 +975,6 @@
           this.videoResolvePower = "1920*1080";
           this.audioResolvePower = "48000";
           this.config = ctx.context;
-          console.log(this.config);
           this.setup();
           this.initialEvent();
       }
@@ -896,22 +983,22 @@
       }
       setup() {
           this.baseURLParser = factory$2().getInstance();
-          this.URLUtils = factory$4().getInstance();
-          this.eventBus = factory$8().getInstance();
-          this.urlLoader = factory$6().getInstance();
+          this.URLUtils = factory$6().getInstance();
+          this.eventBus = factory$a().getInstance();
+          this.urlLoader = factory$8().getInstance();
       }
       onManifestParseCompleted(manifest) {
           this.segmentRequestStruct = this.generateSegmentRequestStruct(manifest);
           console.log(this.segmentRequestStruct, 'Struct');
           this.startStream(manifest);
       }
+      // 初始化播放流，一次至多加载23Segment过来
       startStream(Mpd) {
           Mpd["Period_asArray"].forEach((p, pid) => __awaiter(this, void 0, void 0, function* () {
-              console.log(p, pid, 'pidppp');
               let ires = yield this.loadInitialSegment(pid);
               this.eventBus.trigger(EventConstants.SEGEMTN_LOADED, ires);
               let number = this.segmentRequestStruct.request[pid].VideoSegmentRequest[0].video[this.videoResolvePower][1].length;
-              for (let i = 0; i < number; i++) {
+              for (let i = 0; i < (number >= 23 ? 23 : number); i++) {
                   let mres = yield this.loadMediaSegment(pid, i);
                   this.eventBus.trigger(EventConstants.SEGEMTN_LOADED, mres);
               }
@@ -1003,11 +1090,12 @@
       }
       //初始化类
       setup() {
-          this.urlLoader = factory$6().getInstance();
-          this.eventBus = factory$8().getInstance();
+          this.urlLoader = factory$8().getInstance();
+          this.eventBus = factory$a().getInstance();
           // ignoreRoot -> 忽略Document节点，从MPD开始作为根节点
-          this.dashParser = factory$3({ ignoreRoot: true }).getInstance();
+          this.dashParser = factory$5({ ignoreRoot: true }).getInstance();
           this.streamController = factory$1().create();
+          this.buffer = factory$4().getInstance();
       }
       initializeEvent() {
           this.eventBus.on(EventConstants.MANIFEST_LOADED, this.onManifestLoaded, this);
@@ -1024,8 +1112,13 @@
       }
       onSegmentLoaded(data) {
           console.log("加载segment成功", data);
-          data[0];
-          data[1];
+          let videoBuffer = data[0];
+          let audioBuffer = data[1];
+          this.buffer.push({
+              video: videoBuffer,
+              audio: audioBuffer
+          });
+          this.eventBus.trigger(EventConstants.BUFFER_APPENDED);
       }
       /**
        * @description 发送MPD文件的网络请求，我要做的事情很纯粹，具体实现细节由各个Loader去具体实现
@@ -1035,6 +1128,11 @@
           this.eventBus.trigger(EventConstants.SOURCE_ATTACHED, url);
           this.urlLoader.load({ url, responseType: "text" }, 'Manifest');
       }
+      attachVideo(video) {
+          console.log(video, 'videooo');
+          this.video = video;
+          this.mediaPlayerController = factory$3({ video: video }).create();
+      }
   }
   const factory = FactoryMaker.getClassFactory(MediaPlayer);
 
@@ -1043,6 +1141,8 @@
       constructor(player) {
           let mediaPlayer = factory().create();
           mediaPlayer.attachSource(player.playerOptions.url);
+          mediaPlayer.attachVideo(player.video);
+          player.video.controls = true;
       }
   }
 
