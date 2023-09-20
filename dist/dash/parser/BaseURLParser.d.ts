@@ -1,6 +1,6 @@
-import { FactoryFunction, FactoryObject } from "../../types/dash/Factory";
-import { Mpd } from "../../types/dash/MpdFile";
+import { FactoryObject } from "../../types/dash/Factory";
 import { Path } from "../../types/dash/Location";
+import { Mpd } from "../../types/dash/MpdFile";
 declare class URLNode {
     url: string | null;
     children: URLNode[];
@@ -15,6 +15,6 @@ declare class BaseURLParser {
     parseManifestForBaseURL(manifest: Mpd): URLNode;
     getBaseURLByPath(path: Path, urlNode: URLNode): string;
 }
-declare const factory: FactoryFunction<BaseURLParser>;
+declare const factory: import("../../types/dash/Factory").FactoryFunction<BaseURLParser>;
 export default factory;
 export { BaseURLParser, URLNode };

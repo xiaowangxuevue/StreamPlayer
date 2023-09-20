@@ -1,11 +1,14 @@
 import { FactoryObject } from "../../types/dash/Factory";
-import { Representation, SegmentTemplate, Mpd, Period, AdaptationSet } from "../../types/dash/MpdFile";
+import { AdaptationSet, Mpd, Period, Representation, SegmentTemplate } from "../../types/dash/MpdFile";
+/**
+ * @description 该类仅用于处理MPD文件中具有SegmentTemplate此种情况
+ */
 declare class SegmentTemplateParser {
     private config;
     constructor(ctx: FactoryObject, ...args: any[]);
     setup(): void;
     parse(Mpd: Mpd | Period | AdaptationSet): void;
-    parseNodeSegmentTemplate(Mpd: FactoryObject): void;
+    parseNodeSegmentTemplate(Mpd: Mpd): void;
     generateInitializationURL(SegmentTemplate: SegmentTemplate, parent: Representation): void;
     generateMediaURL(SegmentTemplate: SegmentTemplate, parent: Representation): void;
 }

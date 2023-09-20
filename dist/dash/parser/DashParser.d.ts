@@ -12,15 +12,15 @@ declare class DashParser {
     initialEvent(): void;
     string2xml(s: string): Document;
     parse(manifest: string): ManifestObjectNode["MpdDocument"] | ManifestObjectNode["Mpd"];
-    onSourceAttached(url: string): void;
     parseDOMChildren<T extends string>(name: T, node: Node): ManifestObjectNode[T];
     mergeNode(node: FactoryObject, compare: FactoryObject): void;
     mergeNodeSegementTemplate(Mpd: Mpd): void;
-    setResolvePowerForRepresentation(Mpd: Mpd): void;
     setBaseURLForMpd(Mpd: Mpd): void;
-    setDurationForRepresentation(Mpd: Mpd): void;
+    setResolvePowerForRepresentation(Mpd: Mpd): void;
     getTotalDuration(Mpd: Mpd): number | never;
+    setDurationForRepresentation(Mpd: Mpd): void;
     setSegmentDurationForRepresentation(Mpd: Mpd): void;
+    onSourceAttached(url: string): void;
 }
 declare const factory: import("../../types/dash/Factory").FactoryFunction<DashParser>;
 export default factory;

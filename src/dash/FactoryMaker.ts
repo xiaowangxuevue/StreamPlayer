@@ -4,8 +4,8 @@ import { FactoryFunction, FactoryObject } from "../types/dash/Factory";
 const FactoryMaker = (function () {
   class FactoryMaker {
     __class_factoryMap: { [props: string]: FactoryFunction<any> };
-    __single_factoryMap: { [props: string]: FactoryFunction<any> };
-    __single_instanceMap: { [props: string]: any };
+    __single_factoryMap: { [props:string]: FactoryFunction<any> };
+    __single_instanceMap:{ [props:string]: any };
     constructor() {
       this.__class_factoryMap = {};
       this.__single_factoryMap = {};
@@ -30,26 +30,20 @@ const FactoryMaker = (function () {
       return factory;
     }
 
-    getSingleFactory<T>(classConstructor: BaseConstructor<T>): FactoryFunction<T> {
-
+    getSingleFactory<T>(classConstructor:BaseConstructor<T>): FactoryFunction<T> {
       let factory = this.__single_factoryMap[classConstructor.name];
       let ctx = this;
-      if (!factory) {
-        factory = function (context) {
-          if (!context) context = {}
+      if(!factory) {
+        factory = function(context) {
+          if(!context) context = {}
           return {
-
             getInstance(...args): T {
-
               let instance = ctx.__single_instanceMap[classConstructor.name];
-
-              if (!instance) {
-                instance = new classConstructor({ context }, ...args);
-
+              if(!instance) {
+                instance = new classConstructor({context},...args);
                 ctx.__single_instanceMap[classConstructor.name] = instance;
               }
               return instance;
-            
             },
           }
         }

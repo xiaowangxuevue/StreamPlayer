@@ -1,5 +1,5 @@
 import { FactoryObject } from "../../types/dash/Factory";
-import { URLConfig, RequestType } from "../../types/dash/Net";
+import { RequestType, URLConfig } from "../../types/dash/Net";
 declare class URLLoader {
     private config;
     private xhrLoader;

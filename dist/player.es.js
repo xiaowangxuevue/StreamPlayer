@@ -192,7 +192,10 @@ class EventBus {
     }
     on(type, listener, scope) {
         if (!this.__events[type]) {
-            this.__events[type] = [{ cb: listener, scope }];
+            this.__events[type] = [{
+                    cb: listener,
+                    scope
+                }];
             return;
         }
         if (this.__events[type].filter(event => {
@@ -206,7 +209,9 @@ class EventBus {
         });
     }
     off(type, listener, scope) {
-        if (!this.__events[type] || this.__events[type].filter(event => { return event.cb === listener && event.scope == scope; })) {
+        if (!this.__events[type] || this.__events[type].filter(event => {
+            return event.cb === listener && event.scope === scope;
+        })) {
             throw new Error("不存在该事件");
         }
         this.__events[type] = this.__events[type].filter(event => {
@@ -228,7 +233,10 @@ const EventConstants = {
     MANIFEST_PARSE_COMPLETED: "manifestParseCompleted",
     SOURCE_ATTACHED: "sourceAttached",
     SEGEMTN_LOADED: "segmentLoaded",
-    BUFFER_APPENDED: "bufferAppended"
+    BUFFER_APPENDED: "bufferAppended",
+    SEGMENT_CONSUMED: "segmentConsumed",
+    MEDIA_PLAYBACK_FINISHED: "mediaPlaybackFinished",
+    FIRST_REQUEST_COMPLETED: "firstRequestCompleted"
 };
 
 class HTTPRequest {
@@ -248,8 +256,7 @@ class XHRLoader {
         this.config = ctx.context;
         this.setup();
     }
-    setup() {
-    }
+    setup() { }
     load(config) {
         let request = config.request;
         let xhr = new XMLHttpRequest();
@@ -343,16 +350,15 @@ var DOMNodeTypes;
     DOMNodeTypes[DOMNodeTypes["DOCUMENT_NODE"] = 9] = "DOCUMENT_NODE";
 })(DOMNodeTypes || (DOMNodeTypes = {}));
 
-/*
- @description 该类仅仅用于处理MPD文件中具有SegmentTemplate此种情况
-*/
+/**
+ * @description 该类仅用于处理MPD文件中具有SegmentTemplate此种情况
+ */
 class SegmentTemplateParser {
     constructor(ctx, ...args) {
         this.config = ctx.context;
         this.setup();
     }
-    setup() {
-    }
+    setup() { }
     parse(Mpd) {
         this.parseNodeSegmentTemplate(Mpd);
     }
@@ -369,7 +375,6 @@ class SegmentTemplateParser {
             });
         });
     }
-    // 格式  $RepresentationID$-Header.m4s
     generateInitializationURL(SegmentTemplate, parent) {
         let templateReg = /\$(.+?)\$/ig;
         let initialization = SegmentTemplate.initialization;
@@ -432,45 +437,6 @@ class SegmentTemplateParser {
 }
 const factory$7 = FactoryMaker.getSingleFactory(SegmentTemplateParser);
 
-class URLUtils {
-    constructor(ctx, ...args) {
-        this.config = ctx.context;
-    }
-    setup() { }
-    resolve(...urls) {
-        let index = 0;
-        let str = "";
-        while (index < urls.length) {
-            let url = urls[index];
-            // 如果url不以/或者./,../这种形式开头的话
-            if (/^(?!(\.|\/))/.test(url)) {
-                if (str[str.length - 1] !== '/' && str !== "") {
-                    str += '/';
-                }
-            }
-            else if (/^\/.+/.test(url)) {
-                // 如果url以/开头
-                if (str[str.length - 1] === "/") {
-                    url = url.slice(1);
-                }
-            }
-            else if (/^(\.).+/.test(url)) ;
-            str += url;
-            index++;
-        }
-        return str;
-    }
-    sliceLastURLPath(url) {
-        for (let i = url.length - 1; i >= 0; i--) {
-            if (url[i] === "/") {
-                return url.slice(0, i);
-            }
-        }
-        return url;
-    }
-}
-const factory$6 = FactoryMaker.getSingleFactory(URLUtils);
-
 function addZero(num) {
     return num > 9 ? num + "" : "0" + num;
 }
@@ -527,6 +493,45 @@ function parseDuration(pt) {
     };
 }
 
+class URLUtils {
+    constructor(ctx, ...args) {
+        this.config = ctx.context;
+    }
+    setup() { }
+    resolve(...urls) {
+        let index = 0;
+        let str = "";
+        while (index < urls.length) {
+            let url = urls[index];
+            // 如果url不以/或者./,../这种形式开头的话
+            if (/^(?!(\.|\/))/.test(url)) {
+                if (str[str.length - 1] !== '/' && str !== "") {
+                    str += '/';
+                }
+            }
+            else if (/^\/.+/.test(url)) {
+                // 如果url以/开头
+                if (str[str.length - 1] === "/") {
+                    url = url.slice(1);
+                }
+            }
+            else if (/^(\.).+/.test(url)) ;
+            str += url;
+            index++;
+        }
+        return str;
+    }
+    sliceLastURLPath(url) {
+        for (let i = url.length - 1; i >= 0; i--) {
+            if (url[i] === "/") {
+                return url.slice(0, i);
+            }
+        }
+        return url;
+    }
+}
+const factory$6 = FactoryMaker.getSingleFactory(URLUtils);
+
 class DashParser {
     constructor(ctx, ...args) {
         this.config = {};
@@ -544,12 +549,11 @@ class DashParser {
     }
     string2xml(s) {
         let parser = new DOMParser();
-        return parser.parseFromString(s, "text/xml"); // 将字符串解析为text/xml格式
+        return parser.parseFromString(s, "text/xml");
     }
-    // 解析请求到的xml类型的文本字符串，生成MPD对象，方便后续的解析
+    // 解析请求到的xml类型的文本字符串，生成MPD对象,方便后续的解析
     parse(manifest) {
         let xml = this.string2xml(manifest);
-        console.log(xml, 'xml');
         let Mpd;
         if (this.config.override) {
             Mpd = this.parseDOMChildren("Mpd", xml);
@@ -559,15 +563,12 @@ class DashParser {
         }
         this.mergeNodeSegementTemplate(Mpd);
         this.setResolvePowerForRepresentation(Mpd);
-        console.log('从这开始', Mpd);
         this.setDurationForRepresentation(Mpd);
         this.setSegmentDurationForRepresentation(Mpd);
         this.setBaseURLForMpd(Mpd);
         this.segmentTemplateParser.parse(Mpd);
+        console.log(Mpd);
         return Mpd;
-    }
-    onSourceAttached(url) {
-        this.mpdURL = url;
     }
     parseDOMChildren(name, node) {
         //如果node的类型为文档类型
@@ -579,6 +580,7 @@ class DashParser {
             // 文档类型的节点一定只有一个子节点
             for (let index in node.childNodes) {
                 if (node.childNodes[index].nodeType === DOMNodeTypes.ELEMENT_NODE) {
+                    // 如果在配置指定需要忽略根节点的话，也就是忽略MpdDocument节点
                     if (!this.config.ignoreRoot) {
                         result.__children[index] = this.parseDOMChildren(node.childNodes[index].nodeName, node.childNodes[index]);
                         result[node.childNodes[index].nodeName] = this.parseDOMChildren(node.childNodes[index].nodeName, node.childNodes[index]);
@@ -610,7 +612,7 @@ class DashParser {
                     result[child.nodeName].push(this.parseDOMChildren(child.nodeName, child));
                 }
             }
-            // 2.将node中具有多个相同的标签的子标签合并为一个数组
+            // 2. 将node中的具有多个相同标签的子标签合并为一个数组
             for (let key in result) {
                 if (key !== "tag" && key !== "__children") {
                     result[key + "_asArray"] = Array.isArray(result[key])
@@ -677,7 +679,10 @@ class DashParser {
             });
         });
     }
-    // 给每个Representation上挂载分辨率属性
+    setBaseURLForMpd(Mpd) {
+        Mpd.baseURL = this.URLUtils.sliceLastURLPath(this.mpdURL);
+    }
+    //给每个Representation上挂载分辨率属性
     setResolvePowerForRepresentation(Mpd) {
         Mpd["Period_asArray"].forEach(Period => {
             Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
@@ -698,11 +703,29 @@ class DashParser {
             });
         });
     }
-    setBaseURLForMpd(Mpd) {
-        Mpd.baseURL = this.URLUtils.sliceLastURLPath(this.mpdURL);
-        console.log('来了老弟！', Mpd.baseURL);
+    getTotalDuration(Mpd) {
+        let totalDuration = 0;
+        let MpdDuration = NaN;
+        if (Mpd.mediaPresentationDuration) {
+            MpdDuration = switchToSeconds(parseDuration(Mpd.mediaPresentationDuration));
+        }
+        // MPD文件的总时间要么是由Mpd标签上的availabilityStartTime指定，要么是每一个Period上的duration之和
+        if (isNaN(MpdDuration)) {
+            Mpd.forEach(Period => {
+                if (Period.duration) {
+                    totalDuration += switchToSeconds(parseDuration(Period.duration));
+                }
+                else {
+                    throw new Error("MPD文件格式错误");
+                }
+            });
+        }
+        else {
+            totalDuration = MpdDuration;
+        }
+        return totalDuration;
     }
-    // 给每个Representation对象上挂载duration属性,此处的duration指的是Representation所属的Period所代表的媒体的总时长
+    // 给每一个Representation对象上挂载duration属性，此处的duration指的是Representation所属的Period所代表的媒体的总时长
     setDurationForRepresentation(Mpd) {
         //1. 如果只有一个Period
         if (Mpd["Period_asArray"].length === 1) {
@@ -732,29 +755,7 @@ class DashParser {
             });
         }
     }
-    getTotalDuration(Mpd) {
-        let totalDuration = 0;
-        let MpdDuration = NaN;
-        if (Mpd.mediaPresentationDuration) {
-            MpdDuration = switchToSeconds(parseDuration(Mpd.mediaPresentationDuration));
-            console.log(MpdDuration, '>');
-        }
-        // MPD文件的总时间要么是由Mpd标签上的availabilityStarttime指定，要么是每一个Period上的duration之和
-        if (isNaN(MpdDuration)) {
-            Mpd.forEach(Period => {
-                if (Period.duration) {
-                    totalDuration += switchToSeconds(parseDuration(Period.duration));
-                }
-                else {
-                    throw new Error("MPD文件格式错误");
-                }
-            });
-        }
-        else {
-            totalDuration = MpdDuration;
-        }
-        return totalDuration;
-    }
+    // 给每一个Rpresentation对象上挂载segmentDuration属性，用来标识该Representation每一个Segment的时长
     setSegmentDurationForRepresentation(Mpd) {
         let maxSegmentDuration = switchToSeconds(parseDuration(Mpd.maxSegmentDuration));
         Mpd["Period_asArray"].forEach(Period => {
@@ -765,7 +766,6 @@ class DashParser {
                             let duration = Representation["SegmentTemplate"].duration;
                             let timescale = Representation["SegmentTemplate"].timescale || 1;
                             Representation.segmentDuration = (duration / timescale).toFixed(1);
-                            console.log(duration, '1', timescale, '2');
                         }
                         else {
                             if (maxSegmentDuration) {
@@ -780,95 +780,11 @@ class DashParser {
             });
         });
     }
+    onSourceAttached(url) {
+        this.mpdURL = url;
+    }
 }
 const factory$5 = FactoryMaker.getSingleFactory(DashParser);
-
-class MediaPlayerBuffer {
-    constructor(ctx, ...args) {
-        this.config = {};
-        this.arrayBuffer = new Array();
-        this.config = ctx.context;
-    }
-    push(buffer) {
-        this.arrayBuffer.push(buffer);
-    }
-    clear() {
-        this.arrayBuffer = [];
-    }
-    isEmpty() {
-        return this.arrayBuffer.length === 0;
-    }
-    delete(buffer) {
-        if (this.arrayBuffer.includes(buffer)) {
-            let index = this.arrayBuffer.indexOf(buffer);
-            this.arrayBuffer.splice(index, 1);
-        }
-    }
-    top() {
-        return this.arrayBuffer[0] || null;
-    }
-    pop() {
-        this.arrayBuffer.length && this.arrayBuffer.pop();
-    }
-}
-const factory$4 = FactoryMaker.getSingleFactory(MediaPlayerBuffer);
-
-class MediaPlayerController {
-    constructor(ctx, ...args) {
-        this.config = {};
-        this.config = ctx.context;
-        if (this.config.video) {
-            this.video = this.config.video;
-        }
-        this.setup();
-        this.initEvent();
-        this.initPlayer();
-        console.log(this, 'MPc');
-    }
-    setup() {
-        this.mediaSource = new MediaSource();
-        this.buffer = factory$4().getInstance();
-        this.eventBus = factory$a().getInstance();
-    }
-    initEvent() {
-        this.eventBus.on(EventConstants.BUFFER_APPENDED, () => {
-            if (!this.videoSourceBuffer.updating && !this.audioSourceBuffer.updating) {
-                this.appendSource();
-            }
-        }, this);
-    }
-    initPlayer() {
-        this.video.src = window.URL.createObjectURL(this.mediaSource);
-        this.video.pause();
-        this.mediaSource.addEventListener("sourceopen", this.onSourceopen.bind(this));
-    }
-    appendSource() {
-        let data = this.buffer.top();
-        if (data) {
-            this.buffer.delete(data);
-            this.appendVideoSource(data.video);
-            this.appendAudioSource(data.audio);
-        }
-    }
-    appendVideoSource(data) {
-        this.videoSourceBuffer.appendBuffer(new Uint8Array(data));
-    }
-    appendAudioSource(data) {
-        this.audioSourceBuffer.appendBuffer(new Uint8Array(data));
-    }
-    onSourceopen(e) {
-        this.videoSourceBuffer = this.mediaSource.addSourceBuffer('video/mp4; codecs="avc1.64001E"');
-        this.audioSourceBuffer = this.mediaSource.addSourceBuffer('audio/mp4; codecs="mp4a.40.2"');
-        this.videoSourceBuffer.addEventListener("updateend", this.onUpdateend.bind(this));
-        this.audioSourceBuffer.addEventListener("updateend", this.onUpdateend.bind(this));
-    }
-    onUpdateend() {
-        if (!this.videoSourceBuffer.updating && !this.audioSourceBuffer.updating) {
-            this.appendSource();
-        }
-    }
-}
-const factory$3 = FactoryMaker.getClassFactory(MediaPlayerController);
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -913,8 +829,7 @@ class BaseURLParser {
         this.config = ctx.context;
         this.setup();
     }
-    setup() {
-    }
+    setup() { }
     parseManifestForBaseURL(manifest) {
         let root = new URLNode(null);
         //1. 首先遍历每一个Period，规定BaseURL节点只可能出现在Period,AdaptationSet,Representation中
@@ -962,7 +877,7 @@ class BaseURLParser {
         return baseURL;
     }
 }
-const factory$2 = FactoryMaker.getSingleFactory(BaseURLParser);
+const factory$4 = FactoryMaker.getSingleFactory(BaseURLParser);
 
 class StreamController {
     constructor(ctx, ...args) {
@@ -970,40 +885,121 @@ class StreamController {
         // 音视频的分辨率
         this.videoResolvePower = "1920*1080";
         this.audioResolvePower = "48000";
+        // 和索引相关的变量
+        this.mediaIndex = 0;
+        this.streamId = 0;
         this.config = ctx.context;
+        this.segmentRequestStruct = this.config.num || 23;
         this.setup();
         this.initialEvent();
     }
-    initialEvent() {
-        this.eventBus.on(EventConstants.MANIFEST_PARSE_COMPLETED, this.onManifestParseCompleted, this);
-    }
     setup() {
-        this.baseURLParser = factory$2().getInstance();
+        this.baseURLParser = factory$4().getInstance();
         this.URLUtils = factory$6().getInstance();
         this.eventBus = factory$a().getInstance();
         this.urlLoader = factory$8().getInstance();
     }
-    onManifestParseCompleted(manifest) {
-        this.segmentRequestStruct = this.generateSegmentRequestStruct(manifest);
-        console.log(this.segmentRequestStruct, 'Struct');
-        this.startStream(manifest);
+    initialEvent() {
+        this.eventBus.on(EventConstants.MANIFEST_PARSE_COMPLETED, this.onManifestParseCompleted, this);
+        this.eventBus.on(EventConstants.SEGMENT_CONSUMED, this.onSegmentConsumed, this);
     }
-    // 初始化播放流，一次至多加载23Segment过来
-    startStream(Mpd) {
-        Mpd["Period_asArray"].forEach((p, pid) => __awaiter(this, void 0, void 0, function* () {
-            let ires = yield this.loadInitialSegment(pid);
-            this.eventBus.trigger(EventConstants.SEGEMTN_LOADED, ires);
-            let number = this.segmentRequestStruct.request[pid].VideoSegmentRequest[0].video[this.videoResolvePower][1].length;
-            for (let i = 0; i < (number >= 23 ? 23 : number); i++) {
-                let mres = yield this.loadMediaSegment(pid, i);
-                this.eventBus.trigger(EventConstants.SEGEMTN_LOADED, mres);
+    onManifestParseCompleted(mainifest) {
+        this.segmentRequestStruct = this.generateSegmentRequestStruct(mainifest);
+        this.startStream(mainifest);
+    }
+    generateBaseURLPath(Mpd) {
+        this.baseURLPath = this.baseURLParser.parseManifestForBaseURL(Mpd);
+    }
+    generateSegmentRequestStruct(Mpd) {
+        this.generateBaseURLPath(Mpd);
+        let baseURL = Mpd["baseURL"] || "";
+        let mpdSegmentRequest = {
+            type: "MpdSegmentRequest",
+            request: []
+        };
+        for (let i = 0; i < Mpd["Period_asArray"].length; i++) {
+            let Period = Mpd["Period_asArray"][i];
+            let periodSegmentRequest = {
+                VideoSegmentRequest: [],
+                AudioSegmentRequest: []
+            };
+            for (let j = 0; j < Period["AdaptationSet_asArray"].length; j++) {
+                let AdaptationSet = Period["AdaptationSet_asArray"][j];
+                let res = this.generateAdaptationSetVideoOrAudioSegmentRequest(AdaptationSet, baseURL, i, j);
+                if (AdaptationSet.mimeType === "video/mp4") {
+                    periodSegmentRequest.VideoSegmentRequest.push({
+                        type: "video",
+                        video: res
+                    });
+                }
+                else if (AdaptationSet.mimeType === "audio/mp4") {
+                    periodSegmentRequest.AudioSegmentRequest.push({
+                        lang: AdaptationSet.lang || "en",
+                        audio: res
+                    });
+                }
             }
-        }));
+            mpdSegmentRequest.request.push(periodSegmentRequest);
+        }
+        return mpdSegmentRequest;
     }
-    // 此处的streamId标识具体的Period对象
+    generateAdaptationSetVideoOrAudioSegmentRequest(AdaptationSet, baseURL, i, j) {
+        let res = {};
+        for (let k = 0; k < AdaptationSet["Representation_asArray"].length; k++) {
+            let Representation = AdaptationSet["Representation_asArray"][k];
+            let url = this.URLUtils.
+                resolve(baseURL, this.baseURLParser.getBaseURLByPath([i, j, k], this.baseURLPath));
+            res[Representation.resolvePower] = [];
+            res[Representation.resolvePower].push(this.URLUtils.resolve(url, Representation.initializationURL));
+            res[Representation.resolvePower].push(Representation.mediaURL.map(item => {
+                return this.URLUtils.resolve(url, item);
+            }));
+        }
+        return res;
+    }
+    getNumberOfMediaSegmentForPeriod(streamId) {
+        return this.segmentRequestStruct.request[this.streamId].VideoSegmentRequest[0].video[this.videoResolvePower][1].length;
+    }
+    //初始化播放流，一次至多加载23个Segement过来
+    startStream(Mpd) {
+        return __awaiter(this, void 0, void 0, function* () {
+            Mpd["Period_asArray"][this.streamId];
+            let ires = yield this.loadInitialSegment(this.streamId);
+            this.eventBus.trigger(EventConstants.SEGEMTN_LOADED, { data: ires, streamId: this.streamId });
+            let number = this.getNumberOfMediaSegmentForPeriod(this.streamId);
+            for (let i = 0; i < (number >= this.firstRequestNumber ? this.firstRequestNumber : number); i++) {
+                let mres = yield this.loadMediaSegment(this.streamId, this.mediaIndex);
+                this.mediaIndex++;
+                this.eventBus.trigger(EventConstants.SEGEMTN_LOADED, { data: mres, streamId: this.streamId });
+            }
+        });
+    }
+    //播放器消费一个Segment我就继续请求一个Segment
+    onSegmentConsumed() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!this.segmentRequestStruct.request[this.streamId])
+                return;
+            let total = this.getNumberOfMediaSegmentForPeriod(this.streamId);
+            if (this.mediaIndex >= total) {
+                this.mediaIndex = 0;
+                this.streamId++;
+            }
+            else {
+                this.mediaIndex++;
+            }
+            if (this.segmentRequestStruct.request[this.streamId] === undefined) {
+                console.log("播放完毕");
+                this.eventBus.trigger(EventConstants.MEDIA_PLAYBACK_FINISHED);
+            }
+            else {
+                let mres = yield this.loadMediaSegment(this.streamId, this.mediaIndex);
+                this.eventBus.trigger(EventConstants.SEGEMTN_LOADED, { data: mres, streamId: this.streamId });
+            }
+        });
+    }
+    //此处的streamId标识具体的Period对象
     loadInitialSegment(streamId) {
         let stream = this.segmentRequestStruct.request[streamId];
-        console.log(stream, 'stream123');
         // 先默认选择音视频的第一个版本
         let audioRequest = stream.AudioSegmentRequest[0].audio;
         let videoRequest = stream.VideoSegmentRequest[0].video;
@@ -1021,65 +1017,114 @@ class StreamController {
         let p2 = this.urlLoader.load({ url: audioURL, responseType: "arraybuffer" }, "Segment");
         return Promise.all([p1, p2]);
     }
-    generateBaseURLPath(Mpd) {
-        this.baseURLPath = this.baseURLParser.parseManifestForBaseURL(Mpd);
+}
+const factory$3 = FactoryMaker.getClassFactory(StreamController);
+
+class MediaPlayerBuffer {
+    constructor(ctx, ...args) {
+        this.config = {};
+        this.arrayBuffer = new Array();
+        this.config = ctx.context;
     }
-    generateSegmentRequestStruct(Mpd) {
-        this.generateBaseURLPath(Mpd);
-        let baseURL = Mpd["baseURL"] || "";
-        let MpdSegmentRequest = {
-            type: "MpdSegmentRequest",
-            request: []
-        };
-        for (let i = 0; i < Mpd["Period_asArray"].length; i++) {
-            let Period = Mpd["Period_asArray"][i];
-            let PeriodSegmentRequest = {
-                VideoSegmentRequest: [],
-                AudioSegmentRequest: []
-            };
-            for (let j = 0; j < Period["AdaptationSet_asArray"].length; j++) {
-                let AdaptationSet = Period["AdaptationSet_asArray"][j];
-                let res = this.generateAdaptationSetVideoOrAudioSegmentRequest(AdaptationSet, baseURL, i, j);
-                if (AdaptationSet.mimeType === "video/mp4") {
-                    PeriodSegmentRequest.VideoSegmentRequest.push({
-                        type: "video",
-                        video: res
-                    });
-                }
-                else if (AdaptationSet.mimeType === "audio/mp4") {
-                    PeriodSegmentRequest.AudioSegmentRequest.push({
-                        lang: "en" ,
-                        audio: res
-                    });
-                }
-            }
-            MpdSegmentRequest.request.push(PeriodSegmentRequest);
-        }
-        return MpdSegmentRequest;
+    push(buffer) {
+        this.arrayBuffer.push(buffer);
     }
-    generateAdaptationSetVideoOrAudioSegmentRequest(AdaptationSet, baseURL, i, j) {
-        console.log(AdaptationSet, baseURL, i, j, '7997');
-        let res = {};
-        for (let k = 0; k < AdaptationSet["Representation_asArray"].length; k++) {
-            let Representation = AdaptationSet["Representation_asArray"][k];
-            let url = this.URLUtils.resolve(baseURL, this.baseURLParser.getBaseURLByPath([i, j, k], this.baseURLPath));
-            res[Representation.resolvePower] = [];
-            res[Representation.resolvePower].push(this.URLUtils.resolve(url, Representation.initializationURL));
-            res[Representation.resolvePower].push(Representation.mediaURL.map(item => {
-                return this.URLUtils.resolve(url, item);
-            }));
+    clear() {
+        this.arrayBuffer = [];
+    }
+    isEmpty() {
+        return this.arrayBuffer.length === 0;
+    }
+    delete(buffer) {
+        if (this.arrayBuffer.includes(buffer)) {
+            let index = this.arrayBuffer.indexOf(buffer);
+            this.arrayBuffer.splice(index, 1);
         }
-        return res;
+    }
+    top() {
+        return this.arrayBuffer[0] || null;
+    }
+    pop() {
+        this.arrayBuffer.length && this.arrayBuffer.pop();
     }
 }
-const factory$1 = FactoryMaker.getClassFactory(StreamController);
+const factory$2 = FactoryMaker.getSingleFactory(MediaPlayerBuffer);
+
+class MediaPlayerController {
+    constructor(ctx, ...args) {
+        this.config = {};
+        this.isFirstRequestCompleted = false;
+        this.config = ctx.context;
+        if (this.config.video) {
+            this.video = this.config.video;
+        }
+        this.setup();
+        this.initEvent();
+        this.initPlayer();
+    }
+    setup() {
+        this.mediaSource = new MediaSource();
+        this.buffer = factory$2().getInstance();
+        this.eventBus = factory$a().getInstance();
+    }
+    initEvent() {
+        this.eventBus.on(EventConstants.BUFFER_APPENDED, () => {
+            if (!this.videoSourceBuffer.updating && !this.audioSourceBuffer.updating) {
+                this.appendSource();
+            }
+        }, this);
+        this.eventBus.on(EventConstants.FIRST_REQUEST_COMPLETED, () => {
+            this.isFirstRequestCompleted = true;
+        }, this);
+        this.eventBus.on(EventConstants.MEDIA_PLAYBACK_FINISHED, this.onMediaPlaybackFinished, this);
+    }
+    initPlayer() {
+        this.video.src = window.URL.createObjectURL(this.mediaSource);
+        this.video.pause();
+        this.mediaSource.addEventListener("sourceopen", this.onSourceopen.bind(this));
+    }
+    appendSource() {
+        let data = this.buffer.top();
+        if (data) {
+            this.buffer.delete(data);
+            this.appendVideoSource(data.video);
+            this.appendAudioSource(data.audio);
+        }
+    }
+    appendVideoSource(data) {
+        this.videoSourceBuffer.appendBuffer(new Uint8Array(data));
+    }
+    appendAudioSource(data) {
+        this.audioSourceBuffer.appendBuffer(new Uint8Array(data));
+    }
+    onSourceopen(e) {
+        this.videoSourceBuffer = this.mediaSource.addSourceBuffer('video/mp4; codecs="avc1.64001E"');
+        this.audioSourceBuffer = this.mediaSource.addSourceBuffer('audio/mp4; codecs="mp4a.40.2"');
+        console.log(this.videoSourceBuffer.mode);
+        this.videoSourceBuffer.addEventListener("updateend", this.onUpdateend.bind(this));
+        this.audioSourceBuffer.addEventListener("updateend", this.onUpdateend.bind(this));
+    }
+    onUpdateend() {
+        if (!this.videoSourceBuffer.updating && !this.audioSourceBuffer.updating) {
+            if (this.isFirstRequestCompleted) {
+                this.eventBus.trigger(EventConstants.SEGMENT_CONSUMED);
+            }
+            this.appendSource();
+        }
+    }
+    onMediaPlaybackFinished() {
+        this.mediaSource.endOfStream();
+    }
+}
+const factory$1 = FactoryMaker.getClassFactory(MediaPlayerController);
 
 /**
- * @description 整个dash处理流程的入口类MediaPlayer,类似与项目的中转中心，用于接收任务然后分配给不同解析器去完成
+ * @description 整个dash处理流程的入口类MediaPlayer,类似于项目的中转中心，用于接收任务并且将任务分配给不同的解析器去完成
  */
 class MediaPlayer {
     constructor(ctx, ...args) {
         this.config = {};
+        this.firstCurrentRequest = 0;
         this.config = ctx.context;
         this.setup();
         this.initializeEvent();
@@ -1090,8 +1135,8 @@ class MediaPlayer {
         this.eventBus = factory$a().getInstance();
         // ignoreRoot -> 忽略Document节点，从MPD开始作为根节点
         this.dashParser = factory$5({ ignoreRoot: true }).getInstance();
-        this.streamController = factory$1().create();
-        this.buffer = factory$4().getInstance();
+        this.streamController = factory$3({ num: 23 }).create();
+        this.buffer = factory$2().getInstance();
     }
     initializeEvent() {
         this.eventBus.on(EventConstants.MANIFEST_LOADED, this.onManifestLoaded, this);
@@ -1101,18 +1146,24 @@ class MediaPlayer {
         this.eventBus.off(EventConstants.MANIFEST_LOADED, this.onManifestLoaded, this);
         this.eventBus.off(EventConstants.SEGEMTN_LOADED, this.onSegmentLoaded, this);
     }
+    //MPD文件请求成功获得对应的data数据
     onManifestLoaded(data) {
-        let manifest = this.dashParser.parse(data); //解析后的manifest
-        console.log('解析后', manifest);
+        let manifest = this.dashParser.parse(data);
         this.eventBus.trigger(EventConstants.MANIFEST_PARSE_COMPLETED, manifest);
     }
-    onSegmentLoaded(data) {
-        console.log("加载segment成功", data);
+    onSegmentLoaded(res) {
+        console.log("加载Segment成功");
+        this.firstCurrentRequest++;
+        if (this.firstCurrentRequest === 23) {
+            this.eventBus.trigger(EventConstants.FIRST_REQUEST_COMPLETED);
+        }
+        let data = res.data;
         let videoBuffer = data[0];
         let audioBuffer = data[1];
         this.buffer.push({
             video: videoBuffer,
-            audio: audioBuffer
+            audio: audioBuffer,
+            streamId: res.streamId
         });
         this.eventBus.trigger(EventConstants.BUFFER_APPENDED);
     }
@@ -1122,12 +1173,11 @@ class MediaPlayer {
      */
     attachSource(url) {
         this.eventBus.trigger(EventConstants.SOURCE_ATTACHED, url);
-        this.urlLoader.load({ url, responseType: "text" }, 'Manifest');
+        this.urlLoader.load({ url, responseType: "text" }, "Manifest");
     }
     attachVideo(video) {
-        console.log(video, 'videooo');
         this.video = video;
-        this.mediaPlayerController = factory$3({ video: video }).create();
+        this.mediaPlayerController = factory$1({ video: video }).create();
     }
 }
 const factory = FactoryMaker.getClassFactory(MediaPlayer);
