@@ -19,6 +19,7 @@ const FactoryMaker = (function () {
         // context为调用factory函数时传入的上下文，也就是函数的执行环境
         factory = function (context?: FactoryObject) {
           if (!context) context = {};
+          // 返回了一个create函数，需要手动调用
           return {
             create(...args: any[]) {
               return ctx.merge<T>(classConstructor, context, ...args);

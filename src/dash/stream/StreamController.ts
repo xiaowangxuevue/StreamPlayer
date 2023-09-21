@@ -27,11 +27,11 @@ class StreamController {
     private mediaIndex: number = 0;
     private streamId: number = 0;
     // 整个MPD文件所需要发送请求的结构体对象
-    private firstRequestNumber: number;
+    private firstRequestNumber: number;  //缓存
     private segmentRequestStruct:MpdSegmentRequest;
     constructor(ctx:FactoryObject,...args:any[]) {
         this.config = ctx.context;
-        this.segmentRequestStruct = this.config.num || 23;
+        this.firstRequestNumber = this.config.num || 23;
         this.setup();
         this.initialEvent();
     }
@@ -138,7 +138,6 @@ class StreamController {
             this.mediaIndex ++;
         }
         if(this.segmentRequestStruct.request[this.streamId] === undefined) {
-            console.log("播放完毕")
             this.eventBus.trigger(EventConstants.MEDIA_PLAYBACK_FINISHED);
         } else {
             let mres = await this.loadMediaSegment(this.streamId,this.mediaIndex);

@@ -119,6 +119,7 @@ const FactoryMaker = (function () {
                 factory = function (context) {
                     if (!context)
                         context = {};
+                    // 返回了一个create函数，需要手动调用
                     return {
                         create(...args) {
                             return ctx.merge(classConstructor, context, ...args);
@@ -705,12 +706,12 @@ class DashParser {
     }
     getTotalDuration(Mpd) {
         let totalDuration = 0;
-        let MpdDuration = NaN;
+        let MpdDuration = -1;
         if (Mpd.mediaPresentationDuration) {
             MpdDuration = switchToSeconds(parseDuration(Mpd.mediaPresentationDuration));
         }
         // MPD文件的总时间要么是由Mpd标签上的availabilityStartTime指定，要么是每一个Period上的duration之和
-        if (isNaN(MpdDuration)) {
+        if (MpdDuration < 0) {
             Mpd.forEach(Period => {
                 if (Period.duration) {
                     totalDuration += switchToSeconds(parseDuration(Period.duration));
@@ -889,7 +890,7 @@ class StreamController {
         this.mediaIndex = 0;
         this.streamId = 0;
         this.config = ctx.context;
-        this.segmentRequestStruct = this.config.num || 23;
+        this.firstRequestNumber = 40;
         this.setup();
         this.initialEvent();
     }
@@ -988,7 +989,6 @@ class StreamController {
                 this.mediaIndex++;
             }
             if (this.segmentRequestStruct.request[this.streamId] === undefined) {
-                console.log("播放完毕");
                 this.eventBus.trigger(EventConstants.MEDIA_PLAYBACK_FINISHED);
             }
             else {
@@ -1054,6 +1054,7 @@ class MediaPlayerController {
     constructor(ctx, ...args) {
         this.config = {};
         this.isFirstRequestCompleted = false;
+        this.mediaDuration = 0;
         this.config = ctx.context;
         if (this.config.video) {
             this.video = this.config.video;
@@ -1077,10 +1078,16 @@ class MediaPlayerController {
             this.isFirstRequestCompleted = true;
         }, this);
         this.eventBus.on(EventConstants.MEDIA_PLAYBACK_FINISHED, this.onMediaPlaybackFinished, this);
+        this.eventBus.on(EventConstants.MANIFEST_PARSE_COMPLETED, (manifest, duration) => {
+            this.mediaDuration = duration;
+            if (this.mediaSource.readyState === "open") {
+                this.mediaSource.duration = duration;
+            }
+        }, this);
     }
     initPlayer() {
         this.video.src = window.URL.createObjectURL(this.mediaSource);
-        this.video.pause();
+        // this.video.pause();
         this.mediaSource.addEventListener("sourceopen", this.onSourceopen.bind(this));
     }
     appendSource() {
@@ -1098,22 +1105,24 @@ class MediaPlayerController {
         this.audioSourceBuffer.appendBuffer(new Uint8Array(data));
     }
     onSourceopen(e) {
+        this.mediaSource.duration = this.mediaDuration;
         this.videoSourceBuffer = this.mediaSource.addSourceBuffer('video/mp4; codecs="avc1.64001E"');
         this.audioSourceBuffer = this.mediaSource.addSourceBuffer('audio/mp4; codecs="mp4a.40.2"');
-        console.log(this.videoSourceBuffer.mode);
         this.videoSourceBuffer.addEventListener("updateend", this.onUpdateend.bind(this));
         this.audioSourceBuffer.addEventListener("updateend", this.onUpdateend.bind(this));
     }
     onUpdateend() {
         if (!this.videoSourceBuffer.updating && !this.audioSourceBuffer.updating) {
-            if (this.isFirstRequestCompleted) {
-                this.eventBus.trigger(EventConstants.SEGMENT_CONSUMED);
-            }
+            // if(this.isFirstRequestCompleted) {
+            //     this.eventBus.trigger(EventConstants.SEGMENT_CONSUMED);
+            // }
             this.appendSource();
         }
     }
     onMediaPlaybackFinished() {
         this.mediaSource.endOfStream();
+        window.URL.revokeObjectURL(this.video.src);
+        console.log("播放流加载结束");
     }
 }
 const factory$1 = FactoryMaker.getClassFactory(MediaPlayerController);
@@ -1125,6 +1134,7 @@ class MediaPlayer {
     constructor(ctx, ...args) {
         this.config = {};
         this.firstCurrentRequest = 0;
+        this.duration = 0;
         this.config = ctx.context;
         this.setup();
         this.initializeEvent();
@@ -1149,14 +1159,13 @@ class MediaPlayer {
     //MPD文件请求成功获得对应的data数据
     onManifestLoaded(data) {
         let manifest = this.dashParser.parse(data);
-        this.eventBus.trigger(EventConstants.MANIFEST_PARSE_COMPLETED, manifest);
+        this.duration = this.dashParser.getTotalDuration(manifest);
+        this.eventBus.trigger(EventConstants.MANIFEST_PARSE_COMPLETED, manifest, this.duration);
     }
     onSegmentLoaded(res) {
         console.log("加载Segment成功");
         this.firstCurrentRequest++;
-        if (this.firstCurrentRequest === 23) {
-            this.eventBus.trigger(EventConstants.FIRST_REQUEST_COMPLETED);
-        }
+        if (this.firstCurrentRequest === 23) ;
         let data = res.data;
         let videoBuffer = data[0];
         let audioBuffer = data[1];
@@ -1177,7 +1186,7 @@ class MediaPlayer {
     }
     attachVideo(video) {
         this.video = video;
-        this.mediaPlayerController = factory$1({ video: video }).create();
+        this.mediaPlayerController = factory$1({ video: video, duration: this.duration }).create();
     }
 }
 const factory = FactoryMaker.getClassFactory(MediaPlayer);
@@ -1185,7 +1194,9 @@ const factory = FactoryMaker.getClassFactory(MediaPlayer);
 // import { parseMpd } from "../../dash/parseMpd";
 class MpdPlayer {
     constructor(player) {
-        let mediaPlayer = factory().create();
+        let mediaPlayer = factory().create(); // 创建了一个 MediaPlayer 类的实例
+        console.log(mediaPlayer, 'media实例');
+        // 能播放的，能访问的地址
         mediaPlayer.attachSource(player.playerOptions.url);
         mediaPlayer.attachVideo(player.video);
         player.video.controls = true;

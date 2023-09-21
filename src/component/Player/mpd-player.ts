@@ -93,7 +93,9 @@ import MediaPlayer from "../../dash/MediaPlayer";
 import { Player } from "./player";
 export class MpdPlayer {
   constructor(player:Player) {
-    let mediaPlayer = MediaPlayer().create(); 
+    let mediaPlayer = MediaPlayer().create(); // 创建了一个 MediaPlayer 类的实例
+    console.log(mediaPlayer,'media实例');
+    // 能播放的，能访问的地址
     mediaPlayer.attachSource(player.playerOptions.url);
     mediaPlayer.attachVideo(player.video);
     player.video.controls = true;

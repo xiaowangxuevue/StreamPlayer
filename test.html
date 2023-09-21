@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -7,6 +8,7 @@
     <title>Document</title>
     <link rel="stylesheet" href="./dist/css/index.css">
 </head>
+
 <body>
     <input type="file" id="file">
     <div id="video">
@@ -20,9 +22,9 @@
         //     player.initialize(document.querySelector("#videoPlayer"), url, true);
         // })();
         let player = new Player.Player({
-            url:"https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd",
+            url: "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd",
             // url:"./video.mp4",
-            container:document.getElementById("video"),
+            container: document.getElementById("video"),
             width: "500px",
             height: "300px"
         })
@@ -30,23 +32,10 @@
 
 
 
-        // let parseMpd = Player.parseMpd;
-        // let fileReder = new FileReader();
-        // let File = document.getElementById("file")
-        // File.onchange = function() {
-        //     let file = File.files[0];
-        //     fileReder.readAsText(file);
-        //     fileReder.onload = function() {
-        //         let data = fileReder.result;
-        //         let parser = new DOMParser();
-        //         let document = parser.parseFromString(data,"text/xml");
-        //         let init = Player.initMpdFile(document);
-        //         let request = Player.parseMpd(document,"https://dash.akamaized.net/envivio/EnvivioDash3/");
-        //         console.log(request,'request')
-        //     }
-        // }
 
-     
+
+
     </script>
 </body>
+
 </html>
