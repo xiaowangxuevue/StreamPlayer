@@ -14,6 +14,7 @@ class XHRLoader {
     load(config: XHRConfig) {
         let request = config.request;
         let xhr = new XMLHttpRequest();
+        request.xhr = xhr;
         if(request.header) {
             for(let key in request.header) {
                 xhr.setRequestHeader(key,request.header[key]);

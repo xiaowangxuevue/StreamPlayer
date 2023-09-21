@@ -1,6 +1,7 @@
 import { FactoryObject } from "../../types/dash/Factory";
 import { Mpd } from "../../types/dash/MpdFile";
 import { PlayerBuffer } from "../../types/dash/Net";
+import { VideoBuffers } from "../../types/dash/Stream";
 import EventBusFactory, { EventBus } from "../event/EventBus";
 import { EventConstants } from "../event/EventConstants";
 import FactoryMaker from "../FactoryMaker";
@@ -32,17 +33,22 @@ class MediaPlayerController {
     }
     setup(){
         this.mediaSource = new MediaSource();
-
+       
         this.buffer = MediaPlayerBufferFactory().getInstance();
         this.eventBus = EventBusFactory().getInstance();
         this.timeRangeUtils = TimeRangeUtilsFactory().getInstance();
     }
 
     initEvent() {
+        
         this.eventBus.on(EventConstants.BUFFER_APPENDED,(id:number)=>{
+            // // 当视频和音频源缓冲都没有在更新时，执行回调函数，执行数据追加操作，并更新当前流的标识
             if(!this.videoSourceBuffer.updating && !this.audioSourceBuffer.updating) {
+                console.log("append")
                 this.appendSource();
                 this.currentStreamId = id;
+                console.log(this.currentStreamId,'当视频和音频源缓冲都没有在更新时，执行回调函数，执行数据追加操作，并更新当前流的标识');
+                
             }
         },this)
 
@@ -70,8 +76,22 @@ class MediaPlayerController {
      * @description 配置MediaSource的相关选项和属性
      */
     setMediaSource() {
+        // 将媒体源的持续时间设置为媒体时长。
         this.mediaSource.duration = this.mediaDuration;
         this.mediaSource.setLiveSeekableRange(0,this.mediaDuration);
+    }
+
+    getVideoBuffered(video:HTMLVideoElement): VideoBuffers {
+        let buffer = this.video.buffered;
+        let res:VideoBuffers = [];
+        console.log(res,'已缓存范围.每个范围的开始和结束时间存储在 res 数组');
+        
+        for(let i = 0;i < buffer.length;i++) {
+            let start = buffer.start(i);
+            let end = buffer.end(i);
+            res.push({start,end})
+        }
+        return res;
     }
 
     appendSource() {
@@ -82,9 +102,11 @@ class MediaPlayerController {
             this.appendAudioSource(data.audio);
         }
     }
+
     appendVideoSource(data:ArrayBuffer) {
         this.videoSourceBuffer.appendBuffer(new Uint8Array(data));
     }
+
     appendAudioSource(data:ArrayBuffer) {
         this.audioSourceBuffer.appendBuffer(new Uint8Array(data));
     }
@@ -97,31 +119,44 @@ class MediaPlayerController {
         let currentTime = this.video.currentTime;
         let [streamId,mediaId] = this.timeRangeUtils.
             getSegmentAndStreamIndexByTime(this.currentStreamId,currentTime,this.Mpd);
-        console.log(streamId,mediaId,'streamId','MEDIAiD');
-    }
 
+        let ranges = this.getVideoBuffered(this.video);
+        if(!this.timeRangeUtils.inVideoBuffered(currentTime,ranges)) {
+            console.log("超出缓存范围")
+            this.buffer.clear();
+            
+            this.eventBus.trigger(EventConstants.SEGEMTN_REQUEST,[streamId,mediaId]);
+        } else {
+            console.log("在缓存范围之内")
+        }
+    }
+    
     onSourceopen(e) {
-        this.setMediaSource();
+
         this.videoSourceBuffer = this.mediaSource.addSourceBuffer('video/mp4; codecs="avc1.64001E"');
         this.audioSourceBuffer = this.mediaSource.addSourceBuffer('audio/mp4; codecs="mp4a.40.2"');
 
         this.videoSourceBuffer.addEventListener("updateend",this.onUpdateend.bind(this));
         this.audioSourceBuffer.addEventListener("updateend",this.onUpdateend.bind(this));
     }
+
     onUpdateend() {
         if(!this.videoSourceBuffer.updating && !this.audioSourceBuffer.updating) {
-            // if(this.isFirstRequestCompleted) {
-            //     this.eventBus.trigger(EventConstants.SEGMENT_CONSUMED);
-            // }
+            if(this.isFirstRequestCompleted) {
+                let ranges = this.getVideoBuffered(this.video);
+                this.eventBus.trigger(EventConstants.SEGMENT_CONSUMED,ranges);
+            }
             this.appendSource();
         }
     }
+
     onMediaPlaybackFinished() {
-        this.mediaSource.endOfStream();
+        // this.mediaSource.endOfStream();
         window.URL.revokeObjectURL(this.video.src);
         console.log("播放流加载结束")
     }
 }
+
 const factory = FactoryMaker.getClassFactory(MediaPlayerController);
 export default factory;
 export { MediaPlayerController };

@@ -3,6 +3,7 @@ export declare const EventConstants: {
     MANIFEST_PARSE_COMPLETED: string;
     SOURCE_ATTACHED: string;
     SEGEMTN_LOADED: string;
+    SEGEMTN_REQUEST: string;
     BUFFER_APPENDED: string;
     SEGMENT_CONSUMED: string;
     MEDIA_PLAYBACK_FINISHED: string;

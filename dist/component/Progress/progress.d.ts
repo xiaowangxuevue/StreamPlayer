@@ -12,7 +12,7 @@ export declare class Progress extends BaseEvent {
     private mouseDown;
     constructor(container: HTMLElement);
     get template(): HTMLElement | string;
-    initProgressEvent(): void;
     init(): void;
+    initProgressEvent(): void;
     initEvent(): void;
 }

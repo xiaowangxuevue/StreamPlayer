@@ -1,4 +1,4 @@
-import HTTPRequest from "../../dash/net/HTTPRequest"
+import HTTPRequest from "../../dash/net/HTTPRequest";
 
 export type ResponseType = "arraybuffer" | "text" | "blob" | "document" | "json";
 export type RequestMethod =
@@ -31,6 +31,7 @@ export type XHRConfig = {
   abort?: Function;
   progress?: Function;
   error?: Function;
+  load?:Function;
 }
 
 export type URLConfig = {
