@@ -231,7 +231,7 @@
           }
       }
   }
-  const factory$a = FactoryMaker.getSingleFactory(EventBus);
+  const factory$b = FactoryMaker.getSingleFactory(EventBus);
 
   const EventConstants = {
       MANIFEST_LOADED: "manifestLoaded",
@@ -294,7 +294,7 @@
           xhr.send();
       }
   }
-  const factory$9 = FactoryMaker.getSingleFactory(XHRLoader);
+  const factory$a = FactoryMaker.getSingleFactory(XHRLoader);
 
   class URLLoader {
       constructor(ctx, ...args) {
@@ -309,8 +309,8 @@
           this.xhrLoader.load(config);
       }
       setup() {
-          this.xhrLoader = factory$9({}).getInstance();
-          this.eventBus = factory$a({}).getInstance();
+          this.xhrLoader = factory$a({}).getInstance();
+          this.eventBus = factory$b({}).getInstance();
       }
       // 每调用一次load函数就发送一次请求
       load(config, type) {
@@ -344,7 +344,7 @@
           }
       }
   }
-  const factory$8 = FactoryMaker.getSingleFactory(URLLoader);
+  const factory$9 = FactoryMaker.getSingleFactory(URLLoader);
 
   var DOMNodeTypes;
   (function (DOMNodeTypes) {
@@ -440,7 +440,7 @@
           }
       }
   }
-  const factory$7 = FactoryMaker.getSingleFactory(SegmentTemplateParser);
+  const factory$8 = FactoryMaker.getSingleFactory(SegmentTemplateParser);
 
   function addZero(num) {
       return num > 9 ? num + "" : "0" + num;
@@ -535,7 +535,7 @@
           return url;
       }
   }
-  const factory$6 = FactoryMaker.getSingleFactory(URLUtils);
+  const factory$7 = FactoryMaker.getSingleFactory(URLUtils);
 
   class DashParser {
       constructor(ctx, ...args) {
@@ -545,9 +545,9 @@
           this.initialEvent();
       }
       setup() {
-          this.segmentTemplateParser = factory$7().getInstance();
-          this.eventBus = factory$a().getInstance();
-          this.URLUtils = factory$6().getInstance();
+          this.segmentTemplateParser = factory$8().getInstance();
+          this.eventBus = factory$b().getInstance();
+          this.URLUtils = factory$7().getInstance();
       }
       initialEvent() {
           this.eventBus.on(EventConstants.SOURCE_ATTACHED, this.onSourceAttached, this);
@@ -708,6 +708,21 @@
               });
           });
       }
+      getSegmentDuration(Mpd, streamId) {
+          let Period = Mpd["Period_asArray"][streamId];
+          if (!Period) {
+              throw new Error("传入的流不存在");
+          }
+          let segmentDuration = 0;
+          Period["AdaptationSet_asArray"].forEach(AdaptationSet => {
+              AdaptationSet["Representation_asArray"].forEach(Representation => {
+                  if (Representation.segmentDuration) {
+                      segmentDuration = Number(Representation.segmentDuration);
+                  }
+              });
+          });
+          return segmentDuration;
+      }
       getTotalDuration(Mpd) {
           let totalDuration = 0;
           let MpdDuration = -1;
@@ -789,7 +804,7 @@
           this.mpdURL = url;
       }
   }
-  const factory$5 = FactoryMaker.getSingleFactory(DashParser);
+  const factory$6 = FactoryMaker.getSingleFactory(DashParser);
 
   /******************************************************************************
   Copyright (c) Microsoft Corporation.
@@ -882,7 +897,7 @@
           return baseURL;
       }
   }
-  const factory$4 = FactoryMaker.getSingleFactory(BaseURLParser);
+  const factory$5 = FactoryMaker.getSingleFactory(BaseURLParser);
 
   class StreamController {
       constructor(ctx, ...args) {
@@ -894,15 +909,15 @@
           this.mediaIndex = 0;
           this.streamId = 0;
           this.config = ctx.context;
-          this.firstRequestNumber = 40;
+          this.firstRequestNumber = this.config.num || 23;
           this.setup();
           this.initialEvent();
       }
       setup() {
-          this.baseURLParser = factory$4().getInstance();
-          this.URLUtils = factory$6().getInstance();
-          this.eventBus = factory$a().getInstance();
-          this.urlLoader = factory$8().getInstance();
+          this.baseURLParser = factory$5().getInstance();
+          this.URLUtils = factory$7().getInstance();
+          this.eventBus = factory$b().getInstance();
+          this.urlLoader = factory$9().getInstance();
       }
       initialEvent() {
           this.eventBus.on(EventConstants.MANIFEST_PARSE_COMPLETED, this.onManifestParseCompleted, this);
@@ -963,6 +978,7 @@
           return res;
       }
       getNumberOfMediaSegmentForPeriod(streamId) {
+          console.log('到我了');
           return this.segmentRequestStruct.request[this.streamId].VideoSegmentRequest[0].video[this.videoResolvePower][1].length;
       }
       //初始化播放流，一次至多加载23个Segement过来
@@ -972,9 +988,11 @@
               let ires = yield this.loadInitialSegment(this.streamId);
               this.eventBus.trigger(EventConstants.SEGEMTN_LOADED, { data: ires, streamId: this.streamId });
               let number = this.getNumberOfMediaSegmentForPeriod(this.streamId);
+              console.log(number, 'number');
               for (let i = 0; i < (number >= this.firstRequestNumber ? this.firstRequestNumber : number); i++) {
                   let mres = yield this.loadMediaSegment(this.streamId, this.mediaIndex);
                   this.mediaIndex++;
+                  console.log('qu');
                   this.eventBus.trigger(EventConstants.SEGEMTN_LOADED, { data: mres, streamId: this.streamId });
               }
           });
@@ -982,9 +1000,11 @@
       //播放器消费一个Segment我就继续请求一个Segment
       onSegmentConsumed() {
           return __awaiter(this, void 0, void 0, function* () {
+              console.log('有我的份吗？', this.mediaIndex);
               if (!this.segmentRequestStruct.request[this.streamId])
                   return;
               let total = this.getNumberOfMediaSegmentForPeriod(this.streamId);
+              console.log(total, 'total');
               if (this.mediaIndex >= total) {
                   this.mediaIndex = 0;
                   this.streamId++;
@@ -1022,7 +1042,7 @@
           return Promise.all([p1, p2]);
       }
   }
-  const factory$3 = FactoryMaker.getClassFactory(StreamController);
+  const factory$4 = FactoryMaker.getClassFactory(StreamController);
 
   class MediaPlayerBuffer {
       constructor(ctx, ...args) {
@@ -1052,13 +1072,79 @@
           this.arrayBuffer.length && this.arrayBuffer.pop();
       }
   }
-  const factory$2 = FactoryMaker.getSingleFactory(MediaPlayerBuffer);
+  const factory$3 = FactoryMaker.getSingleFactory(MediaPlayerBuffer);
+
+  class TimeRangeUtils {
+      constructor(ctx, ...args) {
+          this.config = {};
+          this.config = ctx.context;
+          this.setup();
+      }
+      setup() {
+          this.dashParser = factory$6().getInstance();
+      }
+      /**
+       * @description 返回特定stream之前的所有stream的时间总和
+       * @param streamId
+       * @param Mpd
+       * @returns {number} Number
+       */
+      getSummaryTimeBeforeStream(streamId, Mpd) {
+          if (streamId === 0)
+              return 0;
+          let Period = Mpd["Period_asArray"];
+          let sum = 0;
+          for (let i = 0; i < streamId; i++) {
+              sum += Period[i].duration;
+          }
+          return sum;
+      }
+      inSpecificStreamRange(streamId, currentTime, Mpd) {
+          let totalTime = this.dashParser.getTotalDuration(Mpd);
+          if (currentTime > totalTime)
+              return false;
+          let start = this.getSummaryTimeBeforeStream(streamId, Mpd);
+          let end = start + Mpd["Period_asArray"][streamId].duration;
+          if (currentTime < start || currentTime > end)
+              return false;
+          return true;
+      }
+      getSegmentAndStreamIndexByTime(streamId, currentTime, Mpd) {
+          if (this.inSpecificStreamRange(streamId, currentTime, Mpd)) {
+              console.log(111);
+              let segmentDuration = this.dashParser.getSegmentDuration(Mpd, streamId);
+              console.log(segmentDuration, 'segmentDuration');
+              let index = Math.floor(currentTime / segmentDuration);
+              return [index, streamId];
+          }
+          else {
+              let totalTime = this.dashParser.getTotalDuration(Mpd);
+              if (currentTime > totalTime) {
+                  throw new Error("传入的当前时间大于媒体的总时长");
+              }
+              let sum = 0;
+              for (let i = 0; i < Mpd["Period_asArray"].length; i++) {
+                  let Period = Mpd["Period_asArray"][i];
+                  sum += Period.duration;
+                  if (sum > currentTime) {
+                      let segmentDuration = this.dashParser.getSegmentDuration(Mpd, i);
+                      let index = Math.floor(currentTime / segmentDuration);
+                      return [index, i];
+                  }
+              }
+          }
+      }
+  }
+  const factory$2 = FactoryMaker.getSingleFactory(TimeRangeUtils);
 
   class MediaPlayerController {
       constructor(ctx, ...args) {
+          // 控制器
           this.config = {};
+          // 属性
           this.isFirstRequestCompleted = false;
           this.mediaDuration = 0;
+          this.currentStreamId = 0;
           this.config = ctx.context;
           if (this.config.video) {
               this.video = this.config.video;
@@ -1069,30 +1155,40 @@
       }
       setup() {
           this.mediaSource = new MediaSource();
-          this.buffer = factory$2().getInstance();
-          this.eventBus = factory$a().getInstance();
+          this.buffer = factory$3().getInstance();
+          this.eventBus = factory$b().getInstance();
+          this.timeRangeUtils = factory$2().getInstance();
       }
       initEvent() {
-          this.eventBus.on(EventConstants.BUFFER_APPENDED, () => {
+          this.eventBus.on(EventConstants.BUFFER_APPENDED, (id) => {
               if (!this.videoSourceBuffer.updating && !this.audioSourceBuffer.updating) {
                   this.appendSource();
+                  this.currentStreamId = id;
               }
           }, this);
           this.eventBus.on(EventConstants.FIRST_REQUEST_COMPLETED, () => {
               this.isFirstRequestCompleted = true;
           }, this);
           this.eventBus.on(EventConstants.MEDIA_PLAYBACK_FINISHED, this.onMediaPlaybackFinished, this);
-          this.eventBus.on(EventConstants.MANIFEST_PARSE_COMPLETED, (manifest, duration) => {
+          this.eventBus.on(EventConstants.MANIFEST_PARSE_COMPLETED, (manifest, duration, Mpd) => {
               this.mediaDuration = duration;
+              this.Mpd = Mpd;
               if (this.mediaSource.readyState === "open") {
-                  this.mediaSource.duration = duration;
+                  this.setMediaSource();
               }
           }, this);
       }
       initPlayer() {
           this.video.src = window.URL.createObjectURL(this.mediaSource);
-          // this.video.pause();
           this.mediaSource.addEventListener("sourceopen", this.onSourceopen.bind(this));
+          this.video.addEventListener("seeking", this.onMediaSeeking.bind(this));
+      }
+      /**
+       * @description 配置MediaSource的相关选项和属性
+       */
+      setMediaSource() {
+          this.mediaSource.duration = this.mediaDuration;
+          this.mediaSource.setLiveSeekableRange(0, this.mediaDuration);
       }
       appendSource() {
           let data = this.buffer.top();
@@ -1108,8 +1204,18 @@
       appendAudioSource(data) {
           this.audioSourceBuffer.appendBuffer(new Uint8Array(data));
       }
+      /**
+       * @description 当进度条发生跳转时触发
+       * @param { EventTarget} e
+       */
+      onMediaSeeking(e) {
+          let currentTime = this.video.currentTime;
+          let [streamId, mediaId] = this.timeRangeUtils.
+              getSegmentAndStreamIndexByTime(this.currentStreamId, currentTime, this.Mpd);
+          console.log(streamId, mediaId, 'streamId', 'MEDIAiD');
+      }
       onSourceopen(e) {
-          this.mediaSource.duration = this.mediaDuration;
+          this.setMediaSource();
           this.videoSourceBuffer = this.mediaSource.addSourceBuffer('video/mp4; codecs="avc1.64001E"');
           this.audioSourceBuffer = this.mediaSource.addSourceBuffer('audio/mp4; codecs="mp4a.40.2"');
           this.videoSourceBuffer.addEventListener("updateend", this.onUpdateend.bind(this));
@@ -1136,8 +1242,12 @@
    */
   class MediaPlayer {
       constructor(ctx, ...args) {
+          // 私有属性
           this.config = {};
           this.firstCurrentRequest = 0;
+          // 当前视频流的具体ID，也就是在请求第几个Period媒体片段
+          this.currentStreamId = 0;
+          // 媒体的总时长 -- duration
           this.duration = 0;
           this.config = ctx.context;
           this.setup();
@@ -1145,12 +1255,12 @@
       }
       //初始化类
       setup() {
-          this.urlLoader = factory$8().getInstance();
-          this.eventBus = factory$a().getInstance();
+          this.urlLoader = factory$9().getInstance();
+          this.eventBus = factory$b().getInstance();
           // ignoreRoot -> 忽略Document节点，从MPD开始作为根节点
-          this.dashParser = factory$5({ ignoreRoot: true }).getInstance();
-          this.streamController = factory$3({ num: 23 }).create();
-          this.buffer = factory$2().getInstance();
+          this.dashParser = factory$6({ ignoreRoot: true }).getInstance();
+          this.streamController = factory$4({ num: 23 }).create();
+          this.buffer = factory$3().getInstance();
       }
       initializeEvent() {
           this.eventBus.on(EventConstants.MANIFEST_LOADED, this.onManifestLoaded, this);
@@ -1164,21 +1274,25 @@
       onManifestLoaded(data) {
           let manifest = this.dashParser.parse(data);
           this.duration = this.dashParser.getTotalDuration(manifest);
-          this.eventBus.trigger(EventConstants.MANIFEST_PARSE_COMPLETED, manifest, this.duration);
+          this.eventBus.
+              trigger(EventConstants.MANIFEST_PARSE_COMPLETED, manifest, this.duration, manifest);
       }
       onSegmentLoaded(res) {
           console.log("加载Segment成功");
           this.firstCurrentRequest++;
           if (this.firstCurrentRequest === 23) ;
           let data = res.data;
+          let id = res.streamId;
           let videoBuffer = data[0];
           let audioBuffer = data[1];
+          this.currentStreamId = id;
+          console.log(id, 'curr');
           this.buffer.push({
               video: videoBuffer,
               audio: audioBuffer,
               streamId: res.streamId
           });
-          this.eventBus.trigger(EventConstants.BUFFER_APPENDED);
+          this.eventBus.trigger(EventConstants.BUFFER_APPENDED, this.currentStreamId);
       }
       /**
        * @description 发送MPD文件的网络请求，我要做的事情很纯粹，具体实现细节由各个Loader去具体实现

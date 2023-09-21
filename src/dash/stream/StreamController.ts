@@ -108,6 +108,8 @@ class StreamController {
     }
 
     getNumberOfMediaSegmentForPeriod(streamId:number): number {
+        console.log('到我了');
+        
         return this.segmentRequestStruct.request[this.streamId].VideoSegmentRequest[0].video[this.videoResolvePower][1].length;
     }   
 
@@ -119,18 +121,24 @@ class StreamController {
             
         this.eventBus.trigger(EventConstants.SEGEMTN_LOADED,{data: ires,streamId:this.streamId}); 
         let number = this.getNumberOfMediaSegmentForPeriod(this.streamId);
-
+        console.log(number,'number');
         for(let i = 0;i < (number >= this.firstRequestNumber ? this.firstRequestNumber : number); i++) {
             let mres = await this.loadMediaSegment(this.streamId,this.mediaIndex);
             this.mediaIndex++;
+            console.log('qu');
+            
             this.eventBus.trigger(EventConstants.SEGEMTN_LOADED,{data: mres,streamId:this.streamId});
         }
 
     }
     //播放器消费一个Segment我就继续请求一个Segment
     async onSegmentConsumed() {
+        console.log('有我的份吗？',this.mediaIndex);
+        
         if(!this.segmentRequestStruct.request[this.streamId]) return;
         let total = this.getNumberOfMediaSegmentForPeriod(this.streamId);
+        console.log(total,'total');
+        
         if(this.mediaIndex >= total) {
             this.mediaIndex = 0;
             this.streamId ++;
