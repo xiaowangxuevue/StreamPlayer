@@ -1791,6 +1791,14 @@ function getDOMPoint(dom) {
     console.log(l, t, 'xy');
     return { x: l, y: t };
 }
+/**
+ * @description 查看当前的鼠标位置是否在父元素和绝对定位的子元素的组合范围内，如果超出则返回false
+ * @param parent
+ * @param topChild
+ * @param pageX
+ * @param pageY
+ * @returns {boolean}
+ */
 function checkIsMouseInRange(parent, topChild, pageX, pageY) {
     let { x, y } = getDOMPoint(parent);
     let allTop = y - parseInt(topChild.style.bottom) - topChild.clientHeight;
@@ -1883,11 +1891,8 @@ class Controller extends BaseEvent {
         this.volumeBtn.onmouseenter = (e) => {
             this.volumeSet.style.display = "block";
             document.body.onmousemove = (e) => {
-                let pX = e.pageX, pY = e.pageY;
-                console.log(pX, 'pxxx');
-                if (!checkIsMouseInRange(this.volumeBtn, this.volumeSet, pX, pY)) {
-                    this.volumeSet.style.display = "none";
-                }
+                let ctx = this;
+                document.addEventListener("mousemove", this.handleMouseMove.bind(ctx));
             };
         };
     }
@@ -1915,6 +1920,15 @@ class Controller extends BaseEvent {
             this.volumeSet = this.container.querySelector(`.${styles["video-volume-set"]}`);
             this.initControllerEvent();
         });
+    }
+    handleMouseMove(e) {
+        let pX = e.pageX, pY = e.pageY;
+        console.log(pX, 'pxxx');
+        let ctx = this;
+        if (!checkIsMouseInRange(this.volumeBtn, this.volumeSet, pX, pY)) {
+            this.volumeSet.style.display = "none";
+        }
+        document.removeEventListener("mousemove", ctx.handleMouseMove);
     }
 }
 

@@ -3,7 +3,7 @@ import "./controller.less"
 import { volumeSVG } from "../SVGTool/VolumeModel";
 import { settingSVG } from "../SVGTool/SettingsModel";
 import { fullScreenSVG } from "../SVGTool/FullScreenModel";
-import { getDOMPoint ,checkIsMouseInRange} from "../../utils/getDOMPoint";
+import { getDOMPoint, checkIsMouseInRange } from "../../utils/getDOMPoint";
 export class Controller extends BaseEvent {
     private template_: HTMLElement | string;
     private container: HTMLElement;
@@ -27,7 +27,7 @@ export class Controller extends BaseEvent {
         this.container = container;
         this.init();
         this.initEvent()
-      
+
     }
 
     get template(): HTMLElement | string {
@@ -95,22 +95,18 @@ export class Controller extends BaseEvent {
                 document.exitFullscreen(); //退出全屏函数仅仅绑定在document对象上，该点需要切记！！！
             }
         };
-            /**
-     * @desciption 显示音量的设置
-     * TODO:这部分控制选项的显示和隐藏的逻辑可以复用
-     */
-    this.volumeBtn.onmouseenter = (e) => {
-        this.volumeSet.style.display = "block";
-        document.body.onmousemove = (e) => {
-        
-          let pX = e.pageX,pY = e.pageY;
-          console.log(pX,'pxxx');
-          
-          if(!checkIsMouseInRange(this.volumeBtn,this.volumeSet,pX,pY)) {
-            this.volumeSet.style.display = "none";
-          }
+        /**
+ * @desciption 显示音量的设置
+ * TODO:这部分控制选项的显示和隐藏的逻辑可以复用
+ */
+        this.volumeBtn.onmouseenter = (e) => {
+            this.volumeSet.style.display = "block";
+            document.body.onmousemove = (e) => {
+                let ctx = this
+                document.addEventListener("mousemove", this.handleMouseMove.bind(ctx))
+
+            }
         }
-      }
 
     }
 
@@ -151,12 +147,24 @@ export class Controller extends BaseEvent {
                 `.${styles["video-fullscreen"]}`
             );
             this.volumeBtn = this.container.querySelector(`.${styles["video-volume"]}`);
-            console.log(this.volumeBtn,this.volumeBtn.style,'btn')
+            console.log(this.volumeBtn, this.volumeBtn.style, 'btn')
             this.volumeSet = this.container.querySelector(`.${styles["video-volume-set"]}`)
 
             this.initControllerEvent();
         })
 
+
+    }
+
+    handleMouseMove(e: MouseEvent) {
+        let pX = e.pageX, pY = e.pageY;
+        console.log(pX, 'pxxx');
+        let ctx = this
+
+        if (!checkIsMouseInRange(this.volumeBtn, this.volumeSet, pX, pY)) {
+            this.volumeSet.style.display = "none";
+        }
+        document.removeEventListener("mousemove", ctx.handleMouseMove);
 
     }
 }
