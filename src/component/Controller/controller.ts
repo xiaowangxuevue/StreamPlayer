@@ -9,7 +9,7 @@ import {
   import { volumeSVG } from "../SVGTool/VolumeModel";
   import { settingSVG } from "../SVGTool/SettingsModel";
   import { fullScreenSVG } from "../SVGTool/FullScreenModel";
-  import { checkIsMouseInRange, getDOMPoint } from "../../utils/getDOMPoint";
+  import { checkIsMouseInRange, getDOMPoint } from "../../utils/domUtils";
   import "./controller.less";
   export class Controller extends BaseEvent {
     private template_: HTMLElement | string;

@@ -152,6 +152,7 @@ class MediaPlayerController {
 
     onMediaPlaybackFinished() {
         // this.mediaSource.endOfStream();
+        // 虽然存储了 URL-Blob映射，从内部映射中删除引用，从而允许删除 Blob（如果没有其他引用），并释放内存。
         window.URL.revokeObjectURL(this.video.src);
         console.log("播放流加载结束")
     }

@@ -59,7 +59,8 @@ export default defineConfig([
         ],
         // extract: true
         extract: 'css/index.css',
-        modules: true
+        // 启用了 CSS 模块化，使得每个 CSS 类都会被局部化，以防止全局样式冲突。
+        // modules: true
       })
     ],
   },
