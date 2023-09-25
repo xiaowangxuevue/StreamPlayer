@@ -1,6 +1,6 @@
 import {
-    ComponentItem,
-    PlayerOptions,
+  ComponentItem,
+  PlayerOptions,
     ToolBar,
   } from "../index";
   import "./player.less";
@@ -36,15 +36,15 @@ import {
     }
   
     initEvent() {
-      this.video.onmousemove = (e) => {
+      this.el.onmousemove = (e) => {
         this.emit("showtoolbar",e);
       }
   
-      this.video.onmouseenter = (e) => {
+      this.el.onmouseenter = (e) => {
         this.emit("showtoolbar",e);
       }
   
-      this.video.onmouseleave = (e) => {
+      this.el.onmouseleave = (e) => {
         this.emit("hidetoolbar",e);
       }
   
