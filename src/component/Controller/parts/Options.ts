@@ -35,7 +35,12 @@ export class Options extends Component implements ComponentItem {
         if (this.hideHeight && this.hideHeight > 0) {
             this.hideBox.style.height = this.hideHeight + 'px'
         }
+        
+        this.el.appendChild(this.hideBox);
 
+        this.iconBox = $("div");
+        this.el.appendChild(this.iconBox);
+    
 
 
     }

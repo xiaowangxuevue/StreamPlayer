@@ -143,7 +143,7 @@ export function getElementSize(
 const svgNS = 'http://www.w3.org/2000/svg';
 
 export function createSvg(d?: string, viewBox = '0 0 1024 1024'): SVGSVGElement {
-  const svg = document.createElementNS(svgNS, 'svg');
+  const svg = document.createElementNS(svgNS, 'svg'); //创建带有命名空间的元素节点
   svg.setAttribute('viewBox', viewBox);
   if (d) {
     const path = document.createElementNS(svgNS, 'path');
@@ -156,4 +156,16 @@ export function createSvg(d?: string, viewBox = '0 0 1024 1024'): SVGSVGElement 
 export function setSvgPath(svg:SVGSVGElement,d:string) {
     const path = svg.getElementsByTagNameNS(svgNS, "path")[0];
     path.setAttributeNS(null, "d", d);
+}
+
+export function createSvgs(d:string[],viewBox = '0 0 1024 1024'):SVGSVGElement {
+    const svg = document.createElementNS(svgNS,'svg')
+    svg.setAttribute('viewBox',viewBox);
+    for(let key of d){
+        const path = document.createElementNS(svgNS, 'path');
+        path.setAttributeNS(null, 'd', key);
+        svg.appendChild(path);
+    }
+
+    return svg;
 }

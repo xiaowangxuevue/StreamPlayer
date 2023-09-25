@@ -44,15 +44,13 @@ export class PlayButton extends Component implements ComponentItem {
         })
 
         this.el.onclick = (e) => {
-            console.log(this.el,'el');
             
             if(this.player.video.paused) {
-                console.log('test1');
+        
                 
                 this.player.video.play();
             } else {
 
-                console.log('test2');
                 
                 this.player.video.pause();
             }
