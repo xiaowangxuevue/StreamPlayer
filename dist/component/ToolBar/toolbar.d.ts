@@ -1,4 +1,4 @@
-import { Node, ComponentItem, DOMProps, Player, Progress } from "../../index";
+import { Node, ComponentItem, DOMProps, Player, Progress, Controller } from "../../index";
 import { Component } from "../../class/Component";
 import "./toolbar.less";
 export declare class ToolBar extends Component implements ComponentItem {
@@ -6,6 +6,7 @@ export declare class ToolBar extends Component implements ComponentItem {
     props: DOMProps;
     player: Player;
     progress: Progress;
+    controller: Controller;
     private timer;
     constructor(player: Player, container: HTMLElement, desc?: string, props?: DOMProps, children?: Node[]);
     init(): void;

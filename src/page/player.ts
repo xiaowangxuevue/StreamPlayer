@@ -36,6 +36,13 @@ import {
     }
   
     initEvent() {
+      this.video.onplay =(e) =>{
+        this.emit("play",e)
+      }
+
+      this.video.onpause = (e) => {
+        this.emit("pause",e)
+      }
       this.el.onmousemove = (e) => {
         this.emit("showtoolbar",e);
       }
