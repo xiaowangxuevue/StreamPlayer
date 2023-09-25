@@ -225,6 +225,7 @@
 }
 .video-play .video-subplay .video-settings .video-volume .video-volume-set .video-voulme-progress {
   width: 2px;
+  border-radius: 5px;
   height: calc(100% - 20px - 10px);
   margin-top: 8px;
   margin-left: 50%;

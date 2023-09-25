@@ -19,11 +19,11 @@ export class CompletedProgress extends Component implements ComponentItem {
 
     initEvent() {
         this.player.on("progress-click",(e:MouseEvent, ctx:Progress)=>{
-            this.onChangeWidth(e,ctx);
+            this.onChangeSize(e,ctx);
         })
     }
 
-    onChangeWidth(e:MouseEvent,ctx:Component) {
+    onChangeSize(e:MouseEvent,ctx:Component) {
         let scale = e.offsetX / ctx.el.offsetWidth;
         if (scale < 0) {
             scale = 0;

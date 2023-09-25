@@ -81,7 +81,6 @@ export function $<T extends HTMLElement>(
             el.appendChild(child.el);
         }
     }
-
     return el as T;
 }
 /**
