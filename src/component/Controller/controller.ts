@@ -5,6 +5,8 @@ import { $, addClass } from "../../utils/domUtils";
 import "./controller.less";
 import { PlayButton } from "./parts/PlayButton";
 import { Volume } from "./parts/Volume";
+import { FullScreen } from "./parts/FullScreen";
+import { Playrate } from "./parts/Playrate";
 export class Controller extends Component implements ComponentItem {
   readonly id = "Controller";
   private subPlay: HTMLElement;
@@ -12,7 +14,9 @@ export class Controller extends Component implements ComponentItem {
   props: DOMProps;
   player: Player;
   playButton: PlayButton;
-  volume:Volume
+  volume:Volume;
+  FullScreen:FullScreen;
+  playrate: Playrate;
   constructor(player:Player,container:HTMLElement, desc?:string,props?:DOMProps,children?:Node[]) {
     super(container,desc,props,children);
     this.player = player;
@@ -33,10 +37,16 @@ export class Controller extends Component implements ComponentItem {
 
   initComponent() {
     this.playButton = new PlayButton(this.player,this.subPlay,"div.video-start-pause");
+    this.playrate = new Playrate(this.player,this.settings,"div")
     this.volume = new Volume(this.player,this.settings,"div");
     // 给元素添加类名
     console.log("先看看蒸鹅",this.volume)
     addClass(this.volume.el,["video-volume","video-controller"])
+
+    this.FullScreen = new FullScreen(this.player,this.settings,"div")
+   
+    console.log(this,'controller');
+    
   }
   // private template_: HTMLElement | string;
   // private container: HTMLElement;
