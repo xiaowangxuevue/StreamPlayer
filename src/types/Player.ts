@@ -1,10 +1,13 @@
 import { Player } from "../page/player"
+import { Component } from "../class/Component";
 export type PlayerOptions = {
     url: string;
     container: HTMLElement;
     autoplay?:boolean;
     width?:string;
     height?:string;  
+    leftControllers?:(ComponentConstructor | string)[];
+    rightControllers?:(ComponentConstructor | string)[]
 }
 
 
@@ -39,3 +42,13 @@ export type registerOptions = {
 
 // infer 关键字用于捕获参数列表中的每个参数的类型。
 export type getFunctionParametersType<T extends (...arg:any[]) => any> = T extends (...args:(infer T)[]) => infer U ? T : never;
+
+export interface ComponentConstructor {
+    new (
+      player: Player,
+      container: HTMLElement,
+      desc?: string,
+      props?: DOMProps,
+      children?: string | Node[]
+    ): Component & ComponentItem;
+  }
