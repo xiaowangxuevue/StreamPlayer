@@ -8071,7 +8071,7 @@ MP4Box.createFile = function (_keepMdatData, _stream) {
   exports.createFile = MP4Box.createFile;
 }
 });
-mp4box_all.Log;
+var mp4box_all_1 = mp4box_all.Log;
 mp4box_all.MP4BoxStream;
 mp4box_all.DataStream;
 mp4box_all.MultiBufferStream;
@@ -8089,16 +8089,66 @@ class MediaPlayer$1 {
         this.init();
     }
     init() {
-        this.mp4boxFile = mp4box_all.createFile();
+        this.mp4boxfile = mp4box_all.createFile();
         this.initEvent();
     }
     initEvent() {
+        this.mp4boxfile.onMoovStart = function () {
+            mp4box_all_1.info("Application", "Starting to parse movie information");
+        };
+        this.mp4boxfile.onReady = function (info) {
+            debugger;
+            mp4box_all_1.info("Application", "Movie information received");
+            if (info.isFragmented) {
+                this.mediaSource.duration = info.fragment_duration / info.timescale;
+            }
+            else {
+                this.mediaSource.duration = info.duration / info.timescale;
+            }
+            this.addSourceBufferListener(info);
+            stop();
+        };
+    }
+    /**
+     *
+     * @description 根据传入的媒体轨道的类型构建对应的SourceBuffer
+     * @param mp4track
+     */
+    addBuffer(mp4track) {
+        var track_id = mp4track.id;
+        var codec = mp4track.codec;
+        var mime = 'video/mp4; codecs=\"' + codec + '\"';
+        // var kind = mp4track.kind;
+        var sb;
+        if (MediaSource.isTypeSupported(mime)) {
+            try {
+                mp4box_all_1.info("MSE - SourceBuffer #" + track_id, "Creation with type '" + mime + "'");
+                // 根据moov box中解析出来的track去一一创建对应的sourcebuffer
+                sb = this.mediaSource.addSourceBuffer(mime);
+                sb.addEventListener("error", function (e) {
+                    mp4box_all_1.error("MSE SourceBuffer #" + track_id, e);
+                });
+                sb.ms = this.mediaSource;
+                sb.id = track_id;
+                this.mp4boxfile.setSegmentOptions(track_id, sb);
+                sb.pendingAppends = [];
+            }
+            catch (e) {
+                mp4box_all_1.error("MSE - SourceBuffer #" + track_id, "Cannot create buffer with type '" + mime + "'" + e);
+            }
+        }
+    }
+    addSourceBufferListener(info) {
+        for (var i = 0; i < info.tracks.length; i++) {
+            var track = info.tracks[i];
+            this.addBuffer(track);
+        }
     }
 }
 
 function getFileExtension(file) {
-    for (let i = file.length - 1; i > 0; i--) {
-        if (file[i] === '') {
+    for (let i = file.length - 1; i >= 0; i--) {
+        if (file[i] === '.') {
             return file.slice(i, file.length);
         }
     }
