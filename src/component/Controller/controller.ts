@@ -1,7 +1,7 @@
 import { Component } from "../../class/Component";
 import { Player } from "../../page/player";
 import { ComponentConstructor, ComponentItem, DOMProps,Node, PlayerOptions } from "../../types/Player";
-import { $, addClass } from "../../utils/domUtils";
+import { $, } from "../../utils/domUtils";
 import { storeControlComponent,controllersMapping } from "../../utils/store";
 import "./controller.less";
 import { PlayButton } from "./parts/PlayButton";
@@ -10,8 +10,8 @@ import { FullScreen } from "./parts/FullScreen";
 import { Playrate } from "./parts/Playrate";
 export class Controller extends Component implements ComponentItem {
   readonly id = "Controller";
-  private subPlay: HTMLElement;
-  private settings: HTMLElement;
+  subPlay: HTMLElement;
+  settings: HTMLElement;
   props: DOMProps={};
   player: Player;
   // 控件

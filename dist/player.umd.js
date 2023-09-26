@@ -532,6 +532,7 @@
           // 播放器的默认配置
           this.playerOptions = {
               url: "",
+              container: document.body,
               autoplay: false,
               width: "100%",
               height: "100%",
@@ -549,6 +550,7 @@
           this.el.appendChild(this.video);
           this.toolBar = new ToolBar(this, this.el, "div");
           this.initEvent();
+          this.initPlugin();
       }
       initEvent() {
           this.video.onplay = (e) => {
@@ -584,16 +586,32 @@
               this.video.paused && this.video.play();
           });
       }
+      initPlugin() {
+          if (this.playerOptions.plugins) {
+              this.playerOptions.plugins.forEach(plugin => {
+                  this.use(plugin);
+              });
+          }
+      }
       attendSource(url) {
           this.video.src = url;
       }
       registerControls(id, component) {
           let store = CONTROL_COMPONENT_STORE;
           if (store.has(id)) {
-              patchComponent(store.get(id), component);
+              if (component.replaceElementType) {
+                  patchComponent(store.get(id), component, { replaceElementType: component.replaceElementType });
+              }
+              else {
+                  patchComponent(store.get(id), component);
+              }
           }
           else {
-              console.log('暂无!');
+              // 如果该组件实例是用户自创的话
+              if (!component.el)
+                  throw new Error(`传入的原创组件${id}没有对应的DOM元素`);
+              console.log('what', component.el);
+              this.toolBar.controller.settings.appendChild(component.el);
           }
       }
       /**
@@ -1133,10 +1151,18 @@
 
   exports.$warn = $warn;
   exports.BaseEvent = BaseEvent;
+  exports.BufferedProgress = BufferedProgress;
+  exports.CompletedProgress = CompletedProgress;
   exports.Controller = Controller;
+  exports.Dot = Dot;
+  exports.FullScreen = FullScreen;
+  exports.Options = Options;
+  exports.PlayButton = PlayButton;
   exports.Player = Player;
+  exports.Playrate = Playrate;
   exports.Progress = Progress;
   exports.ToolBar = ToolBar;
+  exports.Volume = Volume;
   exports.addZero = addZero;
   exports.checkAdaptationSet = checkAdaptationSet;
   exports.checkBaseURL = checkBaseURL;
