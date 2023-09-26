@@ -154,6 +154,16 @@
       }
       return svg;
   }
+  /**
+   *
+   * @description 合并两个组件的实例对象
+   * @param target
+   * @param another
+   */
+  function patchComponent(target, another, options = { replaceElementType: "replaceOuterHTMLOfComponent" }) {
+      if (target.id !== another.id)
+          throw new Error("需要合并的两个组件id不相同");
+  }
 
   class Component extends BaseEvent {
       constructor(container, desc, props, children) {
@@ -163,6 +173,11 @@
           // 安装组件成功
           container.append(dom);
       }
+  }
+
+  const CONTROL_COMPONENT_STORE = new Map();
+  function storeControlComponent(item) {
+      CONTROL_COMPONENT_STORE.set(item.id, item);
   }
 
   class Player extends Component {
@@ -226,6 +241,20 @@
       }
       attendSource(url) {
           this.video.src = url;
+      }
+      registerControls(id, component) {
+          let store = CONTROL_COMPONENT_STORE;
+          if (store.has(id)) {
+              patchComponent(store.get(id), component);
+          }
+      }
+      /**
+       *
+       * @description 注册对应的组件
+       * @param plugin
+       */
+      use(plugin) {
+          plugin.install(this);
       }
   }
 
@@ -561,6 +590,7 @@
       init() {
           this.initTemplate();
           this.initEvent();
+          storeControlComponent(this);
       }
       initTemplate() {
           // 创建一个playicon
@@ -570,6 +600,7 @@
           this.el.appendChild(this.button);
       }
       initEvent() {
+          this.onClick = this.onClick.bind(this);
           this.player.on("play", (e) => {
               this.el.removeChild(this.button);
               this.button = this.pauseIcon;
@@ -580,14 +611,15 @@
               this.button = this.playIcon;
               this.el.appendChild(this.button);
           });
-          this.el.onclick = (e) => {
-              if (this.player.video.paused) {
-                  this.player.video.play();
-              }
-              else {
-                  this.player.video.pause();
-              }
-          };
+          this.el.onclick = this.onClick.bind(this);
+      }
+      onClick(e) {
+          if (this.player.video.paused) {
+              this.player.video.play();
+          }
+          else {
+              this.player.video.pause();
+          }
       }
   }
 
@@ -643,6 +675,7 @@
       init() {
           this.initTemplate();
           this.initEvent();
+          storeControlComponent(this);
       }
       initTemplate() {
           this.el["aria-label"] = '音量';
@@ -655,8 +688,8 @@
           this.hideBox.appendChild(this.volumeShow);
           this.hideBox.appendChild(this.volumeProgress);
           addClass(this.iconBox, ["video-icon"]);
-          let svg = createSvgs([volumePath$1, volumePath$2]);
-          this.iconBox.appendChild(svg);
+          this.icon = createSvgs([volumePath$1, volumePath$2]);
+          this.iconBox.appendChild(this.icon);
           console.log(this.iconBox, 'box');
       }
       initEvent() {
@@ -688,6 +721,7 @@
       init() {
           this.initTemplate();
           this.initEvent();
+          storeControlComponent(this);
       }
       initTemplate() {
           addClass(this.el, ["video-fullscreen", "video-controller"]);
@@ -727,6 +761,7 @@
       }
       init() {
           this.initTemplate();
+          storeControlComponent(this);
       }
       initTemplate() {
           this.el["aria-label"] = "播放倍速";
@@ -756,6 +791,7 @@
       init() {
           this.initTemplate();
           this.initComponent();
+          storeControlComponent(this);
       }
       initTemplate() {
           this.subPlay = $("div.video-subplay");

@@ -1,4 +1,4 @@
-import { DOMProps, Node } from "../types/Player";
+import { ComponentItem, DOMProps, Node, registerOptions } from "../types/Player";
 export function getDOMPoint(dom:HTMLElement):{x:number,y:number} {
     var t = 0; 
     var l = 0; 
@@ -169,3 +169,32 @@ export function createSvgs(d:string[],viewBox = '0 0 1024 1024'):SVGSVGElement {
 
     return svg;
 }
+
+/**
+ * 
+ * @description 合并两个组件的实例对象
+ * @param target
+ * @param another
+ */
+
+export function patchComponent(
+    target:ComponentItem,
+    another:Partial<ComponentItem>,
+    options:registerOptions = {replaceElementType:"replaceOuterHTMLOfComponent"}
+) {
+    if(target.id !== another.id) throw new Error("需要合并的两个组件id不相同");
+    for(let key in target) {
+        
+    }
+}
+
+export function patchDOMProps(targerProps:DOMProps,anotherProps:DOMProps,el:HTMLElement){
+
+}
+
+
+export function patchStyle(targetStyle:Partial<CSSStyleDeclaration>,
+    anotherStyle:Partial<CSSStyleDeclaration>,
+    el:HTMLElement){
+        
+    }

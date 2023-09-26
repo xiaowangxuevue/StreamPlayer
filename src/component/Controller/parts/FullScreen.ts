@@ -1,5 +1,6 @@
 import { Component } from "../../../class/Component";
 import { Player } from "../../../page/player";
+import { storeControlComponent } from "../../../utils/store";
 import { ComponentItem, DOMProps, Node } from "../../../types/Player";
 import { $, addClass, createSvg } from "../../../utils/domUtils";
 import { fullscreenExitPath, fullscreenPath } from "../path/defaultPath";
@@ -18,6 +19,7 @@ export class FullScreen extends Component implements ComponentItem{
     init(){
         this.initTemplate()
         this.initEvent()
+        storeControlComponent(this)
     }
 
     initTemplate(){

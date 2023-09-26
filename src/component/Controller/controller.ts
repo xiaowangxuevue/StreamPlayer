@@ -2,6 +2,7 @@ import { Component } from "../../class/Component";
 import { Player } from "../../page/player";
 import { ComponentItem, DOMProps,Node } from "../../types/Player";
 import { $, addClass } from "../../utils/domUtils";
+import { storeControlComponent } from "../../utils/store";
 import "./controller.less";
 import { PlayButton } from "./parts/PlayButton";
 import { Volume } from "./parts/Volume";
@@ -26,6 +27,7 @@ export class Controller extends Component implements ComponentItem {
   init() {
     this.initTemplate();
     this.initComponent();
+    storeControlComponent(this)
   }
 
   initTemplate() {
