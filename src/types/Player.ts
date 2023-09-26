@@ -35,3 +35,7 @@ export type  Plugin = {
 export type registerOptions = {
     replaceElementType?:"replaceOuterHTMLOfComponent" | "replaceInnerHTMLOfComponent"
 }
+//提取出函数参数类型
+
+// infer 关键字用于捕获参数列表中的每个参数的类型。
+export type getFunctionParametersType<T extends (...arg:any[]) => any> = T extends (...args:(infer T)[]) => infer U ? T : never;
