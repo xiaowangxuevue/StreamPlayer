@@ -10,6 +10,7 @@ import "../main.less";
 import { Component } from "../class/Component";
 import { $, patchComponent } from "../utils/domUtils";
 import { Plugin } from "../index";
+import Mp4MediaPlayer from "../mp4/MediaPlayer";
 import { getFileExtension } from "../utils/play";
 import  MpdMediaPlayerFactory  from "../dash/MediaPlayer";
 import { CONTROL_COMPONENT_STORE } from "../utils/store";
@@ -31,8 +32,8 @@ class Player extends Component implements ComponentItem {
     super(options.container, "div.video-wrapper");
     this.playerOptions = Object.assign(this.playerOptions, options);
     options.container.className = "video-container";
-    options.container.style.width = this.playerOptions.width + "px";
-    options.container.style.height = this.playerOptions.height + "px";
+    options.container.style.width = this.playerOptions.width ;
+    options.container.style.height = this.playerOptions.height;
     this.container = options.container;
     this.init();
   }
@@ -95,6 +96,7 @@ class Player extends Component implements ComponentItem {
   }
 
   initMp4Player(url:string) {
+    let player = new Mp4MediaPlayer()
 
   }
 
@@ -108,9 +110,11 @@ class Player extends Component implements ComponentItem {
     switch(getFileExtension(url)) {
       case "mp4":
       case "mp3":
-        this.video.src = url;
+        this.initMp4Player(url)
       case "mpd":
-
+        this.initMpdPlayer(url);
+      case "m3u8":
+        // ToDo
     }
   }
   registerControls(id:string,component:Partial<ComponentItem> & registerOptions) {
