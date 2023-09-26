@@ -15,6 +15,7 @@ export class PlayButton extends Component implements ComponentItem {
     constructor(player: Player, container: HTMLElement, desc?: string, props?: DOMProps, children?: Node[]) {
         super(container, desc, props, children);
         this.player = player;
+        this.props  = props || {}
         this.init()
     }
 
@@ -45,7 +46,14 @@ export class PlayButton extends Component implements ComponentItem {
             this.button = this.playIcon as SVGSVGElement;
             this.el.appendChild(this.button);
         })
-        this.el.onclick = this.onClick.bind(this);
+        this.el.onclick = this.onClick;
+
+    }
+    resetEvent(){
+        this.onClick = this.onClick.bind(this);
+        this.el.onclick = null;
+        this.el.onclick = this.onClick;
+        
     }
 
     onClick(e: MouseEvent) {

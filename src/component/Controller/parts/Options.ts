@@ -1,6 +1,5 @@
 import { Component } from "../../../class/Component";
 import { Player } from "../../../page/player";
-import { storeControlComponent } from "../../../utils/store";
 import { ComponentItem, DOMProps, Node } from "../../../types/Player";
 import { $, checkIsMouseInRange } from "../../../utils/domUtils";
 export class Options extends Component implements ComponentItem {
@@ -14,7 +13,7 @@ export class Options extends Component implements ComponentItem {
     constructor(player: Player, container: HTMLElement, hideWidth?: number, hideHiegth?: number, desc?: string, props?: DOMProps, children?: Node[]) {
         super(container, desc, props, children);
         this.player = player;
-        props ? (this.props = props) : (this.props = null);
+        props ? (this.props = props) : (this.props = {});
         this.hideWidth = hideWidth;
         this.hideHeight = hideHiegth;
         this.initBase()

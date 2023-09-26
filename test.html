@@ -47,6 +47,17 @@
         })
         console.log(player,'pl');
 
+        player.use({
+            install(player) {
+                player.registerControls("Toolbar",{
+                    id:"Toolbar",
+                    onHideToolBar(e) {
+                        console.log("隐藏工具栏")
+                    }
+                })
+            }
+        })
+
         
 
 

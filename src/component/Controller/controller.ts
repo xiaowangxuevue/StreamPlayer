@@ -12,7 +12,7 @@ export class Controller extends Component implements ComponentItem {
   readonly id = "Controller";
   private subPlay: HTMLElement;
   private settings: HTMLElement;
-  props: DOMProps;
+  props: DOMProps={};
   player: Player;
   playButton: PlayButton;
   volume:Volume;

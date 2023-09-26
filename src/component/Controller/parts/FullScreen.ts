@@ -13,6 +13,7 @@ export class FullScreen extends Component implements ComponentItem{
     constructor(player: Player, container: HTMLElement, desc?: string, props?: DOMProps, children?: Node[]) {
         super( container,desc,props,children);
         this.player = player;
+        this.props = props || {}
         this.init();
     }
 

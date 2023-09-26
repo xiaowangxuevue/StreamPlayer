@@ -161,8 +161,84 @@
    * @param another
    */
   function patchComponent(target, another, options = { replaceElementType: "replaceOuterHTMLOfComponent" }) {
+      var _a, _b;
       if (target.id !== another.id)
           throw new Error("需要合并的两个组件id不相同");
+      for (let key in another) {
+          if (key in target) {
+              if (key === 'props') {
+                  patchDOMProps(target[key], another[key], target.el);
+              }
+              else if (key === 'el') {
+                  if (options.replaceElementType === "replaceOuterHTMLOfComponent") {
+                      target.el = another.el;
+                  }
+                  else {
+                      for (let child of target.el.childNodes) {
+                          target.el.removeChild(child);
+                      }
+                      target.el.appendChild(another.el);
+                  }
+              }
+              else {
+                  if (target[key] instanceof Function) {
+                      if (!(another[key] instanceof Function)) {
+                          throw new Error(`属性${key}对应的值应该为函数类型`);
+                      }
+                      console.log("合并函数", another[key]);
+                      // target[key] = patchFn(target[key],another[key].target);
+                      target.resetEvent();
+                  }
+                  else if (target[key] instanceof HTMLElement) {
+                      if (!(another[key] instanceof HTMLElement) && typeof another[key] !== 'string') {
+                          throw new Error(`属性${key}对应的值应该为DOM元素或者字符串类型`);
+                      }
+                      if (typeof another[key] === 'string') ;
+                      else {
+                          (_a = target[key].parentNode) === null || _a === void 0 ? void 0 : _a.insertBefore(another[key], target[key]);
+                          (_b = target[key].parentNode) === null || _b === void 0 ? void 0 : _b.removeChild(target[key]);
+                          target[key] = another[key];
+                      }
+                  }
+              }
+          }
+      }
+  }
+  function patchDOMProps(targetProps, anotherProps, el) {
+      for (let key in anotherProps) {
+          if (targetProps.hasOwnProperty(key)) {
+              if (key === 'id') {
+                  targetProps.id = anotherProps.id;
+                  el.id = targetProps.id;
+              }
+              else if (key === "className") {
+                  targetProps.className.concat(anotherProps.className);
+                  addClass(el, anotherProps.className);
+              }
+              else if (key === "style") {
+                  patchStyle(targetProps.style, anotherProps.style, el);
+              }
+          }
+          else {
+              targetProps[key] = anotherProps[key];
+              if (key !== "style") {
+                  el[key] = anotherProps[key];
+              }
+              else if (key === "style") {
+                  for (let prop in anotherProps['style']) {
+                      el.style[prop] = anotherProps['style'][prop];
+                  }
+              }
+          }
+      }
+  }
+  function patchStyle(targetStyle, anotherStyle, el) {
+      for (let key in anotherStyle) {
+          targetStyle[key] = anotherStyle[key];
+      }
+      for (let key in targetStyle) {
+          el.style[key] = targetStyle[key];
+      }
   }
 
   class Component extends BaseEvent {
@@ -173,6 +249,11 @@
           // 安装组件成功
           container.append(dom);
       }
+      init() { }
+      initEvent() { }
+      initTemplate() { }
+      initComponent() { }
+      resetEvent() { }
   }
 
   const CONTROL_COMPONENT_STORE = new Map();
@@ -244,6 +325,7 @@
       }
       registerControls(id, component) {
           let store = CONTROL_COMPONENT_STORE;
+          console.log(store, id,'888');
           if (store.has(id)) {
               patchComponent(store.get(id), component);
           }
@@ -273,14 +355,15 @@
           this.id = 'Toolbar';
           this.timer = 0;
           this.player = player;
-          this.props = props;
-          this.initComponent();
+          this.props = props || {};
           this.initEvent();
           this.init();
       }
       init() {
           this.initTemplate();
           this.initEvent();
+          this.initComponent();
+          storeControlComponent(this);
       }
       initComponent() {
           this.progress = new Progress(this.player, this.el, "div.video-progress");
@@ -585,6 +668,7 @@
           super(container, desc, props, children);
           this.id = "PlayButton";
           this.player = player;
+          this.props = props || {};
           this.init();
       }
       init() {
@@ -611,7 +695,12 @@
               this.button = this.playIcon;
               this.el.appendChild(this.button);
           });
-          this.el.onclick = this.onClick.bind(this);
+          this.el.onclick = this.onClick;
+      }
+      resetEvent() {
+          this.onClick = this.onClick.bind(this);
+          this.el.onclick = null;
+          this.el.onclick = this.onClick;
       }
       onClick(e) {
           if (this.player.video.paused) {
@@ -628,7 +717,7 @@
           super(container, desc, props, children);
           this.id = "Options";
           this.player = player;
-          props ? (this.props = props) : (this.props = null);
+          props ? (this.props = props) : (this.props = {});
           this.hideWidth = hideWidth;
           this.hideHeight = hideHiegth;
           this.initBase();
@@ -716,6 +805,7 @@
           super(container, desc, props, children);
           this.id = 'FullScreen';
           this.player = player;
+          this.props = props || {};
           this.init();
       }
       init() {
@@ -785,6 +875,7 @@
       constructor(player, container, desc, props, children) {
           super(container, desc, props, children);
           this.id = "Controller";
+          this.props = {};
           this.player = player;
           this.init();
       }

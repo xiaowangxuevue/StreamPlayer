@@ -1,5 +1,6 @@
 import { Node,ComponentItem,DOMProps,Player,Progress,Controller,} from "../../index";
 import { Component } from "../../class/Component";
+import { storeControlComponent } from "../../utils/store";
 import { addClass, includeClass, removeClass } from "../../utils/domUtils";
 import "./toolbar.less";
 // ComponentItem用于描述一个组件
@@ -21,14 +22,15 @@ export class ToolBar extends Component implements ComponentItem {
     constructor(player:Player,container:HTMLElement,desc?:string,props?:DOMProps,children?:Node[]){
       super(container,desc,props,children);
       this.player = player;
-      this.props = props;
-      this.initComponent()
+      this.props = props || {};
       this.initEvent()
       this.init()
     }
     init(){
       this.initTemplate();
       this.initEvent();
+      this.initComponent()
+      storeControlComponent(this)
     }
 
     initComponent(){
