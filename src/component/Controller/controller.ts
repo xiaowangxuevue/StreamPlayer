@@ -38,17 +38,11 @@ export class Controller extends Component implements ComponentItem {
   }
 
   initComponent() {
-    this.playButton = new PlayButton(this.player,this.subPlay,"div.video-start-pause");
+    this.playButton = new PlayButton(this.player,this.subPlay,"div");
     this.playrate = new Playrate(this.player,this.settings,"div")
     this.volume = new Volume(this.player,this.settings,"div");
     // 给元素添加类名
-    console.log("先看看蒸鹅",this.volume)
-    addClass(this.volume.el,["video-volume","video-controller"])
-
     this.FullScreen = new FullScreen(this.player,this.settings,"div")
-   
-    console.log(this,'controller');
-    
   }
   // private template_: HTMLElement | string;
   // private container: HTMLElement;

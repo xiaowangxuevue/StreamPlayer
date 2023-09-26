@@ -87,11 +87,10 @@ class Player extends Component implements ComponentItem {
 
   registerControls(id:string,component:Partial<ComponentItem>) {
     let store = CONTROL_COMPONENT_STORE;
-    console.log(store,id)
     if(store.has(id)) {
       patchComponent(store.get(id),component);
     }else {
-
+      console.log('暂无!')
     }
   }
 
@@ -102,6 +101,8 @@ class Player extends Component implements ComponentItem {
    */
 
   use(plugin:Plugin) {
+    console.log(plugin,'pplu');
+    
     plugin.install(this)
   }
 }

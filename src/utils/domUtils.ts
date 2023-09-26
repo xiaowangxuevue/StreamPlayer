@@ -182,10 +182,12 @@ export function patchComponent(
     another:Partial<ComponentItem>,
     options:registerOptions = {replaceElementType:"replaceOuterHTMLOfComponent"}
 ) {
+    console.log(target,another,options,'!!')
     if(target.id !== another.id) throw new Error("需要合并的两个组件id不相同");
 
-    for(let key in another) {
-        if(key in target) {
+    for(let key in another) { //遍历新
+        console.log(key,'key') // id onhidefn()
+        if(key in target) {   //遍历旧
             if(key === 'props') {
                 patchDOMProps(target[key],another[key],target.el);
             } else if(key === 'el') {
@@ -203,7 +205,7 @@ export function patchComponent(
                         throw new Error(`属性${key}对应的值应该为函数类型`);
                     }
                     console.log("合并函数",another[key])
-                    // target[key] = patchFn(target[key],another[key].target);
+                    target[key] = patchFn(target[key],another[key],target);
                     target.resetEvent()
                 } else if(target[key] instanceof HTMLElement) {
                     if(!(another[key] instanceof HTMLElement) && typeof another[key] !== 'string') {
@@ -263,16 +265,14 @@ export function patchStyle(
     }
 }
 
-// export function patchFn<T extends (...args:any[]) => any>(targetFn: T,another : T, context: ComponentItem) {
-//     let args = targetFn.arguments;
-//     function fn(...args: getFunctionParametersType<T>[]) {
-//         targetFn.call(context,...args);
-//         another.call(context,...args);
-//     }
+export function patchFn<T extends (...args:any[]) => any>(targetFn: T,anotherFn : T, context: ComponentItem) {
+    // let args = targetFn.arguments;
+    // console.log(targetFn,'66'+anotherFn,context,'12314')
+    // 创建一个新函数 fn，该函数会调用传入的 targetFn 和 anotherFn，并将它们绑定到指定的 context 上。这可以用于在调用原始函数前后执行额外的逻辑，例如添加一些拦截器或修改参数等。
+    function fn(...args: getFunctionParametersType<T>[]) {
+        targetFn.call(context,...args);
+        anotherFn.call(context,...args);
+    }
 
-//     targetFn = fn as T;
-// }
-
-export function patchFn(){
-    console.log('hh')
+    return fn.bind(context) as T;
 }

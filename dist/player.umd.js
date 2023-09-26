@@ -162,10 +162,12 @@
    */
   function patchComponent(target, another, options = { replaceElementType: "replaceOuterHTMLOfComponent" }) {
       var _a, _b;
+      console.log(target, another, options, '!!');
       if (target.id !== another.id)
           throw new Error("需要合并的两个组件id不相同");
-      for (let key in another) {
-          if (key in target) {
+      for (let key in another) { //遍历新
+          console.log(key, 'key'); // id onhidefn()
+          if (key in target) { //遍历旧
               if (key === 'props') {
                   patchDOMProps(target[key], another[key], target.el);
               }
@@ -186,7 +188,7 @@
                           throw new Error(`属性${key}对应的值应该为函数类型`);
                       }
                       console.log("合并函数", another[key]);
-                      // target[key] = patchFn(target[key],another[key].target);
+                      target[key] = patchFn(target[key], another[key], target);
                       target.resetEvent();
                   }
                   else if (target[key] instanceof HTMLElement) {
@@ -239,6 +241,16 @@
       for (let key in targetStyle) {
           el.style[key] = targetStyle[key];
       }
+  }
+  function patchFn(targetFn, anotherFn, context) {
+      // let args = targetFn.arguments;
+      // console.log(targetFn,'66'+anotherFn,context,'12314')
+      // 创建一个新函数 fn，该函数会调用传入的 targetFn 和 anotherFn，并将它们绑定到指定的 context 上。这可以用于在调用原始函数前后执行额外的逻辑，例如添加一些拦截器或修改参数等。
+      function fn(...args) {
+          targetFn.call(context, ...args);
+          anotherFn.call(context, ...args);
+      }
+      return fn.bind(context);
   }
 
   class Component extends BaseEvent {
@@ -325,9 +337,11 @@
       }
       registerControls(id, component) {
           let store = CONTROL_COMPONENT_STORE;
-          console.log(store, id,'888');
           if (store.has(id)) {
               patchComponent(store.get(id), component);
+          }
+          else {
+              console.log('暂无!');
           }
       }
       /**
@@ -336,6 +350,7 @@
        * @param plugin
        */
       use(plugin) {
+          console.log(plugin, 'pplu');
           plugin.install(this);
       }
   }
@@ -411,13 +426,15 @@
       constructor(player, container, desc, props, children) {
           super(container, desc, props, children);
           this.id = "Dot";
-          this.props = props;
+          this.props = props || {};
           this.player = player;
           this.init();
       }
       init() {
           addClass(this.el, ["video-dot", "video-dot-hidden"]);
           this.initEvent();
+          // 加到map中
+          storeControlComponent(this);
       }
       initEvent() {
           this.player.on("progress-mouseenter", (e) => {
@@ -450,12 +467,13 @@
       constructor(player, container, desc, props, children) {
           super(container, desc, props, children);
           this.id = "CompletedProgress";
-          this.props = props;
+          this.props = props || {};
           this.player = player;
           this.init();
       }
       init() {
           this.initEvent();
+          storeControlComponent(this);
       }
       initEvent() {
           this.player.on("progress-click", (e, ctx) => {
@@ -478,12 +496,13 @@
       constructor(player, container, desc, props, children) {
           super(container, desc, props, children);
           this.id = "BufferedProgress";
-          this.props = props;
+          this.props = props || {};
           this.player = player;
           this.init();
       }
       init() {
           this.initEvent();
+          storeControlComponent(this);
       }
       initEvent() {
           this.player.on("progress-click", (e, ctx) => {
@@ -508,11 +527,13 @@
           this.id = "Progress";
           this.mouseDown = false;
           this.player = player;
+          this.props = props || {};
           this.init();
       }
       init() {
           this.initComponent();
           this.initEvent();
+          storeControlComponent(this);
       }
       initComponent() {
           this.dot = new Dot(this.player, this.el, "div");
@@ -521,14 +542,23 @@
       }
       initEvent() {
           this.el.onmouseenter = (e) => {
-              this.player.emit("progress-mouseenter", e, this);
+              this.onMouseenter(e);
           };
           this.el.onmouseleave = (e) => {
-              this.player.emit("progress-mouseleave", e, this);
+              this.onMouseleave(e);
           };
           this.el.onclick = (e) => {
-              this.player.emit("progress-click", e, this);
+              this.onClick(e);
           };
+      }
+      onMouseenter(e) {
+          this.player.emit("progress-mouseenter", e, this);
+      }
+      onMouseleave(e) {
+          this.player.emit("progress-mouseleave", e, this);
+      }
+      onClick(e) {
+          this.player.emit("progress-click", e, this);
       }
   }
   // import { $warn, BaseEvent, formatTime, styles } from "../../index";
@@ -677,6 +707,7 @@
           storeControlComponent(this);
       }
       initTemplate() {
+          addClass(this.el, ["video-start-pause"]);
           // 创建一个playicon
           this.playIcon = createSvg(playPath);
           this.pauseIcon = createSvg(pausePath);
@@ -767,6 +798,7 @@
           storeControlComponent(this);
       }
       initTemplate() {
+          addClass(this.el, ["video-volume", "video-controller"]);
           this.el["aria-label"] = '音量';
           this.hideBox.style.bottom = '41px';
           addClass(this.hideBox, ['video-volume-set']);
@@ -891,14 +923,11 @@
           this.el.appendChild(this.settings);
       }
       initComponent() {
-          this.playButton = new PlayButton(this.player, this.subPlay, "div.video-start-pause");
+          this.playButton = new PlayButton(this.player, this.subPlay, "div");
           this.playrate = new Playrate(this.player, this.settings, "div");
           this.volume = new Volume(this.player, this.settings, "div");
           // 给元素添加类名
-          console.log("先看看蒸鹅", this.volume);
-          addClass(this.volume.el, ["video-volume", "video-controller"]);
           this.FullScreen = new FullScreen(this.player, this.settings, "div");
-          console.log(this, 'controller');
       }
   }
 

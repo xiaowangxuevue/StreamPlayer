@@ -2,7 +2,7 @@ import { Component } from "../../../class/Component"
 import { Player } from "../../../page/player";
 import { storeControlComponent } from "../../../utils/store";
 import { ComponentItem, DOMProps, Node } from "../../../types/Player";
-import { createSvg } from "../../../utils/domUtils";
+import { createSvg,addClass, } from "../../../utils/domUtils";
 import { pausePath, playPath } from "../path/defaultPath";
 export class PlayButton extends Component implements ComponentItem {
     readonly id = "PlayButton";
@@ -26,6 +26,7 @@ export class PlayButton extends Component implements ComponentItem {
     }
 
     initTemplate() {
+        addClass(this.el,["video-start-pause"])
         // 创建一个playicon
         this.playIcon = createSvg(playPath)
         this.pauseIcon = createSvg(pausePath)
