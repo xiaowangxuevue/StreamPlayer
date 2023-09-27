@@ -426,7 +426,7 @@
           this.iconBox = $("span", null, "倍速");
           this.el.appendChild(this.iconBox);
           this.el.removeChild(this.hideBox);
-          this.hideBox = $("ul", { style: { "display": "none" }, "aria-label": "播放速度调节" });
+          // this.hideBox = $("ul",{style:{"display":"none"},"aria-label":"播放速度调节"});
           addClass(this.hideBox, ["video-playrate-set"]);
           this.el.appendChild(this.hideBox);
           for (let i = 0; i < 6; i++) {
