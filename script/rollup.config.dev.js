@@ -18,6 +18,7 @@ export default defineConfig({
           name: 'Player',
           format: 'umd',
           sourcemap: true,
+          file: "./dist/player.umd.js",
         }
     ],
     plugins:[
@@ -38,9 +39,9 @@ export default defineConfig({
          // 本地服务器
         serve({
             open: true, // 自动打开页面
-            port: 5000, 
-            openPage: '../public/index.html', // 打开的页面
-            contentBase: ''
+            port: 5001, 
+            host: 'localhost',
+            openPage:"/dist/index.html",
         })
     ]
 })
