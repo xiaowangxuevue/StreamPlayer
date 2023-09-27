@@ -72,6 +72,8 @@ class Player extends Component implements ComponentItem {
     }
 
     this.video.ontimeupdate = (e) => {
+      console.log("timeupdate",e);
+      
       this.emit("timeupdate", e);
     }
 
@@ -107,12 +109,18 @@ class Player extends Component implements ComponentItem {
   }
 
   attachSource(url: string) {
+    console.log('开始选择',getFileExtension(url));
+    
     switch(getFileExtension(url)) {
       case "mp4":
-      case "mp3":
         this.initMp4Player(url)
+        console.log('quzhe1llllllllllllll');
+      case "mp3":
+        this.initMp4Player(url);
+        break
       case "mpd":
-        this.initMpdPlayer(url);
+        // this.initMpdPlayer(url);
+        break
       case "m3u8":
         // ToDo
     }
