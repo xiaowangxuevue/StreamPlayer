@@ -215,9 +215,6 @@
 .video-play .video-settings .video-volume .video-volume-set {
   position: absolute;
   bottom: 41px;
-  left: 50%;
-  -webkit-transform: translateX(-16px);
-          transform: translateX(-16px);
   margin-left: -16px;
   width: 32px;
   height: 100px;
@@ -255,7 +252,6 @@
 }
 .video-play .video-settings .video-volume .video-volume-set .video-volume-progress .video-volume-completed {
   height: 50%;
-  width: 100%;
   background-color: #00a1d6;
 }
 .video-play .video-settings .video-volume .video-volume-set .video-volume-progress .video-volume-dot {
@@ -279,6 +275,7 @@
 .video-play .video-settings .video-fullscreen .video-icon svg {
   height: 20px;
   width: 20px;
+  stroke-width: 4px;
 }
 .video-play .video-settings .video-fullscreen .video-icon svg path {
   fill: #fff;
@@ -318,6 +315,7 @@
 .video-play .video-settings .video-playrate span {
   width: 100%;
   height: 100%;
+  font-size: 15px;
 }
 .video-play .video-settings .video-resolvepower {
   position: relative;

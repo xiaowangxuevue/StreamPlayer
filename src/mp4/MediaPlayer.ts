@@ -17,9 +17,9 @@ class MediaPlayer {
     }
 
     init() {
-        this.mp4boxfile = MP4Box.createFile();
-        this.downloader = new DownLoader(this.url);
-        this.mediaSource = new MediaSource();
+        this.mp4boxfile = MP4Box.createFile();  // 解析MP4文件
+        this.downloader = new DownLoader(this.url);  // 用于下载媒体文件
+        this.mediaSource = new MediaSource();  // 管理媒体数据的缓冲和播放
         this.video.src = window.URL.createObjectURL(this.mediaSource);
         this.initEvent();
         this.loadFile();
@@ -35,14 +35,16 @@ class MediaPlayer {
             Log.info("Application", "Movie information received");
             ctx.mediaInfo = info;
             console.log(info,'infoo');
-            
+            // 是否存在分段数据,
             if (info.isFragmented) {
+                // 持续时间 / 时间刻度
                 ctx.mediaSource.duration = info.fragment_duration / info.timescale;
             } else {
                 ctx.mediaSource.duration = info.duration / info.timescale;
             }
             // 当请求到了MP4 Box的 moov box之后解析其中包含的视频的元信息，暂停发送进一步的http请求
             ctx.stop();
+            // 初始化所有SourceBuffer
             ctx.initializeAllSourceBuffers();
         }
 
@@ -59,10 +61,11 @@ class MediaPlayer {
         this.mp4boxfile.onItem = function(item) {
             debugger
         }
-
+        // 用户跳转
         this.video.onseeking = (e) => {
             var i, start, end;
             var seek_info;
+            // 检查上一次跳跃操作的时间（this.lastSeekTime）是否与当前时间不同。如果不同，表示发生了跳跃操作
             if (this.lastSeekTime !== this.video.currentTime) {
                 for (i = 0; i < this.video.buffered.length; i++) {
                     start = this.video.buffered.start(i);
@@ -72,6 +75,7 @@ class MediaPlayer {
                     }
                 }
                 this.downloader.stop();
+                // 根据当前播放时间进行跳跃，获取跳跃后的信息。
                 seek_info = this.mp4boxfile.seek(this.video.currentTime, true);
                 this.downloader.setChunkStart(seek_info.offset);
                 this.downloader.resume();
@@ -82,7 +86,9 @@ class MediaPlayer {
 
     start() {
         this.downloader.setChunkStart(this.mp4boxfile.seek(0, true).offset);
+        // 启动MP4Box解析媒体文件
         this.mp4boxfile.start();
+        // 恢复下载器，开始下载媒体数据。
         this.downloader.resume();
     }
 
@@ -126,7 +132,7 @@ class MediaPlayer {
         }
     }
 
-    // 开始加载视频文件
+    // 开始加载视频媒体文件
     loadFile() {
         let ctx = this;
         if(this.mediaSource.readyState !== "open") {
@@ -156,16 +162,19 @@ class MediaPlayer {
                 }
             }
         )
-
+        // 开始下载媒体文件
         this.downloader.start();
+        // 开始播放视频
         this.video.play();
     }
-
+    // 初始化 SourceBuffer
     initializeAllSourceBuffers() {
         if (this.mediaInfo) {
             var info = this.mediaInfo;
+            // 遍历所有的媒体轨道
             for (var i = 0; i < info.tracks.length; i++) {
                 var track = info.tracks[i];
+                // 为每个轨道调用 addBuffer 方法，以创建对应的 SourceBuffer。
                 this.addBuffer(track);
             }
             this.initializeSourceBuffers();
@@ -173,6 +182,7 @@ class MediaPlayer {
     }
 
     initializeSourceBuffers() {
+        // 获取初始化段（initSegs）的信息。
         var initSegs = this.mp4boxfile.initializeSegmentation();
         for (var i = 0; i < initSegs.length; i++) {
             var sb = initSegs[i].user;
@@ -187,13 +197,15 @@ class MediaPlayer {
             sb.ms.pendingInits++;
         }
     }
-
+    // 处理初始化数据追加的事件回调
     onInitAppended(e:Event) {
-        console.log(this);
+        console.log(this,'this');
         let ctx = this;
         var sb = e.target as MP4SourceBuffer;
+        // MediaSource 处于打开状态
 	    if (sb.ms.readyState === "open") {
             sb.sampleNum = 0;
+            // 防止重复触发
             sb.removeEventListener('updateend', this.onInitAppended);
             sb.addEventListener('updateend', this.onUpdateEnd.bind(sb, true, true, ctx));
             /* In case there are already pending buffers we call onUpdateEnd to start appending them*/
@@ -214,6 +226,7 @@ class MediaPlayer {
                 ctx.mp4boxfile.releaseUsedSamples((this as unknown as MP4SourceBuffer).id, (this as unknown as MP4SourceBuffer).sampleNum);
                 delete (this as unknown as MP4SourceBuffer).sampleNum;
             }
+            // 如果媒体文件的结尾标志 (is_last) 被设置，表示媒体流已结束，触发 endOfStream
             if ((this as unknown as MP4SourceBuffer).is_last) {
                 (this as unknown as MP4SourceBuffer).ms.endOfStream();
             }

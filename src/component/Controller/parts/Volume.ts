@@ -1,5 +1,6 @@
 import { Options } from "./Options";
 import { Player } from "../../../page/player";
+import { VolumeCompletedProgress } from "./VolumeCompletedProgress";
 import { storeControlComponent } from "../../../utils/store";
 import { DOMProps, Node } from "../../../types/Player";
 import { $, addClass ,createSvg, createSvgs, getDOMPoint} from "../../../utils/domUtils";
@@ -9,7 +10,7 @@ export class Volume extends Options {
     readonly id = 'Volume'
     volumeProgress: HTMLElement;
     volumeShow: HTMLElement;
-    volumeCompleted: CompletedProgress;   //  onChangeWidth
+    volumeCompleted: VolumeCompletedProgress;   //  onChangeWidth
     icon:SVGSVGElement;
     constructor(player: Player, container: HTMLElement, desc?: string, props?: DOMProps, children?: Node[]) {
         super(player, container, 0, 0, desc)
@@ -31,7 +32,7 @@ export class Volume extends Options {
         this.volumeProgress = $("div.video-volume-progress", { style: { height: "70px" } })
         this.volumeShow = $("div.video-volume-show");
         this.volumeShow.innerText = "50";
-        this.volumeCompleted = new CompletedProgress(this.player, this.volumeProgress, "div.video-volume-completed");
+        this.volumeCompleted = new VolumeCompletedProgress(this.player, this.volumeProgress, "div.video-volume-completed");
         this.hideBox.appendChild(this.volumeShow);
         this.hideBox.appendChild(this.volumeProgress);
         addClass(this.iconBox,["video-icon"]);
