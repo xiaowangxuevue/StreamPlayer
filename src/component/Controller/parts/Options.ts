@@ -1,7 +1,7 @@
 import { Component } from "../../../class/Component";
 import { Player } from "../../../page/player";
 import { ComponentItem, DOMProps, Node } from "../../../types/Player";
-import { $, checkIsMouseInRange } from "../../../utils/domUtils";
+import { $, addClass, checkIsMouseInRange } from "../../../utils/domUtils";
 export class Options extends Component implements ComponentItem {
     id = "Options";
     props: DOMProps;
@@ -28,6 +28,7 @@ export class Options extends Component implements ComponentItem {
 
     initBaseTemplate() {
         this.hideBox = $("div", { style: { display: "none" } })
+        addClass(this.hideBox, ["video-set"])
         if (this.hideWidth && this.hideWidth > 0) {
             this.hideBox.style.width = this.hideWidth + 'px'
         }
@@ -35,12 +36,15 @@ export class Options extends Component implements ComponentItem {
         if (this.hideHeight && this.hideHeight > 0) {
             this.hideBox.style.height = this.hideHeight + 'px'
         }
-        
+
         this.el.appendChild(this.hideBox);
 
         this.iconBox = $("div");
+        // hideBox距离底部的距离先写死，到时候再做微调
+        this.hideBox.style.bottom = "50px"
+        addClass(this.iconBox, ["video-icon"])
         this.el.appendChild(this.iconBox);
-    
+
 
 
     }

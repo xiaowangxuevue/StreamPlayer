@@ -1,42 +1,40 @@
-import { Component } from "../../../class/Component";
 import { Player } from "../../../page/player";
+import { DOMProps, Node } from "../../../types/Player";
+import { addClass, createSvg } from "../../../utils/domUtils";
 import { storeControlComponent } from "../../../utils/store";
-import { ComponentItem, DOMProps, Node } from "../../../types/Player";
-import { $, addClass, createSvg } from "../../../utils/domUtils";
 import { fullscreenExitPath, fullscreenPath } from "../path/defaultPath";
-export class FullScreen extends Component implements ComponentItem{
-    readonly id = 'FullScreen';
-    player:Player;
+import { Options } from "./Options";
+
+export class FullScreen extends Options {
+    readonly id = "FullScreen";
+    player: Player;
     props: DOMProps;
-    iconBox:HTMLElement;
-    icon:SVGSVGElement;
+    icon: SVGSVGElement;
     constructor(player: Player, container: HTMLElement, desc?: string, props?: DOMProps, children?: Node[]) {
-        super( container,desc,props,children);
+        super(player, container, 0, 0, desc, props, children);
         this.player = player;
-        this.props = props || {}
+        this.props = props || {};
         this.init();
     }
-
-    init(){
+    init() {
         this.initTemplate()
         this.initEvent()
         storeControlComponent(this)
     }
 
-    initTemplate(){
-        addClass(this.el,["video-fullscreen","video-controller"])
+    initTemplate() {
+        addClass(this.el, ["video-fullscreen", "video-controller"])
     }
 
     initEvent() {
         this.el.onclick = this.onClick.bind(this);
-        addClass(this.el,["video-fullscreen","video-controller"]);
-        this.iconBox = $("div.video-icon");
+        addClass(this.el, ["video-fullscreen", "video-controller"]);
         this.icon = createSvg(fullscreenPath);
         this.iconBox.appendChild(this.icon);
         this.el.appendChild(this.iconBox);
     }
 
-    onClick(e:MouseEvent) {
+    onClick(e: MouseEvent) {
         if (this.player.container.requestFullscreen && !document.fullscreenElement) {
             this.player.container.requestFullscreen(); //该函数请求全屏
             this.iconBox.removeChild(this.icon);

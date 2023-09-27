@@ -1,52 +1,54 @@
 import { Component } from "../../../class/Component"
 import { Player } from "../../../page/player";
+import { ComponentItem, DOMProps,Node } from "../../../types/Player";
+import { $, addClass, createSvg } from "../../../utils/domUtils";
 import { storeControlComponent } from "../../../utils/store";
-import { ComponentItem, DOMProps, Node } from "../../../types/Player";
-import { createSvg,addClass, } from "../../../utils/domUtils";
 import { pausePath, playPath } from "../path/defaultPath";
+
 export class PlayButton extends Component implements ComponentItem {
     readonly id = "PlayButton";
-    props: DOMProps;
-    player: Player;
     private pauseIcon: SVGSVGElement | string;
     private playIcon: SVGSVGElement | string;
+    private iconBox: HTMLElement;
     private button: SVGSVGElement;
-
-    constructor(player: Player, container: HTMLElement, desc?: string, props?: DOMProps, children?: Node[]) {
-        super(container, desc, props, children);
+    props: DOMProps;
+    player: Player;
+    constructor(player:Player,container:HTMLElement,desc?:string,props?:DOMProps,children?:Node[]) {
+        super(container,desc,props,children);
         this.player = player;
-        this.props  = props || {}
-        this.init()
+        this.props = props || {};
+        this.init();
     }
-
     init() {
-        this.initTemplate()
-        this.initEvent()
-        storeControlComponent(this)
+        this.initTemplate();
+        this.initEvent();
+        storeControlComponent(this);
     }
 
     initTemplate() {
-        addClass(this.el,["video-start-pause"])
-        // 创建一个playicon
-        this.playIcon = createSvg(playPath)
-        this.pauseIcon = createSvg(pausePath)
+        addClass(this.el,["video-start-pause","video-controller"]);
+        this.iconBox = $("div.video-icon");
+        this.el.appendChild(this.iconBox);
+        this.pauseIcon = createSvg(pausePath);
+        this.playIcon = createSvg(playPath);
         this.button = this.playIcon as SVGSVGElement;
-        this.el.appendChild(this.button)
+        this.iconBox.appendChild(this.button);
     }
 
-
     initEvent() {
-        this.onClick = this.onClick.bind(this)
-        this.player.on("play", (e: Event) => {
-            this.el.removeChild(this.button);
+        this.onClick = this.onClick.bind(this);
+        this.player.on("play",(e:Event) => {
+            this.iconBox.removeChild(this.button);
             this.button = this.pauseIcon as SVGSVGElement;
-            this.el.appendChild(this.button);
+            this.iconBox.appendChild(this.button);
         })
-        this.player.on("pause", (e: Event) => {
-            this.el.removeChild(this.button);
+
+        this.player.on("pause",(e:Event) => {
+            this.iconBox.removeChild(this.button);
             this.button = this.playIcon as SVGSVGElement;
-            this.el.appendChild(this.button);
+            this.iconBox.appendChild(this.button);
         })
+
         this.el.onclick = this.onClick;
 
     }

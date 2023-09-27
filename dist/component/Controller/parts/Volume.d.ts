@@ -1,7 +1,7 @@
 import { Options } from "./Options";
 import { Player } from "../../../page/player";
-import { VolumeCompletedProgress } from "./VolumeCompletedProgress";
 import { DOMProps, Node } from "../../../types/Player";
+import { VolumeCompletedProgress } from "./VolumeCompletedProgress";
 export declare class Volume extends Options {
     readonly id = "Volume";
     volumeProgress: HTMLElement;

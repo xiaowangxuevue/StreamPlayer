@@ -10,6 +10,7 @@ export type DanmakuData = {
     rollTime?: number;
     rollSpeed?: number;
     startTime?: number;
+    timestamp?: number;
     y?: number[];
 };
 export type Track = {

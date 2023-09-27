@@ -89,7 +89,7 @@
   -webkit-justify-content: space-between;
       -ms-flex-pack: justify;
           justify-content: space-between;
-  padding: 15px 5px 0 5px;
+  padding: 10px 5px 0 5px;
 }
 .video-play .video-subplay {
   margin-left: 10px;
@@ -101,7 +101,7 @@
   -webkit-align-items: center;
       -ms-flex-align: center;
           align-items: center;
-  height: 22px;
+  height: 30px;
 }
 .video-play .video-subplay .video-start-pause {
   height: 100%;
@@ -115,14 +115,6 @@
   -webkit-align-items: center;
       -ms-flex-align: center;
           align-items: center;
-}
-.video-play .video-subplay .video-start-pause svg {
-  width: 20px;
-  height: 20px;
-}
-.video-play .video-subplay .video-start-pause svg path {
-  fill: #fff;
-  stroke-width: 3px;
 }
 .video-play .video-subplay .video-duration {
   margin-left: 5px;
@@ -148,16 +140,28 @@
   -webkit-align-items: center;
       -ms-flex-align: center;
           align-items: center;
-  font-size: 20px;
   color: hsla(0, 0%, 100%, 0.8);
   fill: hsla(0, 0%, 100%, 0.8);
-  height: 22px;
+  height: 30px;
+}
+.video-play .video-settings .video-subsettings {
+  margin-right: 5px;
+}
+.video-play .video-settings .video-subsettings .video-subsettings-set {
+  width: 102px;
+  height: 140px;
+  padding-bottom: 8px;
+  background: rgba(21, 21, 21, 0.9);
+  border-radius: 2px;
+  position: absolute;
+  bottom: 41px;
 }
 .video-play .video-settings .video-subsettings svg {
   -webkit-transition: fill 0.15s ease-in-out;
   transition: fill 0.15s ease-in-out;
 }
 .video-play .video-settings .video-volume {
+  margin-right: 5px;
   position: relative;
   display: -webkit-box;
   display: -webkit-flex;
@@ -221,22 +225,8 @@
           transform: translateX(-50%);
   z-index: 1003;
 }
-.video-play .video-settings .video-volume .video-icon svg {
-  height: 20px;
-  width: 20px;
-}
-.video-play .video-settings .video-volume .video-icon svg path {
-  fill: #fff;
-}
-.video-play .video-settings .video-fullscreen .video-icon svg {
-  height: 20px;
-  width: 20px;
-  stroke-width: 4px;
-}
-.video-play .video-settings .video-fullscreen .video-icon svg path {
-  fill: #fff;
-}
 .video-play .video-settings .video-playrate {
+  margin-right: 5px;
   position: relative;
 }
 .video-play .video-settings .video-playrate .video-playrate-set {
@@ -268,12 +258,8 @@
 .video-play .video-settings .video-playrate .video-playrate-set li:hover {
   background-color: #C9CCD0;
 }
-.video-play .video-settings .video-playrate span {
-  width: 100%;
-  height: 100%;
-  font-size: 15px;
-}
 .video-play .video-settings .video-resolvepower {
+  margin-right: 5px;
   position: relative;
 }
 .video-play .video-settings .video-resolvepower .video-resolvepower-set {
@@ -311,14 +297,54 @@
 .video-play .video-settings .video-resolvepower .video-resolvepower-set li:hover {
   background-color: #C9CCD0;
 }
-.video-play .video-settings .video-playrate,
-.video-play .video-settings .video-resolvepower {
-  font-size: 14px;
+.video-play .video-controller {
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  min-width: 30px;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  padding: 3px;
+  height: 100%;
+  -webkit-box-pack: center;
+  -webkit-justify-content: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+      -ms-flex-align: center;
+          align-items: center;
+  cursor: pointer;
+  color: #fff;
+  opacity: 0.9;
+}
+.video-play .video-controller span {
+  width: 100%;
+  height: 100%;
+  font-weight: 550;
+  color: #fff;
+  padding: 0 5px;
+  font-size: 16px;
+}
+.video-icon {
+  height: 100%;
+  width: 100%;
+}
+.video-icon:hover {
+  background-color: #007aff;
+}
+.video-icon svg {
+  height: 100%;
+  width: 100%;
+}
+.video-icon svg path {
+  fill: #fff;
   font-weight: 550;
   color: #fff;
   margin: 0 10px;
 }
-.video-play .video-settings .video-controller {
+.video-icon svg .video-controller {
   -webkit-box-sizing: border-box;
           box-sizing: border-box;
   min-width: 33px;
@@ -339,7 +365,7 @@
   color: #fff;
   opacity: 0.9;
 }
-.video-play .video-settings .video-controller .video-icon {
+.video-icon svg .video-controller .video-icon {
   height: 100%;
   width: 100%;
 }

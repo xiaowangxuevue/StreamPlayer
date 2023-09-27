@@ -1,15 +1,6 @@
 
 daymark.md
 /node_modules/
-/src/
-/test/
-/assets/
-/.vscode/
-.gitignore
-.npmignore
-.npmrc
-package-lock.json
-package.json
-pnpm-lock.yaml
-vitest.config.ts
-tsconfig.json
+video.mp4
+/dist/
+index.html

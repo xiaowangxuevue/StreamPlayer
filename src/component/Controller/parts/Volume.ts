@@ -1,46 +1,38 @@
 import { Options } from "./Options";
 import { Player } from "../../../page/player";
-import { VolumeCompletedProgress } from "./VolumeCompletedProgress";
-import { storeControlComponent } from "../../../utils/store";
 import { DOMProps, Node } from "../../../types/Player";
-import { $, addClass ,createSvg, createSvgs, getDOMPoint} from "../../../utils/domUtils";
-import { CompletedProgress } from "../../Progress/parts/CompletedProgress";
-import { volumePath$1, volumePath$2 } from "../path/defaultPath";
+import { $, addClass, createSvg, createSvgs, getDOMPoint } from "../../../utils/domUtils";
+import { volumePath$1 } from "../path/defaultPath";
+import { storeControlComponent } from "../../../utils/store";
+import { VolumeCompletedProgress } from "./VolumeCompletedProgress";
+
 export class Volume extends Options {
-    readonly id = 'Volume'
+    readonly id = "Volume";
     volumeProgress: HTMLElement;
     volumeShow: HTMLElement;
-    volumeCompleted: VolumeCompletedProgress;   //  onChangeWidth
-    icon:SVGSVGElement;
-    constructor(player: Player, container: HTMLElement, desc?: string, props?: DOMProps, children?: Node[]) {
-        super(player, container, 0, 0, desc)
-        this.init()
+    volumeCompleted: VolumeCompletedProgress;
+    icon: SVGSVGElement;
+    constructor(player: Player,container: HTMLElement, desc?: string, props?: DOMProps,children?: Node[]) {
+        super(player,container,0,0,desc);
+        this.init();
     }
-
-
     init() {
         this.initTemplate();
         this.initEvent();
-        storeControlComponent(this)
+        storeControlComponent(this);
     }
-
     initTemplate() {
         addClass(this.el,["video-volume","video-controller"])
-        this.el["aria-label"] = '音量';
-        this.hideBox.style.bottom = '41px';
-        addClass(this.hideBox, ['video-volume-set']);
-        this.volumeProgress = $("div.video-volume-progress", { style: { height: "70px" } })
+        this.el["aria-label"] = "音量";
+        addClass(this.hideBox,["video-volume-set"]);
+        this.volumeProgress = $("div.video-volume-progress",{style:{height:"70px"}});
         this.volumeShow = $("div.video-volume-show");
         this.volumeShow.innerText = "50";
-        this.volumeCompleted = new VolumeCompletedProgress(this.player, this.volumeProgress, "div.video-volume-completed");
+        this.volumeCompleted = new VolumeCompletedProgress(this.player,this.volumeProgress,"div.video-volume-completed");
         this.hideBox.appendChild(this.volumeShow);
         this.hideBox.appendChild(this.volumeProgress);
-        addClass(this.iconBox,["video-icon"]);
-        this.icon= createSvgs([volumePath$1,volumePath$2]);
-        this.iconBox.appendChild(this.icon)
-
-        console.log(this.iconBox,'box');
-        
+        this.icon = createSvg(volumePath$1);
+        this.iconBox.appendChild(this.icon);
     }
 
     initEvent() {
