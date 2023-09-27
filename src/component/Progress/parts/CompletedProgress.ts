@@ -24,6 +24,11 @@ export class CompletedProgress extends Component implements ComponentItem {
         this.player.on("progress-click",(e:MouseEvent, ctx:Progress)=>{
             this.onChangeSize(e,ctx);
         })
+
+        this.player.on("timeupdate",(e) => {
+            this.updatePos(e);
+        })
+        // this.player.on("volume-progress-click",(e:MouseEvent,ctx:))
     }
 
     onChangeSize(e:MouseEvent,ctx:Component) {
@@ -31,6 +36,17 @@ export class CompletedProgress extends Component implements ComponentItem {
         if (scale < 0) {
             scale = 0;
         } else if (scale > 1) {
+            scale = 1;
+        }
+        this.el.style.width = scale * 100 + "%";
+    }
+
+    updatePos(e: Event) {
+        let video = e.target as HTMLVideoElement;
+        let scale = video.currentTime / video.duration;
+        if(scale < 0) {
+            scale = 0;
+        } else if(scale > 1) {
             scale = 1;
         }
         this.el.style.width = scale * 100 + "%";
