@@ -1,5 +1,6 @@
 /node_modules/
 video.mp4
-/dist/
+
 index.html
 daymark.md
+/dist/

@@ -1,5 +1,6 @@
+// 检查是不是原生的函数
 function isNative(Ctor:any) {
-    return typeof Ctor === 'function' && /navitecode/.test(Ctor.toString())
+    return typeof Ctor === 'function' && /navite code/.test(Ctor.toString())
 }
 
 export function nextTick(cb:(...args)=>any) {
