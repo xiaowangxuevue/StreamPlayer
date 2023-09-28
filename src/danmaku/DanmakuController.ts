@@ -1,12 +1,15 @@
 export class DanmakuController {
     private video :HTMLVideoElement;
-    constructor(video?:HTMLVideoElement){
+    constructor(video:HTMLVideoElement){
         this.video = video;
+        this.init()
     }
 
-    attachVideo(video:HTMLVideoElement) {
-        this.video = video;
+    init() {
+        this.initializeEvent()
     }
+
+
 
     initializeEvent() {
         this.video.ontimeupdate = (e:Event) => {

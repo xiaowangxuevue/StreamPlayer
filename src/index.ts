@@ -12,3 +12,4 @@ export * from "./utils/warn";
 export * from "./utils/format";
 export * from "./utils/typeCheck"
 export * from "./utils/typeSwitch"
+export * from "./danmaku"

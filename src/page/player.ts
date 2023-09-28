@@ -14,6 +14,8 @@ import Mp4MediaPlayer from "../mp4/MediaPlayer";
 import { getFileExtension } from "../utils/play";
 import  MpdMediaPlayerFactory  from "../dash/MediaPlayer";
 import { CONTROL_COMPONENT_STORE } from "../utils/store";
+import { Danmaku } from "../danmaku";
+import { queue } from "../mock/queue";
 class Player extends Component implements ComponentItem {
   readonly id = "Player";
   // 播放器的默认配置
@@ -45,6 +47,13 @@ class Player extends Component implements ComponentItem {
     this.toolBar = new ToolBar(this, this.el, "div");
     this.initEvent();
     this.initPlugin();
+    let danmaku = new Danmaku([],this.el)
+    console.log(this.el,'----------',danmaku);
+    let i = 0;
+    setInterval(()=>{
+      danmaku.addData(queue[(i++)%queue.length]);
+    },150)
+    
   }
 
   initEvent() {
