@@ -11,8 +11,9 @@ import { SubSetting } from "./parts/SubSetting";
 import { Playrate } from "./parts/Playrate";
 export class Controller extends Component implements ComponentItem {
   readonly id = "Controller";
-  subPlay: HTMLElement;
-  settings: HTMLElement;
+  leftArea: HTMLElement;
+  mediumArea: HTMLElement;
+  rightArea: HTMLElement;
   props: DOMProps={};
   player: Player;
   // 控件
@@ -71,10 +72,12 @@ export class Controller extends Component implements ComponentItem {
     }
   } 
   initTemplate() {
-    this.subPlay = $("div.video-subplay");
-    this.settings = $("div.video-settings");
-    this.el.appendChild(this.subPlay);
-    this.el.appendChild(this.settings);
+    this.leftArea = $("div.video-subplay");
+    this.mediumArea = $("div.video-medium")
+    this.rightArea = $("div.video-settings");
+    this.el.appendChild(this.leftArea);
+    this.el.appendChild(this.mediumArea);
+    this.el.appendChild(this.rightArea);
   }
 
   initComponent() {
@@ -85,14 +88,20 @@ export class Controller extends Component implements ComponentItem {
     // this.FullScreen = new FullScreen(this.player,this.settings,"div")
 
     this.leftControllers.forEach(ControlConstructor => {
-      let instance = new ControlConstructor(this.player,this.subPlay,"div")
+      let instance = new ControlConstructor(this.player,this.leftArea,"div")
       this[instance.id] = instance;
     })
 
 
     this.rightController.forEach(ControlConstructor => {
-      let instance = new ControlConstructor(this.player,this.settings,"div");
+      let instance = new ControlConstructor(this.player,this.rightArea,"div");
       this[instance.id] = instance;
+    })
+    
+  }
+  initEvent() {
+    this.player.on("danmaku-plugin-add",()=>{
+
     })
   }
   // private template_: HTMLElement | string;
