@@ -24,14 +24,15 @@ export class FullScreen extends Options {
 
     initTemplate() {
         addClass(this.el, ["video-fullscreen", "video-controller"])
+        this.icon = createSvg(fullscreenPath);
+        this.iconBox.appendChild(this.icon);                                                                                                                                                                                    
+        this.el.appendChild(this.iconBox);
     }
 
     initEvent() {
         this.el.onclick = this.onClick.bind(this);
         addClass(this.el, ["video-fullscreen", "video-controller"]);
-        this.icon = createSvg(fullscreenPath);
-        this.iconBox.appendChild(this.icon);
-        this.el.appendChild(this.iconBox);
+   
     }
 
     onClick(e: MouseEvent) {
