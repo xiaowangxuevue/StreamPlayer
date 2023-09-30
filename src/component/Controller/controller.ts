@@ -8,6 +8,7 @@ import {FullPage} from "./parts/FullPage"
 import { PlayButton } from "./parts/PlayButton";
 import { Volume } from "./parts/Volume";
 import { FullScreen } from "./parts/FullScreen";
+import { PicInPic } from "./parts/PicInPic";
 import { SubSetting } from "./parts/SubSetting";
 import { Playrate } from "./parts/Playrate";
 export class Controller extends Component implements ComponentItem {
@@ -23,7 +24,7 @@ export class Controller extends Component implements ComponentItem {
   // FullScreen:FullScreen;
   // playrate: Playrate;
   leftControllers: ComponentConstructor[] = [PlayButton];
-  rightController: ComponentConstructor[] = [Playrate,SubSetting,Volume,FullPage,FullScreen]
+  rightController: ComponentConstructor[] = [Playrate,SubSetting,Volume,PicInPic,FullPage,FullScreen]
   constructor(player:Player,container:HTMLElement, desc?:string,props?:DOMProps,children?:Node[]) {
     super(container,desc,props,children);
     this.player = player;

@@ -40,10 +40,6 @@ export class Options extends Component implements ComponentItem {
         this.el.appendChild(this.hideBox);
 
         this.iconBox = $("div");
-        // hideBox距离底部的距离先写死，到时候再做微调
-        console.log(this.hideBox,'hide');
-        
-        this.hideBox.style.bottom = "45px"
         addClass(this.iconBox, ["video-icon"])
         this.el.appendChild(this.iconBox);
 
@@ -55,9 +51,20 @@ export class Options extends Component implements ComponentItem {
     initBaseEvent() {
         this.el.onmouseenter = (e) => {
             let ctx = this;
-            ctx.hideBox.style.display = "";
+            ctx.hideBox.style.display = "block";
             document.body.onmousemove = ctx.handleMouseMove.bind(this);
+            this.player.emit("oneControllerHover",this);
         }
+
+
+    this.player.on("oneControllerHover",(controller:ComponentItem) => {
+        console.log(this,controller,this === controller)
+        if(this !== controller) {
+          if(this.hideBox.style.display !== "none") {
+            this.hideBox.style.display = "none";
+          }
+        }
+      })
     }
 
     handleMouseMove(e: MouseEvent) {
