@@ -58,7 +58,6 @@ export class Options extends Component implements ComponentItem {
 
 
     this.player.on("oneControllerHover",(controller:ComponentItem) => {
-        console.log(this,controller,this === controller)
         if(this !== controller) {
           if(this.hideBox.style.display !== "none") {
             this.hideBox.style.display = "none";
