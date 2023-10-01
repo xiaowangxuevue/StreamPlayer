@@ -72,10 +72,10 @@ export class Danmaku {
 
     // 恢复弹幕的运动，此处逻辑有问题
     resume() {
-        this.timer = window.setTimeout(()=>{
+        this.timer = window.setTimeout(() => {
             this.render();
-        },this.renderInterval);
-        this.moovingQueue.forEach(data=>{
+        }, this.renderInterval);
+        this.moovingQueue.forEach(data => {
             data.dom.style.transform = `translateX(${-data.totalDistance}px)`;
             data.startTime = Date.now();
             data.rollTime = (data.totalDistance - data.rollDistance) / data.rollSpeed;
@@ -83,7 +83,7 @@ export class Danmaku {
         })
     }
 
-    resumeOneData(data:DanmakuData) {
+    resumeOneData(data: DanmakuData) {
         data.dom.style.transform = `translateX(${-data.totalDistance}px)`;
         data.startTime = Date.now();
         data.rollTime = (data.totalDistance - data.rollDistance / data.rollSpeed);
@@ -91,7 +91,7 @@ export class Danmaku {
 
     }
 
-    pauseOneData(data:DanmakuData) {
+    pauseOneData(data: DanmakuData) {
         let currentRollDistance = (Date.now() - data.startTime) * data.rollSpeed / 1000;
         data.rollDistance = currentRollDistance + (data.rollDistance ? data.rollDistance : 0);
         data.dom.style.transition = "";
@@ -209,11 +209,11 @@ export class Danmaku {
             data.startTime = Date.now();
         }
         data.dom.onmouseenter = () => {
-            if(this.isStopped) return;
+            if (this.isStopped) return;
             this.pauseOneData(data);
         }
         data.dom.onmouseleave = () => {
-            if(this.isStopped) return;
+            if (this.isStopped) return;
             this.resumeOneData(data);
         }
 
@@ -312,6 +312,10 @@ export class Danmaku {
                 data.dom.ontransitionend = null;
                 data.dom.ontransitionstart = null;
             }
+        })
+        // 清空轨道上的所有数据
+        this.tracks.forEach(obj => {
+            obj.datas = [];
         })
         this.moovingQueue = [];
         this.queue = [];

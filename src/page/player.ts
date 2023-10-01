@@ -49,6 +49,13 @@ class Player extends Component implements ComponentItem {
   }
 
   initEvent() {
+    this.video.onclick = (e) => {
+      if(this.video.paused) {
+        this.video.play();
+      } else if(this.video.played) {
+        this.video.pause();
+      }
+    }
     this.el.onmousemove = (e) => {
       this.emit("showtoolbar",e);
     }
@@ -61,12 +68,15 @@ class Player extends Component implements ComponentItem {
     this.video.onloadedmetadata = (e) => {
       this.emit("loadedmetadata",e);
     }
-    this.video.ontimeupdate = (e) => {
-      this.emit("timeupdate",e);
-    }
+    this.video.addEventListener("timeupdate",(e)=>{
+      this.emit("timeupdate",e)
+    })
     this.video.onplay = (e) => {
       this.emit("play",e);
     }
+    this.video.addEventListener('ratechange',(e) => {
+      this.emit("ratechange")
+    })
     this.video.onpause = (e) => {
       this.emit("pause",e);
     }

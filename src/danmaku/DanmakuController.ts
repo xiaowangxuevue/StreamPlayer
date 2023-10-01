@@ -59,6 +59,9 @@ export class DanmakuController {
             console.log(queue,'queue');
             
         })
+        this.player.on("dotdrag",(e) => {
+            this.danmaku.flush()
+        })
     }
 
     start() {

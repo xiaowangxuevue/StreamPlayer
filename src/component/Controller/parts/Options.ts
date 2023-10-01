@@ -27,7 +27,7 @@ export class Options extends Component implements ComponentItem {
     }
 
     initBaseTemplate() {
-        this.hideBox = $("div", { style: { display: "none" } })
+        this.hideBox = $("div", { style: { display: "none" ,bottom:"48px"} })
         addClass(this.hideBox, ["video-set"])
         if (this.hideWidth && this.hideWidth > 0) {
             this.hideBox.style.width = this.hideWidth + 'px'
