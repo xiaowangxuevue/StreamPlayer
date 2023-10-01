@@ -49,8 +49,7 @@ export class ScreenShot extends Options {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight
         canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height)
-        
-        const fileName = `${video.currentTime}.png`
+        const fileName = `${Math.random().toString(36).slice(-8)}_${video.currentTime}.png`
         canvas.toBlob(blob => {
             const url = URL.createObjectURL(blob)
             const a = document.createElement('a')
