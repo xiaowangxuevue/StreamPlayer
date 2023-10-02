@@ -26,11 +26,16 @@ export class Dot extends Component implements ComponentItem {
         storeControlComponent(this);
     }
     initEvent() {
-        this.player.on("progress-mouseenter", (e) => {
-            this.onShowDot(e);
+        this.player.on("progress-mouseenter",(e)=>{
+            if(this.player.enableSeek) {
+                this.onShowDot(e);
+            }
         })
-        this.player.on("progress-mouseleave", (e) => {
-            this.onHideDot(e);
+
+        this.player.on("progress-mouseleave",(e)=>{
+            if(this.player.enableSeek) {
+                this.onHideDot(e);
+            }
         })
         this.player.on("progress-click", (e: MouseEvent, ctx: Progress) => {
             this.onChangePos(e, ctx);
@@ -51,7 +56,7 @@ export class Dot extends Component implements ComponentItem {
             document.body.addEventListener("mousemove", this.onMouseMove);
 
             document.body.addEventListener("mouseup", (e) => {
-                this.player.emit("dotdup")
+                this.player.emit("dotup")
                 this.player.video.currentTime = Math.floor(this.playScale * this.player.video.duration);
                 document.body.removeEventListener("mousemove", this.onMouseMove);
             })

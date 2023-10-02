@@ -1,6 +1,6 @@
 {
   "name": "splayer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "This is a  video play",
   "main": "./dist/player.umd.js",
   "scripts": {
