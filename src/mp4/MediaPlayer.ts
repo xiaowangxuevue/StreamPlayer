@@ -22,12 +22,14 @@ class MediaPlayer {
         this.mediaSource = new MediaSource();  // 管理媒体数据的缓冲和播放
         this.video.src = window.URL.createObjectURL(this.mediaSource);
         this.initEvent();
-        this.loadFile();
     }
 
     initEvent() {
         console.log('start--',this.mp4boxfile);
         let ctx = this;
+        this.mediaSource.addEventListener("sourceopen",(e) => {
+            this.loadFile()
+        })
         this.mp4boxfile.onMoovStart = function () {
             Log.info("Application", "Starting to parse movie information");
         }
@@ -58,9 +60,9 @@ class MediaPlayer {
             ctx.onUpdateEnd.call(sb, true, false, ctx);
         }
 
-        this.mp4boxfile.onItem = function(item) {
-            debugger
-        }
+        // this.mp4boxfile.onItem = function(item) {
+        //     debugger
+        // }
         // 用户跳转
         this.video.onseeking = (e) => {
             var i, start, end;
@@ -86,6 +88,8 @@ class MediaPlayer {
 
     start() {
         this.downloader.setChunkStart(this.mp4boxfile.seek(0, true).offset);
+        this.downloader.setChunkSize(1000000);
+        this.downloader.setInterval(1000);
         // 启动MP4Box解析媒体文件
         this.mp4boxfile.start();
         // 恢复下载器，开始下载媒体数据。
@@ -114,7 +118,6 @@ class MediaPlayer {
         if (MediaSource.isTypeSupported(mime)) {
             try {
                 console.log("MSE - SourceBuffer #"+track_id,"Creation with type '"+mime+"'")
-                Log.info("MSE - SourceBuffer #"+track_id,"Creation with type '"+mime+"'");
                 // 根据moov box中解析出来的track去一一创建对应的sourcebuffer
                 sb = this.mediaSource.addSourceBuffer(mime);
                 sb.addEventListener("error", function(e) {
@@ -122,7 +125,7 @@ class MediaPlayer {
                 });
                 sb.ms = this.mediaSource;
                 sb.id = track_id;
-                this.mp4boxfile.setSegmentOptions(track_id, sb, { nbSamples: 1000 });
+                this.mp4boxfile.setSegmentOptions(track_id, sb);
                 sb.pendingAppends = [];
             } catch (e) {
                 Log.error("MSE - SourceBuffer #" + track_id,"Cannot create buffer with type '" + mime + "'" + e);
@@ -206,7 +209,7 @@ class MediaPlayer {
 	    if (sb.ms.readyState === "open") {
             sb.sampleNum = 0;
             // 防止重复触发
-            sb.removeEventListener('updateend', this.onInitAppended);
+            sb.onupdateend = null
             sb.addEventListener('updateend', this.onUpdateEnd.bind(sb, true, true, ctx));
             /* In case there are already pending buffers we call onUpdateEnd to start appending them*/
             this.onUpdateEnd.call(sb, false, true, ctx);

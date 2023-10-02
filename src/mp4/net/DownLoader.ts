@@ -10,7 +10,7 @@ class DownLoader {
     chunkSize: number = 0;
     totalLength: number = 0;
     chunkTimeout: number = 1000;   //请求超出时间
-    timeoutID: number = 0;      //超时计时器的ID
+    timeoutID: number | null = null;      //超时计时器的ID
     url: string = "";
     callback: Function = null;   // 下载完成后的回调函数
     eof: boolean = false;    // 是否以达到文件末尾
@@ -34,8 +34,8 @@ class DownLoader {
     }
     // 停止下载器，清除计时器和标记下载器为非活动状态
     stop() {
-        clearTimeout(this.timeoutID);
-        this.timeoutID = 0;
+        window.clearTimeout(this.timeoutID);
+        this.timeoutID = null;
         this.isActive = false;
         return this
     }
@@ -120,8 +120,9 @@ class DownLoader {
 
     getFile(){
         let ctx = this;
+        if(this.isStopped()) return
         // 如果已经请求完整个媒体文件，则设置 eof 为 true
-        if (ctx.totalLength && ctx.chunkStart >= ctx.totalLength) {
+        if (ctx.totalLength !== 0 && ctx.chunkStart >= ctx.totalLength) {
             ctx.eof = true;
         }
 
@@ -135,6 +136,7 @@ class DownLoader {
         // 初始化HTTP请求对象
         let request = this.initHTTPRequest();
         let loader = XHRLoaderFactory({}).getInstance();
+        console.log("当前发送请求的范围为: ",request.header.Range)
 
         // 发送HTTP请求
         loader.load({
@@ -152,7 +154,7 @@ class DownLoader {
             let rangeReceived =xhr.getResponseHeader("Content-Range");
 
             // 如果没有获取到文件的总长度，解析 Content-Range 头部
-            if (!ctx.totalLength && rangeReceived) {
+            if (ctx.totalLength === 0 && rangeReceived) {
                 let sizeIndex;
                 sizeIndex = rangeReceived.indexOf("/");
                 if (sizeIndex > -1) {
@@ -167,6 +169,8 @@ class DownLoader {
             // 获取数据并传递给回调函数
             let buffer = xhr.response;
             buffer.fileStart = xhr.start;
+            console.log("成功拿到请求:",buffer);
+            
             ctx.callback(buffer,ctx.eof);
 
             // 如果下载器处于活动状态且文件未完全下载，设置下一次请求的超时定时器

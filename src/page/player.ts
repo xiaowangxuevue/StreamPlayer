@@ -13,7 +13,10 @@ import { CONTROL_COMPONENT_STORE } from "../utils/store";
 import { getFileExtension } from "../utils/play";
 import  MpdMediaPlayerFactory  from "../dash/MediaPlayer";
 import Mp4MediaPlayer from "../mp4/MediaPlayer";
-import { Danmaku, DanmakuController } from "../danmaku";
+import { DanmakuController } from "../danmaku";
+import { Loading } from "../component/Loading/Loading";
+import { TimeLoading } from "../component/Loading/parts/TimeLoading";
+import { ErrorLoading } from "../component/Loading/parts/ErrorLoading";
 class Player extends Component implements ComponentItem {
   readonly id = "Player";
   // 播放器的默认配置
@@ -28,6 +31,8 @@ class Player extends Component implements ComponentItem {
   toolBar: ToolBar;
   container: HTMLElement;
   props: DOMProps;
+  loading: TimeLoading;
+  error: ErrorLoading;
   constructor(options: PlayerOptions) {
     super(options.container,"div.video-wrapper");
     this.playerOptions = Object.assign(this.playerOptions, options);
@@ -44,8 +49,15 @@ class Player extends Component implements ComponentItem {
     this.attachSource(this.playerOptions.url);
     this.initEvent();
     this.initPlugin();
+    this.initComponent()
 
-    new DanmakuController(this);
+  }
+
+  initComponent(): void {
+       //  new DanmakuController(this);
+       this.loading = new TimeLoading(this,"视频加载中，请稍等....",this.el);
+       this.error = new ErrorLoading(this,"视频加载发送错误",this.el);
+      
   }
 
   initEvent() {
@@ -98,6 +110,21 @@ class Player extends Component implements ComponentItem {
       this.el.onmouseleave = (e) => {
         this.emit("hidetoolbar",e);
       }
+    })
+    this.video.addEventListener("waiting",(e) => {
+      this.emit("waiting",e);
+    })
+
+    this.video.addEventListener("canplay",(e) => {
+      this.emit("canplay",e);
+    })
+
+    this.video.addEventListener("error", (e) => {
+      this.emit("videoError");
+    })
+
+    this.video.addEventListener("abort", (e) => {
+      this.emit("videoError")
     })
   }
   initPlugin() {
