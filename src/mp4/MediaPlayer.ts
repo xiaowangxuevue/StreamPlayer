@@ -2,17 +2,18 @@ import MP4Box ,{ MP4File, Log, MP4ArrayBuffer, MP4Info, MP4SourceBuffer, MP4Medi
 import { FactoryObject } from "../types/dash/Factory";
 import { MoovBoxInfo, MediaTrack } from "../types/mp4";
 import { DownLoader } from "./net/DownLoader";
+import { Player } from "../page/player";
 class MediaPlayer {
     url: string;
-    video: HTMLVideoElement;
+    player: Player;
     mp4boxfile: MP4File;
     mediaSource: MediaSource;
     mediaInfo: MoovBoxInfo;
     downloader: DownLoader;
     lastSeekTime: number = 0;
-    constructor(url:string, video:HTMLVideoElement) {
+    constructor(url:string, player:Player) {
         this.url = url;
-        this.video = video;
+        this.player = player
         this.init()
     }
 
@@ -20,7 +21,7 @@ class MediaPlayer {
         this.mp4boxfile = MP4Box.createFile();  // 解析MP4文件
         this.downloader = new DownLoader(this.url);  // 用于下载媒体文件
         this.mediaSource = new MediaSource();  // 管理媒体数据的缓冲和播放
-        this.video.src = window.URL.createObjectURL(this.mediaSource);
+        this.player.video.src = window.URL.createObjectURL(this.mediaSource);
         this.initEvent();
     }
 
@@ -64,28 +65,27 @@ class MediaPlayer {
         //     debugger
         // }
         // 用户跳转
-        this.video.onseeking = (e) => {
+        this.player.on("seeking",(e) => {
+            console.log("seeking")
             var i, start, end;
             var seek_info;
-            // 检查上一次跳跃操作的时间（this.lastSeekTime）是否与当前时间不同。如果不同，表示发生了跳跃操作
-            if (this.lastSeekTime !== this.video.currentTime) {
-                for (i = 0; i < this.video.buffered.length; i++) {
-                    start = this.video.buffered.start(i);
-                    end = this.video.buffered.end(i);
-                    if (this.video.currentTime >= start && this.video.currentTime <= end) {
+            var video = this.player.video;
+            if (this.lastSeekTime !== video.currentTime) {
+                for (i = 0; i < video.buffered.length; i++) {
+                    start = video.buffered.start(i);
+                    end = video.buffered.end(i);
+                    if (video.currentTime >= start && video.currentTime <= end) {
                         return;
                     }
                 }
                 this.downloader.stop();
-                // 根据当前播放时间进行跳跃，获取跳跃后的信息。
-                seek_info = this.mp4boxfile.seek(this.video.currentTime, true);
+                seek_info = this.mp4boxfile.seek(video.currentTime, true);
                 this.downloader.setChunkStart(seek_info.offset);
                 this.downloader.resume();
-                this.lastSeekTime = this.video.currentTime;
+                this.lastSeekTime = video.currentTime;
             }
-        }
+        })
     }
-
     start() {
         this.downloader.setChunkStart(this.mp4boxfile.seek(0, true).offset);
         this.downloader.setChunkSize(1000000);
@@ -168,7 +168,7 @@ class MediaPlayer {
         // 开始下载媒体文件
         this.downloader.start();
         // 开始播放视频
-        this.video.play();
+        this.player.video.play();
     }
     // 初始化 SourceBuffer
     initializeAllSourceBuffers() {

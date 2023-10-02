@@ -11,6 +11,7 @@ export class Dot extends Component implements ComponentItem {
     container: HTMLElement;
     mouseX: number;
     left = 0;
+    playScale = 0;
     constructor(player: Player, container: HTMLElement, desc?: string, props?: DOMProps, children?: Node[]) {
         super(container, desc, props, children);
         this.props = props || {};
@@ -36,17 +37,22 @@ export class Dot extends Component implements ComponentItem {
         })
 
         this.player.on("timeupdate", (e) => {
-            this.updatePos(e);
+            if(this.player.enableSeek){
+                this.updatePos(e);
+            }
+          
         })
         this.el.addEventListener("mousedown", (e) => {
             e.preventDefault();
             this.onMouseMove = this.onMouseMove.bind(this);
+            this.player.emit("dotdown")
             this.mouseX = e.pageX;
             this.left = parseInt(this.el.style.left);
             document.body.addEventListener("mousemove", this.onMouseMove);
 
             document.body.addEventListener("mouseup", (e) => {
-                console.log("mouseup")
+                this.player.emit("dotdup")
+                this.player.video.currentTime = Math.floor(this.playScale * this.player.video.duration);
                 document.body.removeEventListener("mousemove", this.onMouseMove);
             })
         })
@@ -59,8 +65,8 @@ export class Dot extends Component implements ComponentItem {
         } else if (scale > 1) {
             scale = 1;
         }
+        this.playScale = scale;
         this.el.style.left = this.container.offsetWidth * scale - 5 + "px";
-        this.player.video.currentTime = Math.floor(scale * this.player.video.duration);
         if (this.player.video.paused) this.player.video.play();
         this.player.emit("dotdrag", this.container.offsetWidth * scale);
 
