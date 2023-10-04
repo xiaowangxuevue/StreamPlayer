@@ -9,7 +9,6 @@ import { BufferedProgress } from "./parts/BufferedProgress";
 import "./progress.less"
 export class Progress extends Component implements ComponentItem {
   readonly id = "Progress";
-  private mouseDown: boolean = false;
   props: DOMProps;
   player:Player;
 
