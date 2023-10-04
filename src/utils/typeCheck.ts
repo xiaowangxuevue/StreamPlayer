@@ -11,7 +11,7 @@ import {
     Mpd,
     Period
 } from "../types/dash/MpdFile";
-
+import { BuiltInComponentID } from "../types/Player";
 export function checkMediaType(s: any): s is MediaType {
     if (!s) return true
     return (
@@ -78,4 +78,20 @@ export function checkSegmentURL(s: any): s is SegmentURL {
 
 export function checkSegmentBase(s: any): s is SegmentBase {
     return s.tag === "SegmentBase";
+}
+
+export function checkBuiltInComponentID(s: any): s is BuiltInComponentID {
+    return [
+        "PlayButton",
+        "Playrate",
+        "Volume",
+        "FullScreen",
+        "DutaionShow",
+        "SubSetting",
+        "VideoShot",
+        "ScreenShot",
+        "PicInPic",
+        "FullPage",
+        "FullScreen",
+      ].includes(s);
 }
