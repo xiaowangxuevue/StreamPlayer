@@ -8,9 +8,9 @@ import {
 } from "../index";
 import "./player.less";
 import { Component } from "../class/Component";
-import { $, patchComponent } from "../utils/domUtils";
+import { $, patchComponent, addClass, removeClass } from "../utils/domUtils";
 import { Plugin } from "../index";
-import { ONCE_COMPONENT_STORE, COMPONENT_STORE } from "../utils/store";
+import { ONCE_COMPONENT_STORE, COMPONENT_STORE, HIDEEN_COMPONENT_STORE } from "../utils/store";
 import { getFileExtension } from "../utils/play";
 import MpdMediaPlayerFactory from "../dash/MediaPlayer";
 import Mp4MediaPlayer from "../mp4/MediaPlayer";
@@ -19,6 +19,7 @@ import { Loading } from "../component/Loading/Loading";
 import { TimeLoading } from "../component/Loading/parts/TimeLoading";
 import { ErrorLoading } from "../component/Loading/parts/ErrorLoading";
 import { TopBar } from "../component/TopBar/TopBar";
+import { subSettingPath } from "../component/Controller/path/defaultPath";
 class Player extends Component implements ComponentItem {
   readonly id = "Player";
   // 播放器的默认配置
@@ -68,24 +69,52 @@ class Player extends Component implements ComponentItem {
   initResizeObserver() {
     const resizeObserver = new ResizeObserver(entries => {
       console.log('监听到了尺寸变化了...');
+      // 触发尺寸变化事件
+      this.emit("resize", entries);
       let width = entries[0].contentRect.width;
-
+      let SubSetting;
       if (width <= 400) {
-        console.log(width)
+        // 默认在小屏幕的情况下只将SubSetting移动到上端，其余在底部注册的控件需要隐藏
+        console.log(width, 'width!!!!')
         COMPONENT_STORE.forEach((value, key) => {
-          if(["Playrate","SubSetting","VideoShot","ScreenShot","PicInPic"].includes(key)) {
-            this.umountComponent(key);
-            this.mountComponent(key, ONCE_COMPONENT_STORE.get(key), {
-              mode: {
-                type: "TopToolBar",
-                pos: "right"
-              }
-            })
+          if (["SubSetting"].includes(key)) {
+            SubSetting = ONCE_COMPONENT_STORE.get(key)
+            this.unmountComponent(key)
+          } else if (["Playrate", "SubSetting", "VideoShot", "ScreenShot", "PicInPic"].includes(key)){
+            if (!HIDEEN_COMPONENT_STORE.get(key)) {
+              this.hideComponent(key);
+            }
+          }
+        })
+        this.mountComponent(SubSetting.id,SubSetting,{
+          mode:{
+            type:"TopToolBar",
+            pos:"right"
           }
         })
 
+        addClass(SubSetting.el,["video-subsettings","video-topbar-controller"]);
+      } else {
+        // 展示之前隐藏的组件
+        HIDEEN_COMPONENT_STORE.forEach((value,key) => {
+          this.showComponent(key)
+        })
+        if(COMPONENT_STORE.has("SubSetting")) {
+          let key = "SubSetting";
+          let component = ONCE_COMPONENT_STORE.get(key)
+          // 如果subsetting已经挂载到视图上，需要先卸载
+          this.unmountComponent(key);
+          this.mountComponent(key,component,{
+            mode:{
+              type:"BottomToolBar",
+              pos:"right"
+            },
+            index:1
+          })
+          addClass(component.el,["video-subsetting","video-controller"])
+        }
       }
-    })
+    });
 
     resizeObserver.observe(this.el);
   }
@@ -225,63 +254,112 @@ class Player extends Component implements ComponentItem {
 
 
   // 注册/挂载自己的组件，其中的id为组件实例的名称，分为内置和用户自定义这两种情况；注意，id是唯一的，不能存在两个具有相同id的组件实例
-  mountComponent(id: string, component: ComponentItem, options?: RegisterComponentOptions) {
+  mountComponent(
+    id: string,
+    component: ComponentItem,
+    options?: RegisterComponentOptions
+  ) {
     if (COMPONENT_STORE.has(id)) {
-      throw new Error("无法挂载一个已经存在于视图上的组件，请先将其卸载或者删除")
+      throw new Error(
+        "无法挂载一个已经存在于视图上的组件，请先将其卸载或者删除"
+      );
     }
-
     COMPONENT_STORE.set(id, component);
-
-    ONCE_COMPONENT_STORE.set(id, component);
+    if (!ONCE_COMPONENT_STORE.has(id)) {
+      ONCE_COMPONENT_STORE.set(id, component);
+    }
     if (!options) {
-      if (!component.container) throw new Error("必须传入options选项或者传入的组件实例需要有container选项");
+      if (!component.container)
+        throw new Error(
+          "必须传入Options选项或者传入的组件实例中需要有container选项"
+        );
       component.container.appendChild(component.el);
     } else {
       let mode = options.mode;
       if (mode.type === "BottomToolBar") {
+        let area: HTMLElement;
         if (mode.pos === "left") {
-          this.toolBar.controller.leftArea.appendChild(component.el);
-
+          area = this.toolBar.controller.leftArea;
         } else if (mode.pos === "right") {
-          this.toolBar.controller.rightArea.appendChild(component.el);
+          area = this.toolBar.controller.rightArea;
         } else if (mode.pos === "medium") {
-          this.toolBar.controller.mediumArea.appendChild(component.el);
+          area = this.toolBar.controller.mediumArea;
+        }
+        let children = [...area.children];
+        if (!options.index) area.appendChild(component.el);
+        else {
+          if (options.index < 0) throw new Error("index不能传入负值");
+          area.insertBefore(component.el, children[options.index] || null)
         }
       } else if (mode.type === "TopToolBar") {
+        let area: HTMLElement;
         if (mode.pos === "left") {
-          this.topbar.leftArea.appendChild(component.el)
+          area = this.topbar.leftArea;
         } else {
-          this.topbar.rightArea.appendChild(component.el);
+          area = this.topbar.rightArea;
+        }
+        let children = [...area.children];
+        if (!options.index) area.appendChild(component.el);
+        else {
+          if (options.index < 0) throw new Error("index不能传入负值");
+          area.insertBefore(component.el, children[options.index] || null)
         }
       }
       component.container = component.el.parentElement;
     }
   }
 
+
   // 更新一个已经挂载到视图层上的组件
-  updateComponent(id:string,component:Partial<ComponentItem>,options:UpdateComponentOptions) {
-    if(!COMPONENT_STORE.get(id)){
-      throw new Error ("该组件不存在或者已经被卸载")
+  updateComponent(id: string, component: Partial<ComponentItem>, options: UpdateComponentOptions) {
+    if (!COMPONENT_STORE.get(id)) {
+      throw new Error("该组件不存在或者已经被卸载")
     }
 
-    patchComponent(COMPONENT_STORE.get(id),component,options);
+    patchComponent(COMPONENT_STORE.get(id), component, options);
   }
 
   // 卸载某一个component组件，卸载表示仅仅将dom元素从视图上移除，但是不会删除其实例对象，还可以继续挂载
-  umountComponent(id:string){
-    if(!COMPONENT_STORE.get(id)){
-      throw new Error ("该组件不存在或者已经被卸载")
+  unmountComponent(id: string) {
+    if (!COMPONENT_STORE.get(id)) {
+      throw new Error("该组件不存在或者已经被卸载")
     }
 
     let instance = COMPONENT_STORE.get(id)
     instance.el.parentElement.removeChild(instance.el);
+    removeClass(instance.el, [...instance.el.classList])
     COMPONENT_STORE.delete(id)
+  }
+  // 隐藏某一个已经挂载到视图上的组件
+  hideComponent(id: string) {
+    if (!COMPONENT_STORE.get(id)) {
+      throw new Error("无法隐藏一个未挂载在视图上的组件")
+    }
+    if (HIDEEN_COMPONENT_STORE.get(id)) {
+      throw new Error("该组件已经隐藏")
+    }
+    let instance = COMPONENT_STORE.get(id);
+    instance.el.style.display = 'none';
+    HIDEEN_COMPONENT_STORE.set(id, instance)
+  }
+  // 展示一个已经隐藏的组件
+  showComponent(id: string) {
+    if (!HIDEEN_COMPONENT_STORE.get(id)) {
+      throw new Error("该元素已经隐藏");
+    }
+    if (!COMPONENT_STORE.get(id)) {
+      throw new Error("该元素不存在或者被卸载");
+    }
+
+    let instance = COMPONENT_STORE.get(id);
+    instance.el.style.display = "";
+    HIDEEN_COMPONENT_STORE.delete(id);
   }
 
   // 彻底删除一个组件，也就是直接销毁组件实例，卸载组件仅仅是将其el元素从视图上移除，担仍然保留组件的实例对象
-  deleteComponent(id:string) {
-    if(COMPONENT_STORE.has(id)) {
-      this.umountComponent(id);
+  deleteComponent(id: string) {
+    if (COMPONENT_STORE.has(id)) {
+      this.unmountComponent(id);
     }
 
     ONCE_COMPONENT_STORE.delete(id)

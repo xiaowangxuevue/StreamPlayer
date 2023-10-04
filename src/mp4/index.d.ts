@@ -16,18 +16,22 @@ declare module 'mp4box' {
         language: string;
         nb_samples: number;
     }
+
     interface MP4VideoData {
         width: number;
         height: number;
     }
+
     interface MP4VideoTrack extends MP4MediaTrack {
         video: MP4VideoData;
     }
+
     interface MP4AudioData {
         sample_rate: number;
         channel_count: number;
         sample_size: number;
     }
+
     interface MP4AudioTrack extends MP4MediaTrack {
         audio: MP4AudioData;
     }
@@ -46,6 +50,7 @@ declare module 'mp4box' {
         modified: Date;
         tracks: MP4Track[];
     }
+
     interface LogInterface {
         debug: (module: string,msg: string) => void;
         log: (module: string,msg: string) => void;
@@ -89,6 +94,8 @@ declare module 'mp4box' {
     }
 
     export const Log: LogInterface;
+
     export function createFile(): MP4File;
+
     export { };
 }
