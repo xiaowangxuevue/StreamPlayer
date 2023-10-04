@@ -73,9 +73,7 @@ class Player extends Component implements ComponentItem {
       if (width <= 400) {
         console.log(width)
         COMPONENT_STORE.forEach((value, key) => {
-          if (["Volume", "PlayButton", "DurationShow", "FullScreen", "FullPage"].includes(key)) {
-            // do nothing
-          } else {
+          if(["Playrate","SubSetting","VideoShot","ScreenShot","PicInPic"].includes(key)) {
             this.umountComponent(key);
             this.mountComponent(key, ONCE_COMPONENT_STORE.get(key), {
               mode: {
@@ -256,7 +254,7 @@ class Player extends Component implements ComponentItem {
           this.topbar.rightArea.appendChild(component.el);
         }
       }
-      component.container = component.container.parentElement;
+      component.container = component.el.parentElement;
     }
   }
 
@@ -276,7 +274,7 @@ class Player extends Component implements ComponentItem {
     }
 
     let instance = COMPONENT_STORE.get(id)
-    instance.container.removeChild(instance.el);
+    instance.el.parentElement.removeChild(instance.el);
     COMPONENT_STORE.delete(id)
   }
 
