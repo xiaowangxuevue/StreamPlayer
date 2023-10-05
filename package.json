@@ -51,6 +51,7 @@
     "cors": "^2.8.5",
     "mp4box": "^0.5.2",
     "nanoid": "^4.0.0",
-    "screenfull":"^6.0.2"
+    "ntouch.js": "^1.0.6",
+    "screenfull": "^6.0.2"
   }
 }

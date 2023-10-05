@@ -1,4 +1,5 @@
-import proto from "../MoblieEvent"
+import { wrap, addEventListener } from "ntouch.js"
+import { ExternalHTMLElement } from "ntouch.js/lib/types";
 import {
     ComponentItem,
     DOMProps,
@@ -67,7 +68,7 @@ import {
    * @param {Node[]} children
    * @returns
    */
-  export function $<T extends HTMLElement>(
+  export function $<T extends ExternalHTMLElement>(
     desc?: string,
     props?: DOMProps,
     children?: string | Array<Node>
@@ -77,15 +78,12 @@ import {
     match[0] = regArray[1] || undefined;
     match[1] = regArray[2] || undefined;
     match[2] = regArray[3] || undefined;
-    let el: HTMLElement = match[0]
+    let el = match[0]
       ? document.createElement(match[0])
       : document.createElement("div");
-      let prototype = (el as any).__proto__;
-      // 坑点！！
-      el = Object.setPrototypeOf(el,Object.setPrototypeOf(Object.assign({},proto),prototype))
     if (match[1]) {
       el.id = match[1];
-    }
+    }-
     match[2] && addClass(el, [match[2]]);
     for (let key in props) {
       if (typeof props[key] === "object") {
@@ -110,7 +108,7 @@ import {
       }
     }
   
-    return el as T;
+    return el ;
   }
   /**
    * @description 根据传入的字符串获取对应的DOM元素

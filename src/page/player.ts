@@ -28,6 +28,7 @@ import { ErrorLoading } from "../component/Loading/parts/ErrorLoading";
 import { TopBar } from "../component/TopBar/TopBar";
 import { Env } from "../utils/env";
 import { MobileVolume } from "../component/Mobile/MobileVolume";
+import { wrap } from "ntouch.js";
 class Player extends Component implements ComponentItem {
   readonly id = "Player";
   // 播放器的默认配置
@@ -88,7 +89,9 @@ class Player extends Component implements ComponentItem {
     this.toolBar = new ToolBar(this, this.el, "div");
     this.topbar = new TopBar(this, this.el, "div")
   }
-
+  /**
+ * @@description 监听视频播放器大小的变化
+ */
   initResizeObserver() {
     const resizeObserver = new ResizeObserver(entries => {
       console.log('监听到了尺寸变化了...');
@@ -96,6 +99,7 @@ class Player extends Component implements ComponentItem {
       this.emit("resize", entries);
       let width = entries[0].contentRect.width;
       let SubSetting;
+      // 当尺寸发生变化的时候视频库只调整基本的内置组件，其余用户自定义的组件响应式需要自己实现
       if (width <= 500) {
         // 默认在小屏幕的情况下只将SubSetting移动到上端，其余在底部注册的控件需要隐藏
         console.log(width, 'width!!!!')
@@ -267,15 +271,17 @@ class Player extends Component implements ComponentItem {
   }
 
   initMobileEvent(): void {
-    this.video.addEventListener("singleTap", (e) => {
-      if (this.toolBar.status === "hidden") {
-        this.emit("showtoolbar", e);
+    wrap(this.video).addEventListener("singleTap",(e) => {
+      console.log("singletap",e);
+      if(this.toolBar.status === "hidden") {
+        this.emit("showtoolbar",e);
       } else {
-        this.emit("hidetoolbar", e);
+        this.emit("hidetoolbar",e);
+
       }
     })
 
-    this.video.addEventListener("doubleTap", (e) => {
+    wrap(this.video).addEventListener("doubleTap",(e) => {
       if (this.video.paused) {
         this.video.play();
       } else if (this.video.played) {
@@ -283,48 +289,82 @@ class Player extends Component implements ComponentItem {
       }
     })
 
-    this.video.addEventListener("moveLeft", (val) => {
 
-    })
-
-    this.video.addEventListener("moveRight", (val) => {
-
-    })
-
-    // 当手势具有向上或者向下的位移量的时候持续触发此方法
-    this.video.addEventListener("moveTop", (val: any) => {
-      this.emit("moveTop", val);
-      if (Math.abs(val.dx) <= Math.abs(val.dy)) {
-        this.emit("moveVertical", val);
-      } else {
-        this.emit("moveHorizontal", val);
+    wrap(this.video).addEventListener("move",(e)=>{
+      let dx = e.deltaX;
+      let dy = e.deltaY;
+      if(Math.abs(dx) <= 20 && Math.abs(dx) < Math.abs(dy)) {
+        this.emit("moveVertical",e);
       }
     })
 
-    this.video.addEventListener("moveDown", (val: any) => {
-      this.emit("moveDown", val);
-      if (Math.abs(val.dx) <= Math.abs(val.dy)) {
-        this.emit("moveVertical", val);
-      } else {
-        this.emit("moveHorizontal", val);
+    wrap(this.video).addEventListener("swipe",(e) => {
+      let dx = e.endPos.x - e.startPos.x;
+      let dy = e.endPos.y - e.startPos.y;
+      if(Math.abs(dx) <= 20 && Math.abs(dx) < Math.abs(dy)) {
+        this.emit("slideVertical", e);
       }
+      
     })
-    // 当手势具有向上或者向下的位移且滑动结束后触发该事件
-    this.video.addEventListener("slideTop", (val: any) => {
-      if (Math.abs(val.dx) <= Math.abs(val.dy)) {
-        this.emit("slideVertical")
-      } else {
-        this.emit("slideHorizontal");
-      }
-    })
+        
+    // this.video.addEventListener("singleTap", (e) => {
+    //   if (this.toolBar.status === "hidden") {
+    //     this.emit("showtoolbar", e);
+    //   } else {
+    //     this.emit("hidetoolbar", e);
+    //   }
+    // })
 
-    this.video.addEventListener("slideDown", (val: any) => {
-      if (Math.abs(val.dx) <= Math.abs(val.dy)) {
-        this.emit("slideVertical")
-      } else {
-        this.emit("slideHorizontal");
-      }
-    })
+    // this.video.addEventListener("doubleTap", (e) => {
+    //   if (this.video.paused) {
+    //     this.video.play();
+    //   } else if (this.video.played) {
+    //     this.video.pause();
+    //   }
+    // })
+
+    // this.video.addEventListener("moveLeft", (val) => {
+
+    // })
+
+    // this.video.addEventListener("moveRight", (val) => {
+
+    // })
+
+    // // 当手势具有向上或者向下的位移量的时候持续触发此方法
+    // this.video.addEventListener("moveTop", (val: any) => {
+    //   this.emit("moveTop", val);
+    //   if (Math.abs(val.dx) <= Math.abs(val.dy)) {
+    //     this.emit("moveVertical", val);
+    //   } else {
+    //     this.emit("moveHorizontal", val);
+    //   }
+    // })
+
+    // this.video.addEventListener("moveDown", (val: any) => {
+    //   this.emit("moveDown", val);
+    //   if (Math.abs(val.dx) <= Math.abs(val.dy)) {
+    //     this.emit("moveVertical", val);
+    //   } else {
+    //     this.emit("moveHorizontal", val);
+    //   }
+    // })
+    // // 当手势具有向上或者向下的位移且滑动结束后触发该事件
+    // this.video.addEventListener("slideTop", (val: any) => {
+    //   if (Math.abs(val.dx) <= Math.abs(val.dy)) {
+    //     this.emit("slideVertical")
+    //   } else {
+    //     this.emit("slideHorizontal");
+    //   }
+    // })
+
+    // this.video.addEventListener("slideDown", (val: any) => {
+    //   if (Math.abs(val.dx) <= Math.abs(val.dy)) {
+    //     this.emit("slideVertical")
+    //   } else {
+    //     this.emit("slideHorizontal");
+    //   }
+    // })
   }
   initPlugin() {
     if (this.playerOptions.plugins) {
@@ -430,10 +470,10 @@ class Player extends Component implements ComponentItem {
           if (options.index < 0) throw new Error("index不能传入负值");
           area.insertBefore(component.el, children[options.index] || null)
         }
-      } else if(mode.type === "AnyPosition") {
+      } else if (mode.type === "AnyPosition") {
         this.el.appendChild(component.el)
       }
-         // 给组件中的container赋予新的值·
+      // 给组件中的container赋予新的值·
       component.container = component.el.parentElement;
     }
   }

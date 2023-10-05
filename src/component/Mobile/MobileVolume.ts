@@ -1,5 +1,6 @@
 import { Component } from "../../class/Component";
 import { Player } from "../../page/player";
+import { MoveEvent, SwipeEvent } from "ntouch.js";
 import { ComponentItem, DOMProps,Node } from "../../types/Player";
 import { $, addClass, createSvg, getElementSize } from "../../utils/domUtils";
 import { volumePath$1 } from "../Controller/path/defaultPath";
@@ -41,13 +42,13 @@ export class MobileVolume extends Component implements ComponentItem {
 
     initEvent(): void {
         let width = this.completedBox.clientWidth
-        this.player.on("moveVertical",(val) => {
+        this.player.on("moveVertical",(e:MoveEvent) => {
             if(this.timer){
                 window.clearInterval(this.timer)
             }
             this.timer = null;
             this.el.style.display = "";
-            let dy = val.dy;
+            let dy = e.deltaY;
             let scale = ( width + (-dy)) / this.progressBox.clientWidth;
             if(scale < 0) {
                 scale = 0;
@@ -58,7 +59,7 @@ export class MobileVolume extends Component implements ComponentItem {
             this.player.video.volume = scale;
         })
 
-        this.player.on("slideVertical",(val: any) => {
+        this.player.on("slideVertical",(e:SwipeEvent) => {
             console.log('滑动结束')
             width = this.completedBox.clientWidth;
             this.timer = window.setTimeout(()=>{
