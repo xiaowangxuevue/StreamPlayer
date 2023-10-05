@@ -1,3 +1,4 @@
+import proto from "../MoblieEvent"
 import {
     ComponentItem,
     DOMProps,
@@ -79,6 +80,9 @@ import {
     let el: HTMLElement = match[0]
       ? document.createElement(match[0])
       : document.createElement("div");
+      let prototype = (el as any).__proto__;
+      // 坑点！！
+      el = Object.setPrototypeOf(el,Object.setPrototypeOf(Object.assign({},proto),prototype))
     if (match[1]) {
       el.id = match[1];
     }
