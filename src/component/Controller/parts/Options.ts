@@ -7,6 +7,7 @@ export class Options extends Component implements ComponentItem {
     props: DOMProps;
     player: Player;
     hideWidth: number;
+    icon: Element;
     hideHeight: number;
     hideBox: HTMLElement;
     iconBox: HTMLElement;
@@ -27,7 +28,7 @@ export class Options extends Component implements ComponentItem {
     }
 
     initBaseTemplate() {
-        this.hideBox = $("div", { style: { display: "none" ,bottom:"48px"} })
+        this.hideBox = $("div", { style: { display: "none", bottom: "48px" } })
         addClass(this.hideBox, ["video-set"])
         if (this.hideWidth && this.hideWidth > 0) {
             this.hideBox.style.width = this.hideWidth + 'px'
@@ -53,18 +54,23 @@ export class Options extends Component implements ComponentItem {
             let ctx = this;
             ctx.hideBox.style.display = "block";
             document.body.onmousemove = ctx.handleMouseMove.bind(this);
-            this.player.emit("oneControllerHover",this);
+            this.player.emit("oneControllerHover", this);
         }
 
 
-    this.player.on("oneControllerHover",(controller:ComponentItem) => {
-        if(this !== controller) {
-          if(this.hideBox.style.display !== "none") {
+        this.player.on("oneControllerHover", (controller: ComponentItem) => {
+            if (this !== controller) {
+                if (this.hideBox.style.display !== "none") {
+                    this.hideBox.style.display = "none";
+                }
+            }
+        })
+
+        this.player.on("videoClick", () => {
             this.hideBox.style.display = "none";
-          }
-        }
-      })
+        })
     }
+
 
     handleMouseMove(e: MouseEvent) {
         let pX = e.pageX, pY = e.pageY;
@@ -73,6 +79,12 @@ export class Options extends Component implements ComponentItem {
             ctx.hideBox.style.display = "none"
             document.body.onmousemove = null;
         }
+    }
+
+    replaceIcon(icon: Element) {
+        this.iconBox.removeChild(this.icon);
+        this.iconBox.appendChild(icon);
+        this.icon = icon;
     }
 
 

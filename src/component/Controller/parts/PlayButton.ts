@@ -1,5 +1,6 @@
 import { Component } from "../../../class/Component"
 import { Player } from "../../../page/player";
+import { wrap } from "ntouch.js";
 import { ComponentItem, DOMProps,Node } from "../../../types/Player";
 import { $, addClass, createSvg } from "../../../utils/domUtils";
 import { storeControlComponent } from "../../../utils/store";
@@ -36,7 +37,6 @@ export class PlayButton extends Component implements ComponentItem {
     }
 
     initEvent() {
-        this.onClick = this.onClick.bind(this);
         this.player.on("play",(e:Event) => {
             this.iconBox.removeChild(this.button);
             this.button = this.pauseIcon as SVGSVGElement;
@@ -48,22 +48,33 @@ export class PlayButton extends Component implements ComponentItem {
             this.button = this.playIcon as SVGSVGElement;
             this.iconBox.appendChild(this.button);
         })
-
-        this.el.onclick = this.onClick;
-
-    }
-    resetEvent(){
         this.onClick = this.onClick.bind(this);
-        this.el.onclick = null;
-        this.el.onclick = this.onClick;
-        
+        if(this.player.env === "Mobile") {
+            this.initMobileEvent()
+        } else {
+            this.initPCEvent()
+        }
     }
 
-    onClick(e: MouseEvent) {
+    initPCEvent(): void {
+        this.el.onclick = this.onClick;
+    }
+
+    initMobileEvent(): void {
+        wrap(this.el).addEventListener("singleTap",this.onClick);
+    }
+
+    onClick(e: Event) {
         if (this.player.video.paused) {
             this.player.video.play();
         } else {
             this.player.video.pause();
         }
+    }
+
+    resetEvent() {
+        this.onClick = this.onClick.bind(this);
+        this.el.onclick = null;
+        this.el.onclick = this.onClick;
     }
 }
