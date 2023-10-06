@@ -57,9 +57,16 @@ class Player extends Component implements ComponentItem {
   }
 
   init() {
-    this.video = $("video");
-    this.video["playsinline"] = true;
-    this.video["x5-video-player-type"] = "h5";
+    if (this.playerOptions.video) {
+      this.video = this.playerOptions.video;
+      this.video.parentElement && this.video.parentElement.removeChild(this.video)
+    } else {
+      this.video = $("video");
+      // 确保视频在移动设备上以内联方式播放
+      this.video["playsinline"] = true;
+      this.video["x5-video-player-type"] = "h5";
+
+    }
 
     this.el.appendChild(this.video);
     this.playerOptions?.url && this.attachSource(this.playerOptions.url);
@@ -334,7 +341,7 @@ class Player extends Component implements ComponentItem {
     }
   }
 
-  checkFullScreenMode() {}
+  checkFullScreenMode() { }
 
   // 注册/挂载自己的组件,其中的id为组件实例的名称，分为内置和用户自定义这两种情况；注意，id是唯一的，不能存在两个具有相同id的组件实例!!!
   mountComponent(
