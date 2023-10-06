@@ -1,15 +1,15 @@
+import { wrap } from "ntouch.js";
 import { Player } from "../../../page/player";
 import { DOMProps, Node } from "../../../types/Player";
-import { addClass, createSvg, removeClass } from "../../../utils/domUtils";
+import { addClass, createSvg } from "../../../utils/domUtils";
 import { storeControlComponent } from "../../../utils/store";
 import { picInPicPath } from "../path/defaultPath";
 import { Options } from "./Options";
-import { wrap } from "ntouch.js";
+
 export class PicInPic extends Options {
     readonly id = "PicInPic";
     constructor(player:Player,container:HTMLElement,desc?:string, props?:DOMProps,children?:Node[]) {
         super(player, container,0,0, desc,props,children);
-
         this.init();
     }
 
@@ -28,17 +28,17 @@ export class PicInPic extends Options {
         this.hideBox.innerText = "画中画"
         this.hideBox.style.fontSize = "13px"
     }
-
+    
     initEvent() {
         this.onClick = this.onClick.bind(this);
         if(this.player.env === "Mobile") {
-            wrap(this.el).addEventListener("singleTap",this.onClick)
-        }else {
-            this.el.onclick = this.onClick
+            wrap(this.el).addEventListener("singleTap",this.onClick);
+        } else {
+            this.el.onclick = this.onClick;
         }
     }
 
-    onClick(e:Event) {
+    onClick(e: Event) {
         if (document.pictureInPictureElement) { // 当前画中画的元素
             document.exitPictureInPicture();
         } else {

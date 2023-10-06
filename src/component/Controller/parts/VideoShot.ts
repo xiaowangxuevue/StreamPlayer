@@ -1,20 +1,20 @@
-import { Player } from "../../../page/player";
 import { wrap } from "ntouch.js";
+import { Player } from "../../../page/player";
 import { DOMProps, Node } from "../../../types/Player";
 import { addClass, createSvg } from "../../../utils/domUtils";
 import { storeControlComponent } from "../../../utils/store";
 import { videoShotPath } from "../path/defaultPath";
 import { Options } from "./Options";
-
+ 
 export class VideoShot extends Options {
     readonly id = "VideoShot";
     player: Player;
-    icon: SVGSVGElement;
     props: DOMProps;
+    icon: SVGSVGElement;
     countDown = 30;
     timer: number | null = null;
-    constructor(player: Player, container: HTMLElement, desc?: string, props?: DOMProps, children?: Node[]) {
-        super(player, container, 0, 0, desc, props, children);
+    constructor(player:Player,container:HTMLElement,desc?:string, props?:DOMProps,children?:Node[]) {
+        super(player, container,0,0, desc,props,children);
         this.player = player;
         this.props = props || {};
         this.init();
@@ -23,18 +23,19 @@ export class VideoShot extends Options {
     init() {
         this.initTemplate();
         this.initEvent();
-        storeControlComponent(this)
+        storeControlComponent(this);
     }
-    initTemplate() {
 
-        addClass(this.el, ["video-videoshot", "video-controller"])
-        this.icon = createSvg(videoShotPath, "0 0 1024 1024")
+    initTemplate() {
+        addClass(this.el,["video-videoshot","video-controller"])
+        this.icon = createSvg(videoShotPath,"0 0 1024 1024")
         this.iconBox.appendChild(this.icon);
         this.el.appendChild(this.iconBox);
+
         this.hideBox.innerText = "视频录制"
         this.hideBox.style.fontSize = "13px"
     }
-
+    
     initEvent() {
         this.onDown = this.onDown.bind(this);
         if(this.player.env === "PC") {
@@ -44,10 +45,9 @@ export class VideoShot extends Options {
         }
     }
 
-    onDown(e: Event) {
-        if (this.player.video.played) {
+    onDown() {
+        if(this.player.video.played) {
             this.videoShot();
-
         }
     }
 
@@ -55,12 +55,15 @@ export class VideoShot extends Options {
         let recorder = new MediaRecorder(
             (this.player.video as HTMLMediaElement as HTMLMediaElementWithCaputreStream).captureStream(60)
         )
+
         recorder.addEventListener("start",(e)=>{
             console.log("开始录制视频")
         })
+
         recorder.addEventListener("stop",(e)=>{
             console.log("结束录制视频")
         })
+
         recorder.addEventListener("dataavailable",(e:BlobEvent)=>{
             let data = e.data;
             let a = document.createElement("a");
@@ -72,7 +75,9 @@ export class VideoShot extends Options {
             document.body.removeChild(a);
             a = null;
         })
+
         recorder.start();
+
         this.timer = window.setInterval(()=>{
             console.log(this.countDown);
             if(this.countDown === 0) {

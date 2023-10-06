@@ -1,9 +1,9 @@
 export type DanmakuData = {
-    message:string;
-    fontColor?:string;
+    message: string;
+    fontColor?: string;
     fontSize?: number;
     fontFamily?: string;
-    fontWeight?:number;
+    fontWeight?: number;
     dom?: HTMLElement;
     useTracks?: number;
     width?: number;
@@ -14,17 +14,13 @@ export type DanmakuData = {
     // 弹幕的位移速度
     rollSpeed?: number;
     // 弹幕的当前位移距离
-    rollDistance?:number;
+    rollDistance?: number;
     startTime?: number;
-    timestamp?:number
-    // 弹幕在何轨道？
+    timestamp?: number;
     y?: number[];
-
 }
-
 
 export type Track = {
     id: number;
     priority: number;
-
 }

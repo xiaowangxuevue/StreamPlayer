@@ -32,25 +32,27 @@ export class DanmakuController {
                 player.mountComponent(ctx.danmakuInput.id,ctx.danmakuInput,{
                     mode:{
                         type:"BottomToolBar",
-                        pos:"medium"
+                        pos: "medium"
                     }
-                })
+                });
             }
         })
     }
-
-
+    
     initializeEvent() {
         this.video.addEventListener("timeupdate",(e:Event)=>{
             this.onTimeupdate(e);
         })
+
         this.video.addEventListener("seeking",(e:Event) => {
             this.onSeeking(e);
         })
+
         this.video.addEventListener("play",(e:Event)=>{
             this.start();
             this.danmaku.resume();
         })
+
         this.video.addEventListener("pause",(e:Event) => {
             this.pause();
             this.danmaku.pause();
@@ -59,24 +61,27 @@ export class DanmakuController {
         this.video.addEventListener("loadedmetadata",(e) => {})
         this.danmakuInput.on("sendData",function(data) {
             // 此处为发送弹幕的逻辑
-            console.log(data);
+            // console.log(data);
             queue.push(data);
-            console.log(queue,'queue');
-            
+            // console.log(queue);
         })
-        this.player.on("dotdrag",(e) => {
-            this.danmaku.flush()
+
+        this.player.on("dotdrag",(e)=>{
+            this.danmaku.flush();
         })
     }
 
     start() {
         this.timer = window.setInterval(()=>{
+            // console.log(queue);
             this.danmaku.addData(queue[(this.index++)%queue.length]);
         },50)
     }
+
     pause() {
         window.clearInterval(this.timer);
     }
+
     onTimeupdate(e:Event) {
         let video = e.target as HTMLVideoElement;
         let currentTime = video.currentTime;

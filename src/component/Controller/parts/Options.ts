@@ -1,91 +1,90 @@
 import { Component } from "../../../class/Component";
+import { EVENT } from "../../../events";
 import { Player } from "../../../page/player";
 import { ComponentItem, DOMProps, Node } from "../../../types/Player";
 import { $, addClass, checkIsMouseInRange } from "../../../utils/domUtils";
+
 export class Options extends Component implements ComponentItem {
-    id = "Options";
-    props: DOMProps;
-    player: Player;
-    hideWidth: number;
-    icon: Element;
-    hideHeight: number;
-    hideBox: HTMLElement;
-    iconBox: HTMLElement;
-    constructor(player: Player, container: HTMLElement, hideWidth?: number, hideHiegth?: number, desc?: string, props?: DOMProps, children?: Node[]) {
-        super(container, desc, props, children);
-        this.player = player;
-        props ? (this.props = props) : (this.props = {});
-        this.hideWidth = hideWidth;
-        this.hideHeight = hideHiegth;
-        this.initBase()
+  id = "Options";
+  props: DOMProps;
+  player: Player;
+  hideWidth: number;
+  hideHeight: number;
+  hideBox: HTMLElement;
+  iconBox: HTMLElement;
+  icon: Element;
+  constructor(
+    player: Player,
+    container: HTMLElement,
+    hideWidth?: number,
+    hideHeight?: number,
+    desc?: string,
+    props?: DOMProps,
+    children?: Node[]
+  ) {
+    super(container, desc, props, children);
+    this.player = player;
+    props ? (this.props = props) : (this.props = {});
+    this.hideHeight = hideHeight;
+    this.hideWidth = hideWidth;
+    this.initBase();
+  }
 
+  initBase() {
+    this.initBaseTemplate();
+    this.initBaseEvent();
+  }
 
+  initBaseTemplate() {
+    this.hideBox = $("div",{style:{display:"none",bottom:"48px"}});
+    addClass(this.hideBox,["video-set"])
+    if(this.hideHeight && this.hideHeight > 0) {
+        this.hideBox.style.height = this.hideHeight + 'px';
+    }
+    if(this.hideWidth && this.hideWidth > 0) {
+        this.hideBox.style.width = this.hideWidth + 'px'
     }
 
-    initBase() {
-        this.initBaseTemplate();
-        this.initBaseEvent();
-    }
+    this.el.appendChild(this.hideBox);
 
-    initBaseTemplate() {
-        this.hideBox = $("div", { style: { display: "none", bottom: "48px" } })
-        addClass(this.hideBox, ["video-set"])
-        if (this.hideWidth && this.hideWidth > 0) {
-            this.hideBox.style.width = this.hideWidth + 'px'
-        }
+    this.iconBox = $("div");
+    addClass(this.iconBox,["video-icon"])
+    this.el.appendChild(this.iconBox);
+  }
 
-        if (this.hideHeight && this.hideHeight > 0) {
-            this.hideBox.style.height = this.hideHeight + 'px'
-        }
-
-        this.el.appendChild(this.hideBox);
-
-        this.iconBox = $("div");
-        addClass(this.iconBox, ["video-icon"])
-        this.el.appendChild(this.iconBox);
-
-
-
-    }
-
-
-    initBaseEvent() {
-        this.el.onmouseenter = (e) => {
-            let ctx = this;
-            ctx.hideBox.style.display = "block";
-            document.body.onmousemove = ctx.handleMouseMove.bind(this);
-            this.player.emit("oneControllerHover", this);
-        }
-
-
-        this.player.on("oneControllerHover", (controller: ComponentItem) => {
-            if (this !== controller) {
-                if (this.hideBox.style.display !== "none") {
-                    this.hideBox.style.display = "none";
-                }
-            }
-        })
-
-        this.player.on("videoClick", () => {
-            this.hideBox.style.display = "none";
-        })
-    }
-
-
-    handleMouseMove(e: MouseEvent) {
-        let pX = e.pageX, pY = e.pageY;
+  initBaseEvent() {
+    this.el.onmouseenter = (e) => {
         let ctx = this;
-        if (!checkIsMouseInRange(ctx.el, ctx.hideBox, pX, pY)) {
-            ctx.hideBox.style.display = "none"
-            document.body.onmousemove = null;
+        ctx.hideBox.style.display = "block";
+        document.body.onmousemove = ctx.handleMouseMove.bind(this);
+        this.player.emit("oneControllerHover",this);
+    }
+
+    this.player.on("oneControllerHover",(controller:ComponentItem) => {
+      if(this !== controller) {
+        if(this.hideBox.style.display !== "none") {
+          this.hideBox.style.display = "none";
         }
+      }
+    })
+
+    this.player.on(EVENT.VIDEO_CLICK,() => {
+      this.hideBox.style.display = "none";
+    })
+  }
+
+  handleMouseMove(e: MouseEvent) {
+    let pX = e.pageX,pY = e.pageY;
+    let ctx = this;
+    if(!checkIsMouseInRange(ctx.el,ctx.hideBox,pX,pY)) {
+        ctx.hideBox.style.display = "none"
+        document.body.onmousemove = null; 
     }
+  }
 
-    replaceIcon(icon: Element) {
-        this.iconBox.removeChild(this.icon);
-        this.iconBox.appendChild(icon);
-        this.icon = icon;
-    }
-
-
+  replaceIcon(icon: Element) {
+    this.iconBox.removeChild(this.icon);
+    this.iconBox.appendChild(icon);
+    this.icon = icon;
+  }
 }

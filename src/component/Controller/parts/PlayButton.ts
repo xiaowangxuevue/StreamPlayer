@@ -1,6 +1,6 @@
+import { wrap } from "ntouch.js";
 import { Component } from "../../../class/Component"
 import { Player } from "../../../page/player";
-import { wrap } from "ntouch.js";
 import { ComponentItem, DOMProps,Node } from "../../../types/Player";
 import { $, addClass, createSvg } from "../../../utils/domUtils";
 import { storeControlComponent } from "../../../utils/store";
@@ -20,6 +20,7 @@ export class PlayButton extends Component implements ComponentItem {
         this.props = props || {};
         this.init();
     }
+
     init() {
         this.initTemplate();
         this.initEvent();
@@ -65,7 +66,7 @@ export class PlayButton extends Component implements ComponentItem {
     }
 
     onClick(e: Event) {
-        if (this.player.video.paused) {
+        if(this.player.video.paused) {
             this.player.video.play();
         } else {
             this.player.video.pause();

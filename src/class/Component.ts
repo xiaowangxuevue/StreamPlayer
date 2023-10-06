@@ -2,27 +2,27 @@ import { $ } from "../utils/domUtils";
 import { BaseEvent } from "./BaseEvent";
 import { DOMProps, Node } from "../types/Player";
 
-export class Component extends BaseEvent {
+export class Component extends BaseEvent{
     el: HTMLElement; //el代表着该组件对应的整个HTML元素
     container: HTMLElement;
-    
-    constructor(container?: HTMLElement, desc?: string, props?: DOMProps, children?: string | Node[]) {
+    constructor(container?:HTMLElement,desc?:string,props?:DOMProps,children?:string | Node[]) {
         super();
-        let dom = $(desc, props, children);
+        let dom = $(desc,props,children);
         this.el = dom;
-        this.container = container
+        this.container = container;
         // 安装组件成功
-        if (container) {
+        if(container) {
             container.appendChild(dom);
         }
     }
 
-    init() { }
-    initEvent() { }
-    initTemplate() { }
+    init() {}
+    initEvent() {}
     initPCEvent(){}
     initMobileEvent(){}
-    initComponent() { }
-    resetEvent() { }
+    initTemplate() {}
+    initPCTemplate(){}
+    initMobileTemplate(){}
+    initComponent() {}
+    resetEvent() {}
 }
-

@@ -5,8 +5,7 @@ import { addClass, createSvgs } from "../../../utils/domUtils";
 import { storeControlComponent } from "../../../utils/store";
 import { screenShot$1, screenShot$2 } from "../path/defaultPath";
 import { Options } from "./Options";
-import { nanoid } from "nanoid"
-
+ 
 export class ScreenShot extends Options {
     readonly id = "ScreenShot";
     constructor(player:Player,container:HTMLElement,desc?:string, props?:DOMProps,children?:Node[]) {
@@ -29,16 +28,16 @@ export class ScreenShot extends Options {
         this.hideBox.innerText = "截图"
         this.hideBox.style.fontSize = "13px"
     }
-
+    
     initEvent() {
         this.onClick = this.onClick.bind(this);
         if(this.player.env === "PC") {
             this.el.addEventListener("click",this.onClick)
-        }else {
+        } else {
             wrap(this.el).addEventListener("singleTap",this.onClick)
         }
     }
-
+    
     onClick(e:Event) {
         this.screenShot();
     }
@@ -51,6 +50,7 @@ export class ScreenShot extends Options {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight
         canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height)
+
         const fileName = `${Math.random().toString(36).slice(-8)}_${video.currentTime}.png`
         canvas.toBlob(blob => {
             const url = URL.createObjectURL(blob)
@@ -64,5 +64,4 @@ export class ScreenShot extends Options {
             URL.revokeObjectURL(url)
         }, 'image/png')
     }
-
 }

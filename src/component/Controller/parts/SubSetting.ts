@@ -6,15 +6,17 @@ import { subSettingPath } from "../path/defaultPath";
 import { $, addClass, createSvg } from "../../../utils/domUtils";
 
 export class SubSetting extends Options {
-    readonly id = 'SubSetting';
+    readonly id = "SubSetting";
     constructor(player: Player,container: HTMLElement, desc?: string, props?: DOMProps,children?: Node[]) {
         super(player,container,0,0,desc);
         this.init();
     }
+
     init() {
         this.initTemplate();
         storeControlComponent(this);
     }
+
     initTemplate() {
         addClass(this.el,["video-subsettings","video-controller"]);
         addClass(this.hideBox,["video-subsettings-set"])

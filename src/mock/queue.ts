@@ -13,13 +13,13 @@ export const queue = [
         fontColor:"green"
     },
     {
-        message:"另一个看的兄弟是谁？？",
+        message:"HHHHHHHHHHHHH",
     },
     {
         message:"任何邪恶，终将绳之以法"
     },
     {
-        message:"大家好，我是可口可乐"
+        message:"大家好，我是昊京"
     },
     {
         message: "2333333333333333333333333333333333"

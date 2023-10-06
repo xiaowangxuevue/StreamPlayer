@@ -1,10 +1,9 @@
-video-topbar {
+.video-topbar {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    background-color: rgba(0, 0, 0, 0.2);
-    // background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAADGCAYAAAAT+OqFAAAAdklEQVQoz42QQQ7AIAgEF/T/D+kbq/RWAlnQyyazA4aoAB4FsBSA/bFjuF1EOL7VbrIrBuusmrt4ZZORfb6ehbWdnRHEIiITaEUKa5EJqUakRSaEYBJSCY2dEstQY7AuxahwXFrvZmWl2rh4JZ07z9dLtesfNj5q0FU3A5ObbwAAAABJRU5ErkJggg==) repeat-x bottom;
+    background-color: rgba(0,0,0,0.3);
     color: #fff;
     transition: all 0.3s ease;
     z-index: 2001;
@@ -18,7 +17,6 @@ video-topbar {
         flex-direction: row-reverse;
     }
 }
-
 
 .video-topbar-hidden {
     display: none;
@@ -36,7 +34,7 @@ video-topbar {
     color: #fff;
     opacity: .9;
     position: relative;
-
+  
     span {
       width: 100%;
       height: 100%;
@@ -45,7 +43,7 @@ video-topbar {
       padding:0 5px;
       font-size: 16px;
     }
-
+  
     .video-icon {
       height: 100%;
       width: 100%;
@@ -70,3 +68,4 @@ video-topbar {
         transform: translateX(-50%);
     }
   }
+  

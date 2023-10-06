@@ -1,10 +1,11 @@
+import { wrap } from "ntouch.js";
 import { Player } from "../../../page/player";
 import { DOMProps, Node } from "../../../types/Player";
 import { addClass, createSvg, removeClass } from "../../../utils/domUtils";
 import { storeControlComponent } from "../../../utils/store";
 import { fullPagePath, fullPageExitPath } from "../path/defaultPath";
 import { Options } from "./Options";
-import { wrap } from "ntouch.js";
+
 export class FullPage extends Options {
     readonly id = "FullPage";
     isFullPage = false;
@@ -24,10 +25,11 @@ export class FullPage extends Options {
         this.icon = createSvg(fullPagePath);
         this.iconBox.appendChild(this.icon);
         this.el.appendChild(this.iconBox);
+
         this.hideBox.innerText = "网页全屏"
         this.hideBox.style.fontSize = "13px"
     }
-
+    
     initEvent() {
         this.onClick = this.onClick.bind(this);
         if(this.player.env === "Mobile") {
@@ -37,7 +39,7 @@ export class FullPage extends Options {
         }
     }
 
-    onClick(e:Event) {
+    onClick(e: Event) {
         if(!this.isFullPage) {
             addClass(this.player.container,["video-fullpage"])
             this.player.container.style.position = "fixed"
@@ -46,12 +48,12 @@ export class FullPage extends Options {
             this.iconBox.removeChild(this.icon);
             this.icon = createSvg(fullPageExitPath);
             this.iconBox.appendChild(this.icon)
-
+            
         } else {
             removeClass(this.player.container,["video-fullpage"]);
             this.player.container.style.position = ""
-            this.player.container.style.width = this.player.playerOptions.width;
-            this.player.container.style.height = this.player.playerOptions.height;
+            this.player.container.style.width = this.player.containerWidth + "px";
+            this.player.container.style.height = this.player.containerHeight + "px";
             this.iconBox.removeChild(this.icon);
             this.icon = createSvg(fullPagePath);
             this.iconBox.appendChild(this.icon)
@@ -59,5 +61,5 @@ export class FullPage extends Options {
         this.isFullPage = !this.isFullPage;
 
     }
-
+        
 }
