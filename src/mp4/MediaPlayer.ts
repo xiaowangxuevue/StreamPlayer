@@ -134,7 +134,7 @@ class MediaPlayer {
 	    this.downloader.setUrl(this.url);
         this.downloader.setCallback(
             // end表示这一次的请求是否已经将整个视频文件加载过来
-            function(response: MP4ArrayBuffer, end: boolean, error: FactoryObject) {
+            function(response: MP4ArrayBuffer, end: boolean, error) {
                 var nextStart = 0;
                 if (response) {
                     // 设置文件加载的进度条

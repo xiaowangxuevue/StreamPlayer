@@ -6,8 +6,8 @@ import {
   ComponentItem,
   DOMProps,
   Player,
-  Progress,
   Controller,
+  Progress
 } from "../../index";
 import { addClass, includeClass, removeClass } from "../../utils/domUtils";
 import { storeControlComponent } from "../../utils/store";

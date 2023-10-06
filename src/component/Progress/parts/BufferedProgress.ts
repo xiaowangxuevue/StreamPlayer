@@ -3,7 +3,7 @@ import { EVENT } from "../../../events";
 import { Player } from "../../../page/player";
 import { ComponentItem, DOMProps, Node } from "../../../types/Player";
 import { storeControlComponent } from "../../../utils/store";
-import { Progress } from "../Progress";
+import { Progress } from "../progress";
 export class BufferedProgress extends Component implements ComponentItem {
   readonly id = "BufferedProgress";
   props: DOMProps;

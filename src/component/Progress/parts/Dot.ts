@@ -10,7 +10,7 @@ import {
   removeClass,
 } from "../../../utils/domUtils";
 import { storeControlComponent } from "../../../utils/store";
-import { Progress } from "../Progress";
+import { Progress } from "../progress";
 export class Dot extends Component implements ComponentItem {
   readonly id = "Dot";
   props: DOMProps;
@@ -102,7 +102,7 @@ export class Dot extends Component implements ComponentItem {
       this.player.emit(EVENT.DOT_UP);
     });
 
-    this.player.on("EVENT.MOVE_HORIZONTAL", (e: MoveEvent) => {
+    this.player.on(EVENT.MOVE_HORIZONTAL, (e: MoveEvent) => {
       let scale = (this.left + e.deltaX) / this.container.clientWidth;
 
       if (scale < 0) {
@@ -120,7 +120,7 @@ export class Dot extends Component implements ComponentItem {
       this.player.emit(EVENT.DOT_DRAG, scale, e);
     });
 
-    this.player.on("EVENT.SLIDE_HORIZONTAL", (e: SwipeEvent) => {
+    this.player.on(EVENT.SLIDE_HORIZONTAL, (e: SwipeEvent) => {
       this.player.emit(EVENT.DOT_UP);
       this.player.video.currentTime = Math.floor(
         this.playScale * this.player.video.duration
