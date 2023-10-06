@@ -22,7 +22,7 @@ export default defineConfig({
         plugins:[
           autoprefixer()
         ],
-        extract: 'css/index.css',
+
       }),
 
     ],
