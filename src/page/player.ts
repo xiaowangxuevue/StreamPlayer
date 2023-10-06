@@ -68,6 +68,7 @@ class Player extends Component implements ComponentItem {
       this.video["x5-video-player-type"] = "h5";
 
     }
+    this.video.crossOrigin = "anonymous"
 
     this.el.appendChild(this.video);
     this.playerOptions?.url && this.attachSource(this.playerOptions.url);
@@ -166,18 +167,18 @@ class Player extends Component implements ComponentItem {
     resizeObserver.observe(this.el);
   }
   // 调整尺寸
-  adjustMediaSize(){
-    if(this.mediaProportion !== 0) {
-      if(this.container.clientHeight / this.container.clientWidth > this.mediaProportion) {
-       this.video.style.width = "100%";
-       this.video.style.height = this.container.clientWidth * 9 / 16 + 5 + "px" 
+  adjustMediaSize() {
+    if (this.mediaProportion !== 0) {
+      if (this.container.clientHeight / this.container.clientWidth > this.mediaProportion) {
+        this.video.style.width = "100%";
+        this.video.style.height = this.container.clientWidth * 9 / 16 + 5 + "px"
       } else {
         this.video.style.height = "100%";
         this.video.style.width = this.container.clientHeight / this.mediaProportion + "px"
       }
     }
 
-      
+
   }
 
   initEvent() {
@@ -187,19 +188,19 @@ class Player extends Component implements ComponentItem {
       this.initPCEvent();
     }
 
-    this.video.addEventListener('loadedmetadata',(e) => {
+    this.video.addEventListener('loadedmetadata', (e) => {
       this.emit(EVENT.LOADED_META_DATA, e);
-    }) 
+    })
 
     this.video.addEventListener("timeupdate", (e) => {
       this.emit(EVENT.TIME_UPDATE, e);
     });
 
-    this.video.addEventListener("play",(e) => {
+    this.video.addEventListener("play", (e) => {
       this.emit(EVENT.PLAY, e);
     });
 
-    this.video.addEventListener("pause",(e) => {
+    this.video.addEventListener("pause", (e) => {
       this.emit(EVENT.PAUSE, e);
     });
 
@@ -282,12 +283,16 @@ class Player extends Component implements ComponentItem {
   }
 
   initPCEvent(): void {
+    // 防止事件冒泡
     this.el.onclick = (e) => {
-      if (this.video.paused) {
-        this.video.play();
-      } else if (this.video.played) {
-        this.video.pause();
+      if (e.target === this.el || e.target === this.video) {
+        if (this.video.paused) {
+          this.video.play();
+        } else if (this.video.played) {
+          this.video.pause();
+        }
       }
+
     };
     this.el.onmousemove = (e) => {
       this.emit("showtoolbar", e);
