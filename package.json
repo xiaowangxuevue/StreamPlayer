@@ -1,8 +1,8 @@
 {
-  "name": "splayer",
-  "version": "1.0.2",
+  "name": "streaming-media-player",
+  "version": "1.1.0",
   "description": "This is a  video play",
-  "main": "./dist/player.umd.js",
+  "main": "./dist/player.es.js",
   "scripts": {
     "dev": "rollup -c script/rollup.config.dev.js --watch",
     "build": "rollup -c script/rollup.config.prod.js",
