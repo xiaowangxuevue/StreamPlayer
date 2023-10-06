@@ -1,71 +1,86 @@
 .video-topbar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background-color: rgba(0,0,0,0.3);
-    color: #fff;
-    transition: all 0.3s ease;
-    z-index: 2001;
-    overflow: hidden;
-    padding: 5px 5px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  color: #fff;
+  transition: all 0.3s ease;
+  z-index: 2001;
+  padding: 5px 5px;
+  display: flex;
+  justify-content: space-between;
+  box-sizing: border-box;
+
+  .video-topbar-right {
     display: flex;
-    justify-content: space-between;
-    box-sizing: border-box;
-    .video-topbar-right {
-        display: flex;
-        flex-direction: row-reverse;
-    }
+    flex-direction: row-reverse;
+  }
 }
 
 .video-topbar-hidden {
-    display: none;
+  display: none;
 }
 
 .video-topbar-controller {
-    padding: 3px;
-    box-sizing: border-box;
-    min-width: 30px;
-    display: flex;
-    height: 30px; 
-    justify-content: center;
-    align-items: center;    
-    cursor: pointer;
+  padding: 3px;
+  box-sizing: border-box;
+  min-width: 30px;
+  display: flex;
+  height: 30px;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  color: #fff;
+  opacity: .9;
+  position: relative;
+
+  span {
+    width: 100%;
+    height: 100%;
+    font-weight: 550;
     color: #fff;
-    opacity: .9;
-    position: relative;
-  
-    span {
-      width: 100%;
-      height: 100%;
-      font-weight:550;
-      color: #fff;
-      padding:0 5px;
-      font-size: 16px;
+    padding: 0 5px;
+    font-size: 16px;
+  }
+
+  .video-icon {
+    height: 100%;
+    width: 100%;
+
+    &:hover {
+      background-color: #007aff;
     }
-  
-    .video-icon {
+
+    svg {
       height: 100%;
       width: 100%;
-      &:hover {
-        background-color: #007aff;
+
+      path {
+        fill: #fff;
       }
-      svg {
-        height: 100%;
-        width: 100%;
-        path {
-          fill: #fff;
-        }
-      }
-    }
-    .video-set {
-        position: absolute;
-        background: rgba(21,21,21,.9);
-        text-align: center;
-        border-radius: 2px;
-        padding: 5px 5px;
-        left: 50%;
-        transform: translateX(-50%);
     }
   }
-  
+
+  .video-set {
+    position: absolute;
+    background: rgba(21, 21, 21, .9);
+    text-align: center;
+    border-radius: 2px;
+    padding: 5px 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    top: 32px;
+  }
+
+  .video-set-hidden {
+    display: none;
+  }
+
+  .video-subsettings-set {
+    right: 0;
+    left: auto !important;
+    transform: translateX(0) !important;
+  }
+
+}
