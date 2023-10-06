@@ -1,6 +1,6 @@
 import { Node,ComponentItem,DOMProps,Player,Progress,Controller,} from "../../index";
 import { Component } from "../../class/Component";
-import { SingleTapEvent } from "ntouch.js";
+import { MoveEvent,SingleTapEvent } from "ntouch.js";
 import { storeControlComponent } from "../../utils/store";
 import { addClass, includeClass, removeClass } from "../../utils/domUtils";
 import "./toolbar.less";
@@ -61,14 +61,14 @@ export class ToolBar extends Component implements ComponentItem {
       }
     }
   
-    private showToolBar(e:Event | SingleTapEvent) {
+    private showToolBar(e:Event | SingleTapEvent | MoveEvent) {
       if(includeClass(this.el,"video-controls-hidden")) {
         removeClass(this.el,["video-controls-hidden"]);
         this.status = "show"
       }
       let target;
       if(e instanceof Event) target = e.target;
-      else target = (e as SingleTapEvent).e.target;
+      else target = (e as SingleTapEvent | MoveEvent).e.target;
   
       if(target === this.player.video && this.player.env === "PC") {
         this.timer = window.setTimeout(()=>{
@@ -77,7 +77,7 @@ export class ToolBar extends Component implements ComponentItem {
       }
     }
   
-    onShowToolBar(e:Event | SingleTapEvent) {
+    onShowToolBar(e:Event | SingleTapEvent | MoveEvent) {
       if(this.timer) {
         window.clearTimeout(this.timer);
         this.timer = null;
@@ -85,7 +85,7 @@ export class ToolBar extends Component implements ComponentItem {
       this.showToolBar(e);
     }
   
-    onHideToolBar(e:MouseEvent) {
+    onHideToolBar(e:Event) {
       this.hideToolBar();
     }
   }
