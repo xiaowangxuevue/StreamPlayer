@@ -38,7 +38,8 @@ class Player extends Component implements ComponentItem {
   topbar: TopBar;
   loading: TimeLoading;
   error: ErrorLoading;
-  mediaProportion: number;
+  mask: HTMLElement;
+  mediaProportion: number = 9 / 16;
   containerWidth: number;
   containerHeight: number;
 
@@ -168,13 +169,13 @@ class Player extends Component implements ComponentItem {
   }
   // 调整尺寸
   adjustMediaSize() {
-    if (this.mediaProportion !== 0) {
-      if (this.container.clientHeight / this.container.clientWidth > this.mediaProportion) {
-        this.video.style.width = "100%";
-        this.video.style.height = this.container.clientWidth * 9 / 16 + 5 + "px"
+    if(this.mediaProportion !== 0) {
+      if(this.el.clientHeight / this.el.clientWidth > this.mediaProportion) {
+       this.video.style.width = "100%";
+       this.video.style.height = this.el.clientWidth  * this.mediaProportion + 0.05 * this.el.clientWidth + "px" 
       } else {
         this.video.style.height = "100%";
-        this.video.style.width = this.container.clientHeight / this.mediaProportion + "px"
+        this.video.style.width = this.el.clientHeight / this.mediaProportion + "px"
       }
     }
 
@@ -284,13 +285,11 @@ class Player extends Component implements ComponentItem {
 
   initPCEvent(): void {
     // 防止事件冒泡
-    this.el.onclick = (e) => {
-      if (e.target === this.el || e.target === this.video) {
-        if (this.video.paused) {
-          this.video.play();
-        } else if (this.video.played) {
-          this.video.pause();
-        }
+    this.video.onclick = (e) => {
+      if (this.video.paused) {
+        this.video.play();
+      } else if (this.video.played) {
+        this.video.pause();
       }
 
     };
@@ -308,7 +307,7 @@ class Player extends Component implements ComponentItem {
   }
 
   initMobileEvent(): void {
-    wrap(this.el).addEventListener("singleTap", (e) => {
+    wrap(this.video).addEventListener("singleTap", (e) => {
       if (this.toolBar.status === "hidden") {
         this.emit(EVENT.SHOW_TOOLBAR, e);
       } else {
@@ -317,7 +316,7 @@ class Player extends Component implements ComponentItem {
       this.emit(EVENT.VIDEO_CLICK);
     });
 
-    wrap(this.el).addEventListener("doubleTap", (e) => {
+    wrap(this.video).addEventListener("doubleTap", (e) => {
       if (this.video.paused) {
         this.video.play();
       } else if (this.video.played) {
@@ -325,7 +324,7 @@ class Player extends Component implements ComponentItem {
       }
     });
 
-    wrap(this.el).addEventListener("move", (e) => {
+    wrap(this.video).addEventListener("move", (e) => {
       let dx = e.deltaX;
       let dy = e.deltaY;
       if (computeAngle(dx, dy) >= 75) {
@@ -335,7 +334,7 @@ class Player extends Component implements ComponentItem {
       }
     });
 
-    wrap(this.el).addEventListener("swipe", (e) => {
+    wrap(this.video).addEventListener("swipe", (e) => {
       let dx = e.endPos.x - e.startPos.x;
       let dy = e.endPos.y - e.startPos.y;
       if (computeAngle(dx, dy) >= 75) {

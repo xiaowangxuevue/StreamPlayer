@@ -17,7 +17,10 @@
     }
     #video {
         height: 300px;
-        width: 400px;
+        width: 600px;
+        resize: both;
+        overflow: auto;
+        margin: 100px auto;
       }
   </style>
 
@@ -58,7 +61,7 @@
         // })
         // console.log(player,'pl');
         let video = document.getElementsByTagName("video")[0]
-      let player = new Player.Player({url:"https://novaex.cc/OnePiece.mp4" , container: document.querySelector("#video"),streamPlay:true,autoPlay:true});
+      let player = new Player.Player({url: "http://127.0.0.1:5502/dist/156084836-1-192.mp4" , container: document.querySelector("#video"),streamPlay:true,autoPlay:true});
         player.use({
             install(player) {
                 player.registerControls("Dot",{
