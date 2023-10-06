@@ -38,6 +38,7 @@ class Player extends Component implements ComponentItem {
   topbar: TopBar;
   loading: TimeLoading;
   error: ErrorLoading;
+  mediaProportion: number;
   containerWidth: number;
   containerHeight: number;
 
@@ -104,6 +105,7 @@ class Player extends Component implements ComponentItem {
     const resizeObserver = new ResizeObserver((entries) => {
       // 触发尺寸变化事件
       this.emit(EVENT.RESIZE, entries);
+      this.adjustMediaSize();
       let width = entries[0].contentRect.width;
       let subsetting;
       // 当尺寸发生变化的时候视频库只调整基本的内置组件，其余用户自定义的组件响应式需要自己实现
@@ -160,7 +162,22 @@ class Player extends Component implements ComponentItem {
       }
     });
 
+
     resizeObserver.observe(this.el);
+  }
+  // 调整尺寸
+  adjustMediaSize(){
+    if(this.mediaProportion !== 0) {
+      if(this.container.clientHeight / this.container.clientWidth > this.mediaProportion) {
+       this.video.style.width = "100%";
+       this.video.style.height = this.container.clientWidth * 9 / 16 + 5 + "px" 
+      } else {
+        this.video.style.height = "100%";
+        this.video.style.width = this.container.clientHeight / this.mediaProportion + "px"
+      }
+    }
+
+      
   }
 
   initEvent() {
@@ -170,21 +187,21 @@ class Player extends Component implements ComponentItem {
       this.initPCEvent();
     }
 
-    this.video.onloadedmetadata = (e) => {
+    this.video.addEventListener('loadedmetadata',(e) => {
       this.emit(EVENT.LOADED_META_DATA, e);
-    };
+    }) 
 
     this.video.addEventListener("timeupdate", (e) => {
       this.emit(EVENT.TIME_UPDATE, e);
     });
 
-    this.video.onplay = (e) => {
+    this.video.addEventListener("play",(e) => {
       this.emit(EVENT.PLAY, e);
-    };
+    });
 
-    this.video.onpause = (e) => {
+    this.video.addEventListener("pause",(e) => {
       this.emit(EVENT.PAUSE, e);
-    };
+    });
 
     this.video.addEventListener("seeking", (e) => {
       if (this.enableSeek) {
@@ -265,7 +282,7 @@ class Player extends Component implements ComponentItem {
   }
 
   initPCEvent(): void {
-    this.video.onclick = (e) => {
+    this.el.onclick = (e) => {
       if (this.video.paused) {
         this.video.play();
       } else if (this.video.played) {
@@ -286,7 +303,7 @@ class Player extends Component implements ComponentItem {
   }
 
   initMobileEvent(): void {
-    wrap(this.video).addEventListener("singleTap", (e) => {
+    wrap(this.el).addEventListener("singleTap", (e) => {
       if (this.toolBar.status === "hidden") {
         this.emit(EVENT.SHOW_TOOLBAR, e);
       } else {
@@ -295,7 +312,7 @@ class Player extends Component implements ComponentItem {
       this.emit(EVENT.VIDEO_CLICK);
     });
 
-    wrap(this.video).addEventListener("doubleTap", (e) => {
+    wrap(this.el).addEventListener("doubleTap", (e) => {
       if (this.video.paused) {
         this.video.play();
       } else if (this.video.played) {
@@ -303,7 +320,7 @@ class Player extends Component implements ComponentItem {
       }
     });
 
-    wrap(this.video).addEventListener("move", (e) => {
+    wrap(this.el).addEventListener("move", (e) => {
       let dx = e.deltaX;
       let dy = e.deltaY;
       if (computeAngle(dx, dy) >= 75) {
@@ -313,7 +330,7 @@ class Player extends Component implements ComponentItem {
       }
     });
 
-    wrap(this.video).addEventListener("swipe", (e) => {
+    wrap(this.el).addEventListener("swipe", (e) => {
       let dx = e.endPos.x - e.startPos.x;
       let dy = e.endPos.y - e.startPos.y;
       if (computeAngle(dx, dy) >= 75) {

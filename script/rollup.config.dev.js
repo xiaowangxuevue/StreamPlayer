@@ -41,7 +41,7 @@ export default defineConfig({
             open: true, // 自动打开页面
             port: 5001, 
             host: 'localhost',
-            openPage:"/dist/index.html",
+            openPage:"/index.html",
         })
     ]
 })
