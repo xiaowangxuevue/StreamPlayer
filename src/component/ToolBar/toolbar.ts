@@ -5,14 +5,13 @@ import {
   Node,
   ComponentItem,
   DOMProps,
-  Player,
   Controller,
   Progress
 } from "../../index";
 import { addClass, includeClass, removeClass } from "../../utils/domUtils";
 import { storeControlComponent } from "../../utils/store";
 import "./toolbar.less";
-
+import { Player } from "../../page/player";
 export class ToolBar extends Component implements ComponentItem {
   readonly id: string = "Toolbar";
   props: DOMProps;

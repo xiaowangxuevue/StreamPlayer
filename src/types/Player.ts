@@ -7,6 +7,7 @@ export type PlayerOptions = {
   autoPlay?: boolean;
   video?: HTMLVideoElement;
   streamPlay?: boolean;
+  post?:string;
   leftBottomBarControllers?: (ComponentConstructor | string)[];
   rightBottomBarControllers?: (ComponentConstructor | string)[];
   leftTopBarControllers?: (ComponentConstructor | string)[];

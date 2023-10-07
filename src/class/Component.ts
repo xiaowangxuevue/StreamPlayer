@@ -25,4 +25,5 @@ export class Component extends BaseEvent{
     initMobileTemplate(){}
     initComponent() {}
     resetEvent() {}
+    dispose() {}
 }
