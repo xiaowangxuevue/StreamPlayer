@@ -302,3 +302,18 @@ export function patchFn<T extends (...args: any[]) => any>(
 
   return fn.bind(context) as T;
 }
+
+
+export function containsDom(dom:Element,child:Element):boolean {
+  if(dom.childNodes.length){
+    dom.childNodes.forEach(node => {
+      if(node !== child) {
+        if(containsDom(node as Element,child)) return true
+      }
+
+    })
+
+  }
+
+  return false
+}
