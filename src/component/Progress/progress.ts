@@ -4,7 +4,6 @@ import { ComponentItem } from "../../types/Player";
 import { EVENT } from "../../events";
 import { $, getDOMPoint } from "../../utils/domUtils";
 import { SingleTapEvent, wrap } from "ntouch.js";
-
 export class Progress extends Component implements ComponentItem {
   id = "Progress";
   player: Player;
