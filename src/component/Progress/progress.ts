@@ -52,7 +52,7 @@ export class Progress extends Component implements ComponentItem {
         scale = 1;
       }
       this.dot.style.left = scale * 100 + "%";
-      this.completedProgress.style.widows = scale * 100 + "%";
+      this.completedProgress.style.width = scale * 100 + "%";
     })
 
     this.on(EVENT.DOT_DRAG,(dx: number, ctx: Progress) => {
@@ -86,7 +86,7 @@ export class Progress extends Component implements ComponentItem {
       e.preventDefault();
       this.emit(EVENT.DOT_DOWN);
       this.mouseX = e.pageX;
-      this.dotLeft = parseInt(this.el.style.left);
+      this.dotLeft = parseInt(this.dot.style.left) / 100*this.el.clientWidth;
       document.body.addEventListener("mousemove", ctx.onMouseMove);
 
       document.body.onmouseup =  (e: MouseEvent) => {

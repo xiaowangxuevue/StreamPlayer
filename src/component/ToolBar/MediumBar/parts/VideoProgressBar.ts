@@ -31,6 +31,9 @@ export class VideoProgress extends Progress {
                 scale = 1;
             }
             this.player.video.currentTime = scale * this.player.video.duration;
+            if(this.player.video.paused){
+                this.player.video.play()
+            }
         })
 
         this.on(EVENT.DOT_DRAG,(dx: number, ctx: Progress) => {
@@ -55,9 +58,10 @@ export class VideoProgress extends Progress {
         this.on(EVENT.DOT_DOWN,() => {
             this.player.emit(EVENT.DOT_DOWN)
         }) 
-
-        this.on(EVENT.DOT_UP,() => {
+        this.on(EVENT.DOT_UP,(scale: number) => {
             this.player.emit(EVENT.DOT_UP)
+
+            this.player.video.currentTime = scale * this.player.video.duration;
         })
     }
 
