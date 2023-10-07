@@ -14,11 +14,10 @@ class DownLoader {
 	url: string = "";
 	callback: Function = null;
 	eof: boolean = false;
-    loader: XHRLoader
-
+    loader: XHRLoader;
     constructor(url?:string) {
         this.url = url || "";
-        this.loader = new XHRLoader()
+        this.loader = new XHRLoader();
     }
 
     // 从开头去请求文件，也就是初始化文件的请求过程直到所有文件都请求完成
@@ -133,7 +132,6 @@ class DownLoader {
 		    return;
         }
         let request = this.initHttpRequest();
-        
         this.loader.load({
             request:request,
             error: error,
@@ -158,7 +156,6 @@ class DownLoader {
                 (xhr.response.byteLength === ctx.totalLength);
             let buffer = xhr.response;
             buffer.fileStart = xhr.start;
-            console.log("成功拿到请求:",buffer);
             // 拿到数据之后执行回调函数
             ctx.callback(buffer,ctx.eof);
             // 如果下载器还是处于激活状态且还没全部下载完成的话

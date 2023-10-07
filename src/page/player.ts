@@ -1,12 +1,12 @@
 import {
   ComponentItem,
+  DanmakuController,
   DOMProps,
   PlayerOptions,
   RegisterComponentOptions,
   ToolBar,
   UpdateComponentOptions,
 } from "../index";
-import "./player.less";
 import { Component } from "../class/Component";
 import { $, addClass, patchComponent, removeClass } from "../utils/domUtils";
 import { computeAngle } from "../index";
@@ -39,12 +39,12 @@ class Player extends Component implements ComponentItem {
   loading: TimeLoading;
   error: ErrorLoading;
   mask: HTMLElement;
-  mediaProportion: number = 9 / 16;
   containerWidth: number;
   containerHeight: number;
+  mediaProportion: number = 9 / 16;
 
   constructor(options?: PlayerOptions) {
-    super(options.container, "div.video-wrapper");
+    super(options.container, "div.Niplayer_video-wrapper");
     this.playerOptions = Object.assign(
       {
         autoPlay: false,
@@ -59,24 +59,23 @@ class Player extends Component implements ComponentItem {
   }
 
   init() {
-    if (this.playerOptions.video) {
+    if(this.playerOptions.video) {
       this.video = this.playerOptions.video;
-      this.video.parentElement && this.video.parentElement.removeChild(this.video)
+      this.video.parentNode && this.video.parentNode.removeChild(this.video);
     } else {
       this.video = $("video");
-      // 确保视频在移动设备上以内联方式播放
       this.video["playsinline"] = true;
       this.video["x5-video-player-type"] = "h5";
-
     }
     this.video.crossOrigin = "anonymous"
-
+    
     this.el.appendChild(this.video);
     this.playerOptions?.url && this.attachSource(this.playerOptions.url);
-    this.initEvent();
-    this.initPlugin();
+    
     this.initComponent();
     this.initTemplate();
+    this.initEvent();
+    this.initPlugin();
     this.initResizeObserver();
     this.checkFullScreenMode();
   }
@@ -98,6 +97,8 @@ class Player extends Component implements ComponentItem {
     this.error = new ErrorLoading(this, "你的网络罢工啦Q_Q", this.el);
     this.toolBar = new ToolBar(this, this.el, "div");
     this.topbar = new TopBar(this, this.el, "div");
+
+    new DanmakuController(this);
   }
 
   /**
@@ -108,6 +109,7 @@ class Player extends Component implements ComponentItem {
       // 触发尺寸变化事件
       this.emit(EVENT.RESIZE, entries);
       this.adjustMediaSize();
+
       let width = entries[0].contentRect.width;
       let subsetting;
       // 当尺寸发生变化的时候视频库只调整基本的内置组件，其余用户自定义的组件响应式需要自己实现
@@ -164,10 +166,10 @@ class Player extends Component implements ComponentItem {
       }
     });
 
-
     resizeObserver.observe(this.el);
   }
-  // 调整尺寸
+
+  //调整video的尺寸
   adjustMediaSize() {
     if(this.mediaProportion !== 0) {
       if(this.el.clientHeight / this.el.clientWidth > this.mediaProportion) {
@@ -178,8 +180,6 @@ class Player extends Component implements ComponentItem {
         this.video.style.width = this.el.clientHeight / this.mediaProportion + "px"
       }
     }
-
-
   }
 
   initEvent() {
@@ -189,21 +189,22 @@ class Player extends Component implements ComponentItem {
       this.initPCEvent();
     }
 
-    this.video.addEventListener('loadedmetadata', (e) => {
+    this.video.addEventListener("loadedmetadata",(e)=>{
       this.emit(EVENT.LOADED_META_DATA, e);
+      this.adjustMediaSize();
     })
-
+      
     this.video.addEventListener("timeupdate", (e) => {
       this.emit(EVENT.TIME_UPDATE, e);
     });
 
-    this.video.addEventListener("play", (e) => {
+    this.video.addEventListener("play",(e)=>{
       this.emit(EVENT.PLAY, e);
-    });
+    })
 
-    this.video.addEventListener("pause", (e) => {
+    this.video.addEventListener("pause",(e)=>{
       this.emit(EVENT.PAUSE, e);
-    });
+    })
 
     this.video.addEventListener("seeking", (e) => {
       if (this.enableSeek) {
@@ -284,14 +285,12 @@ class Player extends Component implements ComponentItem {
   }
 
   initPCEvent(): void {
-    // 防止事件冒泡
     this.video.onclick = (e) => {
       if (this.video.paused) {
         this.video.play();
       } else if (this.video.played) {
         this.video.pause();
       }
-
     };
     this.el.onmousemove = (e) => {
       this.emit("showtoolbar", e);
@@ -362,7 +361,7 @@ class Player extends Component implements ComponentItem {
     }
   }
 
-  checkFullScreenMode() { }
+  checkFullScreenMode() {}
 
   // 注册/挂载自己的组件,其中的id为组件实例的名称，分为内置和用户自定义这两种情况；注意，id是唯一的，不能存在两个具有相同id的组件实例!!!
   mountComponent(
@@ -462,7 +461,7 @@ class Player extends Component implements ComponentItem {
   }
 
   //卸载某一个component组件，所谓卸载一个组件指的是仅仅将其DOM元素从视图上移除，但是不会删除其实例对象，还可以继续挂载
-  //注意 ：卸载一个组件会清楚class和id，意味着之后用户可以将组件挂载到任何位置
+  // 注意：卸载一个组件会清除该组件上挂载的class和id，意味着之后用户可以将组件挂载到任何位置
   unmountComponent(id: string) {
     if (!COMPONENT_STORE.has(id)) {
       throw new Error("该组件不存在或者已经被卸载");

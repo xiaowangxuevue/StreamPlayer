@@ -2,7 +2,7 @@ import { XHRConfig } from "../../types/mp4";
 
 export class XHRLoader {
 
-
+    
     constructor() {}
 
     setup() {}

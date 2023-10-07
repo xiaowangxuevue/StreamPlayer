@@ -1,8 +1,8 @@
-import { Component } from "../../../class/Component";
-import { EVENT } from "../../../events";
-import { Player } from "../../../page/player";
-import { ComponentItem, DOMProps, Node } from "../../../types/Player";
-import { $, addClass, checkIsMouseInRange,includeClass,removeClass } from "../../../utils/domUtils";
+import { Component } from "../../../../class/Component";
+import { EVENT } from "../../../../events";
+import { Player } from "../../../../page/player";
+import { ComponentItem, DOMProps, Node } from "../../../../types/Player";
+import { $, addClass, checkIsMouseInRange, includeClass, removeClass } from "../../../../utils/domUtils";
 
 export class Options extends Component implements ComponentItem {
   id = "Options";
@@ -13,10 +13,10 @@ export class Options extends Component implements ComponentItem {
   hideBox: HTMLElement;
   iconBox: HTMLElement;
   icon: Element;
-  bottom :number = 48;
+  bottom: number = 48;
   constructor(
     player: Player,
-    container: HTMLElement,
+    container?: HTMLElement,
     hideWidth?: number,
     hideHeight?: number,
     desc?: string,
@@ -52,6 +52,7 @@ export class Options extends Component implements ComponentItem {
     addClass(this.iconBox,["video-icon"])
     this.el.appendChild(this.iconBox);
   }
+
   initBaseEvent() {
     this.el.onmouseenter = (e) => {
         let ctx = this;
@@ -76,11 +77,12 @@ export class Options extends Component implements ComponentItem {
   handleMouseMove(e: MouseEvent) {
     let pX = e.clientX,pY = e.clientY;
     let ctx = this;
-    if(!checkIsMouseInRange(ctx.el,ctx.hideBox,this.bottom, pX,pY)) {
+    if(!checkIsMouseInRange(ctx.el, ctx.hideBox, this.bottom, pX,pY)) {
         addClass(this.hideBox,["video-set-hidden"])
         document.body.onmousemove = null; 
     }
   }
+
   replaceIcon(icon: Element) {
     this.iconBox.removeChild(this.icon);
     this.iconBox.appendChild(icon);

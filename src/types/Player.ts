@@ -4,10 +4,10 @@ import { Player } from "../page/player";
 export type PlayerOptions = {
   url?: string;
   container?: HTMLElement;
-  autoPlay?: boolean;
   video?: HTMLVideoElement;
-  streamPlay?: boolean;
   post?:string;
+  autoPlay?: boolean;
+  streamPlay?: boolean;
   leftBottomBarControllers?: (ComponentConstructor | string)[];
   rightBottomBarControllers?: (ComponentConstructor | string)[];
   leftTopBarControllers?: (ComponentConstructor | string)[];

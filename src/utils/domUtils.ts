@@ -43,9 +43,9 @@ export function checkIsMouseInRange(
   if (pageX >= allLeft && pageX <= allRight && pageY <= y && pageY >= allTop)
     return true;
   if (
-    pageX >= parentLeft -5 &&
-    pageX <= parentRight  +5&&
-    pageY >= y -5&&
+    pageX >= parentLeft - 5 &&
+    pageX <= parentRight + 5&&
+    pageY >= y - 5 &&
     pageY <= allBottom + 5
   )
     return true;

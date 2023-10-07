@@ -1,18 +1,17 @@
-import { Player } from "../../../page/player";
-import { $ } from "../../../utils/domUtils";
+import { Player } from "../../../../page/player";
+import { $ } from "../../../../utils/domUtils";
 
 export class SubsettingItem {
     el: HTMLElement;
     player: Player;
     msg: string;
     checkBox: HTMLInputElement;
-    constructor(message:string,player:Player) {
+    constructor(message: string,player:Player) {
         this.msg = message;
         this.player = player;
         this.init()
         this.initEvent()
     }
-
     init() {
         this.el = $("div.video-subsettings-item");
         let left = $("div.video-subsettings-itemleft")

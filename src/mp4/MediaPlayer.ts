@@ -1,4 +1,4 @@
-import MP4Box ,{ MP4File, Log, MP4ArrayBuffer, MP4Info, MP4SourceBuffer, MP4MediaSource } from "mp4box"
+import MP4Box ,{ MP4File, Log, MP4ArrayBuffer, MP4SourceBuffer } from "mp4box"
 import { Player } from "../page/player";
 import { MoovBoxInfo, MediaTrack } from "../types/mp4";
 import { DownLoader } from "./net/DownLoader";
@@ -134,7 +134,7 @@ class MediaPlayer {
 	    this.downloader.setUrl(this.url);
         this.downloader.setCallback(
             // end表示这一次的请求是否已经将整个视频文件加载过来
-            function(response: MP4ArrayBuffer, end: boolean, error) {
+            function(response: MP4ArrayBuffer, end: boolean, error: any) {
                 var nextStart = 0;
                 if (response) {
                     // 设置文件加载的进度条
@@ -185,7 +185,6 @@ class MediaPlayer {
     }
 
     onInitAppended(e:Event) {
-        console.log("@@@@",this);
         let ctx = this;
         var sb = e.target as MP4SourceBuffer;
 	    if (sb.ms.readyState === "open") {
