@@ -156,7 +156,7 @@
             z-index: 2003;
             top: 50%;
             transform: translateY(-50%);
-            transition: all 0.6s ease;
+            transition: opacity 0.6s ease;
           }
         }
       }
@@ -411,7 +411,7 @@
 // 以下的类为工具类，统一存放在最外侧
 
 // 该类用于所有的原子组件的共同样式
-.Nplayer_controller {
+.Splayer_controller {
   box-sizing: border-box;
   min-width: 30px;
   display: flex;
@@ -461,14 +461,14 @@
   }
 }
 
-.Nplayer_controller-video-set(bottom) {
+.Splayer_controller-video-set(bottom) {
   bottom: 48px;
 }
-.Nplayer_controller-video-set(top) {
+.Splayer_controller-video-set(top) {
   top: 32px;
 }
 // 不管传入的参数是bottom还是top，都会应用下面的样式
-.Nplayer_controller-video-set(@_) {
+.Splayer_controller-video-set(@_) {
   position: absolute;
   background: rgba(21, 21, 21, 0.9);
   text-align: center;
@@ -483,10 +483,10 @@
 // 所谓的原子组件也就是不包含子组件的单个组件，例如全屏，音量这些组件
 // 该类用于底部的原子组件的样式
 .video-controller {
-  .Nplayer_controller;
+  .Splayer_controller;
 
   .video-set {
-    .Nplayer_controller-video-set(bottom);
+    .Splayer_controller-video-set(bottom);
   }
   @keyframes slideIn {
     from {
@@ -500,10 +500,10 @@
 
 // 对应顶部的原子组件的样式
 .video-topbar-controller {
-  .Nplayer_controller;
+  .Splayer_controller;
 
   .video-set {
-    .Nplayer_controller-video-set(top);
+    .Splayer_controller-video-set(top);
   }
 }
 
