@@ -44,7 +44,7 @@ class Player extends Component implements ComponentItem {
   mediaProportion: number = 9 / 16;
 
   constructor(options?: PlayerOptions) {
-    super(options.container, "div.Niplayer_video-wrapper");
+    super(options.container, "div.Stplayer_video-wrapper");
     this.playerOptions = Object.assign(
       {
         autoPlay: false,

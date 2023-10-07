@@ -304,12 +304,13 @@ export function patchFn<T extends (...args: any[]) => any>(
 }
 
 
-export function containsDom(dom:Element,child:Element):boolean {
-  if(dom.childNodes.length){
+export function containsDOM(dom:Element,child:Element):boolean {
+  if(dom.childNodes.length > 0){
     dom.childNodes.forEach(node => {
       if(node !== child) {
-        if(containsDom(node as Element,child)) return true
-      }
+        if(containsDOM(node as Element,child) === true)
+        return true
+      }else return true
 
     })
 
