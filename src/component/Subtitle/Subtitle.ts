@@ -29,6 +29,8 @@ export class Subtitle {
   }
 
   init() {
+    console.log('字幕类！',this);
+    
     this.initTemplate();
     this.initTextTrack();
     this.initEvent();
@@ -99,6 +101,8 @@ export class Subtitle {
 
     this.player.on("ShowSubtitle",() => {
         this.trackElement.src = this.currentSource;
+        console.log(this.trackElement.src,'this.trackElement.src');
+        
     })
     this.loadVTTFile(this.defaultSubtitle.source);
   }
@@ -113,8 +117,9 @@ export class Subtitle {
     });
 
     this.textTrack = this.player.video.textTracks[0];
+    this.textTrack.mode = "showing";
 
-    this.textTrack.mode = "hidden"; //默认隐藏弹幕，使用我们自己的样式
+    // this.textTrack.mode = "hidden"; //默认隐藏弹幕，使用我们自己的样式
     this.textTrack.addEventListener("cuechange", (e) => {
       this.el.innerHTML = "";
       if (this.textTrack.activeCues.length > 0) {
