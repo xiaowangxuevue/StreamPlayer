@@ -56,6 +56,7 @@ export class ScreenShot extends Options {
   }
 
   onClick(e: Event) {
+    e.stopPropagation();
     if (!includeClass(this.icon, "video-screenshot-animate")) {
       addClass(this.icon, ["video-screenshot-animate"]);
       (this.icon as SVGSVGElement).ontransitionend = (e) => {

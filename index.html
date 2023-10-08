@@ -67,8 +67,9 @@
         //     streamPlay: true
         // })
         // console.log(player,'pl');
-            let video = document.getElementsByTagName("video")[0]
-          let player = new Player.Player({url: "http://127.0.0.1:5502/dist/156084836-1-192.mp4" , container: document.querySelector("#video"),streamPlay:true,autoPlay:true,  subtitles:[
+        let video = document.getElementsByTagName("video")[0]
+        let player = new Player.Player({
+            url: "http://127.0.0.1:5502/dist/156084836-1-192.mp4", container: document.querySelector("#video"), streamPlay: true, autoPlay: true, subtitles: [
                 {
                     source: "http://127.0.0.1:5502/subtitles/subtitle.vtt",
                     tip: "English",
@@ -76,15 +77,20 @@
                 },
                 {
                     source: "http://127.0.0.1:5502/subtitles/subtitle.zh.vtt",
-                    tip:"Chinese",
+                    tip: "Chinese",
                     lang: "zh"
                 },
                 {
                     source: "http://127.0.0.1:5502/subtitles/subtitle.jp.vtt",
-                    tip:"Japanese",
+                    tip: "Japanese",
                     lang: "jp"
                 }
-            ]});
+            ], danmaku: { //弹幕
+                open: true,
+                api: "http://localhost/",
+                type: "websocket"
+            }
+        });
 
         // window.onload = function () {
         //     let player = new Player.default({

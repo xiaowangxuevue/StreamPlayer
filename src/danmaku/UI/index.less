@@ -1,37 +1,29 @@
-.danmaku-input-wrapper {
-    box-sizing: border-box;
-    padding: 0 5px;
-    display: flex;
-    align-items: center;
-    height: 100%;
-    flex: 1;
-    background-color: hsla(0,0%,100%,.15);
-    border-radius: 2px;
-    .danmaku-input {
-        background-color: transparent;
-        width: calc(100% - 40px);
-        height: 50%;
-        line-height: 100%;
-        color: #fff;
-        font-size: 13px;
-        outline: 0;
-        padding: 0;
-        border: 0;
-        box-sizing: border-box;
-    }
-    .danmaku-send {
-        height: 100%;
-        width: 50px;
-        text-align: center;
-        line-height: 30px;
-        background-color: transparent;
-        color: #fff;
-        font-size: 13px;
-        vertical-align: middle;
-        cursor: pointer;
-    }
-}
-
 .danmaku-box {
     cursor: pointer;
+}
+
+
+.video-danmaku-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    left: 0;
+    top: 0;
+    z-index: 1001;
+
+    .video-danmaku-message {
+        user-select: none;
+        white-space: pre;
+        pointer-events: none;
+        perspective: 500px;
+        display: inline-block;
+        will-change: transform;
+        font-weight: normal;
+        line-height: 1.125;
+        font-family: SimHei, "Microsoft JhengHei", Arial, Helvetica, sans-serif;
+        text-shadow: rgb(0 0 0) 1px 0px 1px, rgb(0 0 0) 0px 1px 1px, rgb(0 0 0) 0px -1px 1px, rgb(0 0 0) -1px 0px 1px;
+        opacity: 1;
+        margin-left: 0px;
+    }
 }
