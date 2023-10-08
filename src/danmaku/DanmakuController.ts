@@ -8,7 +8,7 @@ import { DanmakuSettings } from "./UI/DanmakuSettings";
 import io from "socket.io-client/dist/socket.io";
 import "../utils/polyfill";
 import { $ } from "../utils/domUtils";
-import { log } from "console";
+
 /**
  * @description 控制弹幕的类 Controller层
  */

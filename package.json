@@ -1,8 +1,8 @@
 {
   "name": "streaming-media-player",
-  "version": "1.1.5",
+  "version": "1.1.9",
   "description": "This is a  video play",
-  "main": "./dist/player.es.js",
+  "main": "./dist/player.esm.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "dev": "rollup -c script/rollup.config.dev.js --watch",
@@ -56,7 +56,6 @@
     "be-full": "^0.1.4",
     "mp4box": "^0.5.2",
     "ntouch.js": "^1.0.6",
-
     "socket.io-client": "^4.6.0"
   }
 }

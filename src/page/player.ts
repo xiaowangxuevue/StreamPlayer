@@ -43,7 +43,7 @@ class Player extends Component implements ComponentItem {
   containerWidth: number;
   containerHeight: number;
   mediaProportion: number = 9 / 16;
-
+  static player = this; 
   constructor(options?: PlayerOptions) {
     super(options.container, "div.Stplayer_video-wrapper");
     this.playerOptions = Object.assign(
