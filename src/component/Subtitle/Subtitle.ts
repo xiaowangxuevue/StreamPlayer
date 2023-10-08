@@ -20,6 +20,7 @@ export class Subtitle {
   textTrack: TextTrack; //一个textTrack对应一个字幕文件
   xhrLoader: XHRLoader;
   subsettingsSubtitle: SubsettingsSubtitle;
+  currentSource: string;
   el: HTMLElement;
   constructor(player: Player, subtitles: Subtitles[]) {
     this.player = player;
@@ -47,7 +48,8 @@ export class Subtitle {
           leftIcon: leftIcon,
           leftText: item.tip,
           click(value: SubsettingsItem) {
-            // 设置当前轨道的字幕源
+            ctx.player.emit("SubsettingsSubtitleChange",value);
+            ctx.subsettingsSubtitle.leadItem.instance.rightTipBox.innerText = item.tip;
             ctx.trackElement.src = item.source;
             for (let index in ctx.subtitles) {
               ctx.subtitles[index].instance.leftIconBox.innerHTML = "";
@@ -74,7 +76,7 @@ export class Subtitle {
     this.el = $("div.video-texttrack-container");
     this.player.el.appendChild(this.el);
   }
-  // 初始化字幕文本轨道
+
   initTextTrack() {
     this.xhrLoader = new XHRLoader();
     this.onsuccess = this.onsuccess.bind(this);
@@ -85,14 +87,19 @@ export class Subtitle {
         break;
       }
     }
-    // 创建字幕轨道元素
     this.trackElement = document.createElement("track");
 
     this.player.video.appendChild(this.trackElement);
-    console.log(this.trackElement,'字幕轨道元素');
-    
 
-    // 加载默认字幕文件
+    this.player.on("HideSubtitle",() => {
+        this.currentSource = this.trackElement.src;
+        this.trackElement.src = ""
+        this.el.innerHTML = ""
+    }) 
+
+    this.player.on("ShowSubtitle",() => {
+        this.trackElement.src = this.currentSource;
+    })
     this.loadVTTFile(this.defaultSubtitle.source);
   }
 
@@ -108,13 +115,11 @@ export class Subtitle {
     this.textTrack = this.player.video.textTracks[0];
 
     this.textTrack.mode = "hidden"; //默认隐藏弹幕，使用我们自己的样式
-    // 监听文本轨道中字幕改变事件
     this.textTrack.addEventListener("cuechange", (e) => {
       this.el.innerHTML = "";
       if (this.textTrack.activeCues.length > 0) {
         [...this.textTrack.activeCues].forEach((cue: VTTCue) => {
           if (!cue) return;
-          // 将字幕文本按行拆分
           let texts = cue.text.split("\n");
           texts.forEach((text) => {
             let p = $("p");
@@ -141,7 +146,7 @@ export class Subtitle {
   }
 
   onsuccess(response: ArrayBuffer) {
-    console.log('啥类？',response);
+    console.log(response,'ress');
     
     let url = window.URL.createObjectURL(new Blob([response]));
     this.trackElement.src = url;

@@ -21,8 +21,9 @@ export class SubSetting extends Options {
   mask: HTMLElement;
   subsettingsMain: SubsettingsMain;
   subsettingsPlayrate: SubsettingsPlayrate;
-  subsettingsSubtitle:SubsettingsSubtitle;
+  subsettingsSubtitle: SubsettingsSubtitle;
   currentShow: HTMLElement;
+
   constructor(
     player: Player,
     container: HTMLElement,
@@ -87,13 +88,15 @@ export class SubSetting extends Options {
       if(item.instance.el.dataset.SubsettingsMainType === "播放速度") { //展示播放速率的设置界面
         this.currentShow.style.display = "none";
         this.subsettingsPlayrate.el.style.display = "";
+        this.subsettingsPlayrate.leadItem = item;
         this.hideBox.style.width = this.subsettingsPlayrate.el.dataset.width + "px"
         this.currentShow = this.subsettingsPlayrate.el; 
       } else if( item.instance.el.dataset.SubsettingsMainType === "画面比例") {
         
-      } else if( item.instance.el.dataset.SubsettingsMainType === "字幕设置") {
+      } else if(item.instance.el.dataset.SubsettingsMainType === "字幕设置") {
         this.currentShow.style.display = "none";
         this.subsettingsSubtitle.el.style.display = "";
+        this.subsettingsSubtitle.leadItem = item;
         this.hideBox.style.width = this.subsettingsSubtitle.el.dataset.width + "px"
         this.currentShow = this.subsettingsSubtitle.el; 
       }
