@@ -17,6 +17,7 @@ export class Danmaku {
   private trackHeight: number = 10;
   private trackNumber: number;
   private opacity: number = 1;
+  private fontSizeScale : number = 1;
   private isStopped = true;
   private isHidden = false;
   private tracks: Array<{
@@ -164,6 +165,7 @@ export class Danmaku {
       dom.style.fontWeight = data.fontWeight + "";
       dom.style.position = "absolute";
       dom.style.left = "100%";
+      dom.style.fontSize = data.fontSize * this.fontSizeScale + "px"
       dom.style.whiteSpace = "nowrap";
       dom.style.willChange = "transform";
       dom.style.cursor = "pointer";
@@ -328,5 +330,13 @@ export class Danmaku {
 
   setTrackNumber(num: number) {
     this.trackNumber = this.container.clientHeight / this.trackHeight * num;
+  }
+
+
+  setFontSize(scale: number) {
+    this.fontSizeScale = scale;
+    this.moovingQueue.forEach(data => {
+      data.dom.style.fontSize = data.fontSize * this.fontSizeScale + "px";
+    })
   }
 }

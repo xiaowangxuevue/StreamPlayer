@@ -1,3 +1,4 @@
+import { log } from "console";
 import { Options, SubsettingsMain } from "../../component";
 import { SubsettingsDanmakuMain } from "../../component/ToolBar/BottomBar/parts/Subsettings/parts/danmaku/SubsettingsDanmakuMain";
 import { SubsettingsBase } from "../../component/ToolBar/BottomBar/parts/Subsettings/parts/SubsettingsBase";
@@ -18,6 +19,7 @@ export class DanmakuSettings {
   }
 
   init(): void {
+    console.log('将设置更多');
     this.initTemplate();
   }
 
@@ -25,6 +27,7 @@ export class DanmakuSettings {
     this.subsettingsMain = (SubsettingsMain as SubsettingsBaseConstructor)
       .instance as SubsettingsMain;
 
+    
     this.subsettingsMain.registerSubsettingsItem({
       leftIcon: createSvgs([danmakuPath$1,danmakuPath$2],"0 0 1024 1024"),
       leftText: "弹幕设置",

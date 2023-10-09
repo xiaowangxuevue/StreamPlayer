@@ -8,6 +8,7 @@ import { DanmakuSettings } from "./UI/DanmakuSettings";
 import io from "socket.io-client/dist/socket.io";
 import "../utils/polyfill";
 import { $ } from "../utils/domUtils";
+import { log } from "console";
 /**
  * @description 控制弹幕的类 Controller层
  */
@@ -49,6 +50,8 @@ export class DanmakuController {
   }
 
   initWebSocket() {
+    console.log(this.options.api,'api');
+    
     const socket = io(this.options.api, {
       transports: ["websocket", "polling"],
     });
@@ -76,6 +79,8 @@ export class DanmakuController {
   initHTTP() {}
 
   initTemlate() {
+    console.log('进入设置更多的组件');
+    
     let ctx = this;
     this.danmakuInput = new DanmakuInput(this.player, null, "div");
     this.danmakuSettings = new DanmakuSettings(this.player);
@@ -158,5 +163,9 @@ export class DanmakuController {
 
   setOpacity(opacity: number) {
     this.danmaku.setOpacity(opacity);
+  }
+
+  setFontSize(scale: number) {
+    this.danmaku.setFontSize(scale);
   }
 }
