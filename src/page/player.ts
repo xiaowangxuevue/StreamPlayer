@@ -69,7 +69,7 @@ class Player extends Component implements ComponentItem {
       this.video["x5-video-player-type"] = "h5";
     }
     this.video.crossOrigin = "anonymous"
-    
+    // 初始化媒体的播放源
     this.el.appendChild(this.video);
     this.playerOptions?.url && this.attachSource(this.playerOptions.url);
     
@@ -98,7 +98,6 @@ class Player extends Component implements ComponentItem {
     this.error = new ErrorLoading(this, "你的网络罢工啦Q_Q", this.el);
     this.toolBar = new ToolBar(this, this.el, "div");
     this.topbar = new TopBar(this, this.el, "div");
-    console.log(this.playerOptions.subtitles)
     if(this.playerOptions.subtitles && this.playerOptions.subtitles.length > 0) {
       new Subtitle(this,this.playerOptions.subtitles);
     }

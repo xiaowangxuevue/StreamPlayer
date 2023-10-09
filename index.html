@@ -24,6 +24,11 @@
         overflow: auto;
         margin: 100px auto;
     }
+
+    
+    iframe {
+        display: none;
+      }
 </style>
 
 <body>
@@ -85,11 +90,7 @@
                     tip: "Japanese",
                     lang: "jp"
                 }
-            ], danmaku: { //弹幕
-                open: true,
-                api: "http://localhost/",
-                type: "websocket"
-            }
+            ]
         });
 
         // window.onload = function () {

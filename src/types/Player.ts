@@ -1,5 +1,7 @@
 import { Component } from "../class/Component";
 import { Player } from "../page/player";
+import { SubSetting } from "../component";
+import { SubsettingsBase } from "../component/ToolBar/BottomBar/parts/Subsettings/parts/SubsettingsBase";
 import { SubsettingItem } from "../component/ToolBar/BottomBar/parts/Subsettings/SubsettingItem";
 export type PlayerOptions = {
   url?: string;
@@ -18,6 +20,7 @@ export type PlayerOptions = {
   subtitles?: Subtitles[];
   danmaku?: DanmakuOptions;
   plugins?: Plugin[];
+  biblibiliMode?:boolean;
 };
 
 export type DanmakuOptions = {
@@ -55,7 +58,13 @@ export interface SubsettingsItem {
   leftText?: string;
   rightTip?: string;
   rightIcon?: SVGSVGElement | HTMLElement;
-  instance? : SubsettingItem;
+  instance? : SubsettingItem;  //自身item对应的实例
+  target?: SubsettingsBase | SubsettingsBaseConstructor;
+}
+
+export interface SubsettingsBaseConstructor {
+  new (subsetting:SubSetting,player:Player):SubsettingsBase;
+  instance?: SubsettingsBase;
 }
 
 export interface Node {
