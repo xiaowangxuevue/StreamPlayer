@@ -218,14 +218,14 @@
               flex-direction: column-reverse;
               .video-volume-completed {
                 height: 50%;
-                background-color: @plainBlue;
+                background-color: @progressColor;
               }
 
               .video-volume-dot {
                 width: 12px;
                 height: 12px;
                 border-radius: 50%;
-                background-color: @plainBlue;
+                background-color: @progressColor;
                 position: absolute;
                 left: 50%;
                 top: 50%;
@@ -458,12 +458,17 @@
     .video-subsettings-main {
       width: 100%;
     }
-    .video-subsettings-playrate {
+    .video-subsettings-main, 
+    .video-subsettings-subtitle,
+    .video-subsettings-playrate,
+    .video-subsettings-danmaku-main,
+    .video-subsettings-danmaku-opacity,
+    .video-subsettings-danmaku-range {
       width: 100%;
     }
     .video-subsettings-item {
       &:hover {
-        color: @plainBlue;
+        color: @progressColor;
       }
       .flex-vertical-horizontal-center;
       height: 35px;

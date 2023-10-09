@@ -8,7 +8,6 @@ import { DanmakuSettings } from "./UI/DanmakuSettings";
 import io from "socket.io-client/dist/socket.io";
 import "../utils/polyfill";
 import { $ } from "../utils/domUtils";
-
 /**
  * @description 控制弹幕的类 Controller层
  */
@@ -18,92 +17,77 @@ export class DanmakuController {
   private player: Player;
   private danmaku: Danmaku;
   private danmakuInput: DanmakuInput;
-  private danmakuSettings: DanmakuSettings;
   private danmakuOpenClose: DanmakuOpenClose;
   private options: DanmakuOptions;
   private el: HTMLElement;
-  private timer: number | null = null;
-  private index = 0;
+  danmakuSettings: DanmakuSettings;
   constructor(player: Player, options: DanmakuOptions) {
     this.player = player;
     this.video = player.video;
     this.container = player.el;
+
     this.options = Object.assign(
       {
         type: "http",
       },
       options
-    )
+    );
     this.init();
   }
-  // danmaku: { //弹幕
-  //   open: true,
-  //   api: "http://localhost/",
-  //   type: "websocket"
-  // }
+
   init() {
     this.el = $("div.video-danmaku-container");
     this.container.appendChild(this.el)
-    this.danmaku = new Danmaku(this.el,this.player)
+    this.danmaku = new Danmaku(this.el, this.player);
     this.initTemlate();
     this.initializeEvent();
-    if(this.options.type === 'websocket') {
-      this.initWebSocket()
-    }else {
-      this.initHTTP()
+    if (this.options.type === "websocket") {
+      this.initWebSocket();
+    } else {
+      this.initHTTP();
     }
   }
 
   initWebSocket() {
-    const socket = io(this.options.api,{
-      transports:["websocket","polling"],
+    const socket = io(this.options.api, {
+      transports: ["websocket", "polling"],
     });
 
-    socket.on("connect",() => {
+    socket.on("connect", () => {
+
       this.player.video.addEventListener("timeupdate",(e) => {
         socket.emit(EVENT.REQUEST_DANMAKU_DATA,{
-          time:this.player.video.currentTime
+          time: this.player.video.currentTime
         })
       })
-    })
-
-    socket.on(EVENT.SEND_DANMAKU_DATA,(data: any[]) => {
-      console.log(`接收到数据${JSON.stringify(data)},当前时间${this.player.video.currentTime}`);
-
-      for(let item of data) {
-        this.danmaku.addData(item)
-      }
       
-    })
+      socket.on(EVENT.SEND_DANMAKU_DATA,(data: any[]) => {
+        console.log(`接受到数据${JSON.stringify(data)},当前时间${this.player.video.currentTime}`);
+        
+        for(let item of data) {
+          this.danmaku.addData(item)
+        }
+      })
+    });
 
-
-
+    socket.connect();
   }
 
-  initHTTP() {
-
-  }
+  initHTTP() {}
 
   initTemlate() {
     let ctx = this;
     this.danmakuInput = new DanmakuInput(this.player, null, "div");
-    this.danmakuSettings = new DanmakuSettings(this.player, null, "div");
+    this.danmakuSettings = new DanmakuSettings(this.player);
     this.danmakuOpenClose = new DanmakuOpenClose(this.player, null, "div");
     this.player.use({
       install(player) {
         player.mountComponent(ctx.danmakuOpenClose.id, ctx.danmakuOpenClose, {
           mode: {
             type: "BottomToolBar",
-            pos: "medium"
-          }
-        })
-
-        player.mountComponent(ctx.danmakuSettings.id, ctx.danmakuSettings, {
-          mode: {
-            type: "BottomToolBar",
-            pos: "medium"
-          }
-        })
+            pos: "medium",
+          },
+        });
 
         player.mountComponent(ctx.danmakuInput.id, ctx.danmakuInput, {
           mode: {
@@ -111,7 +95,6 @@ export class DanmakuController {
             pos: "medium",
           },
         });
-
       },
     });
   }
@@ -142,9 +125,9 @@ export class DanmakuController {
     this.video.addEventListener("play", () => {
       this.danmaku.resume();
     });
+
     this.danmakuInput.on("sendData", function (data) {
       // 此处为发送弹幕的逻辑
-  
     });
 
     this.player.on(EVENT.DOT_DRAG, () => {
@@ -153,20 +136,27 @@ export class DanmakuController {
 
     this.player.on("closeDanmaku", () => {
       this.danmaku.close();
-    })
+    });
 
     this.player.on("openDanmaku", () => {
-      this.danmaku.open()
-    })
-
+      this.danmaku.open();
+    });
   }
 
   onTimeupdate(e: Event) {
-   // 时间更新
-   // 默认请求弹幕数据的方式为http请求，则要进行轮询
+    // 时间更新
+    // 如果默认请求弹幕数据的方式为http请求，则需要进行轮询
   }
 
   onSeeking(e: Event) {
     this.danmaku.flush();
+  }
+
+  setTrackNumber(num: number) {
+    this.danmaku.setTrackNumber(num);
+  }
+
+  setOpacity(opacity: number) {
+    this.danmaku.setOpacity(opacity);
   }
 }

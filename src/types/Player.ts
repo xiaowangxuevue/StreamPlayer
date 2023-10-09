@@ -59,6 +59,7 @@ export interface SubsettingsItem {
   rightTip?: string;
   rightIcon?: SVGSVGElement | HTMLElement;
   instance? : SubsettingItem;  //自身item对应的实例
+  click?: (item: SubsettingsItem) => any
   target?: SubsettingsBase | SubsettingsBaseConstructor;
 }
 

@@ -43,6 +43,7 @@ class Player extends Component implements ComponentItem {
   containerWidth: number;
   containerHeight: number;
   mediaProportion: number = 9 / 16;
+  danmakuController:DanmakuController
   static player = this; 
   constructor(options?: PlayerOptions) {
     super(options.container, "div.Stplayer_video-wrapper");
@@ -102,7 +103,7 @@ class Player extends Component implements ComponentItem {
       new Subtitle(this,this.playerOptions.subtitles);
     }
     if(this.playerOptions.danmaku && this.playerOptions.danmaku.open) {
-      new DanmakuController(this, this.playerOptions.danmaku);
+      this.danmakuController = new DanmakuController(this, this.playerOptions.danmaku);
     }
   }
 

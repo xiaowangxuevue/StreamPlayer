@@ -48,7 +48,6 @@ export class Subtitle {
           target: SubsettingsMain,
           click: (value: SubsettingsItem) => {
             console.log(this,'this');
-            
             this.leadItem.instance.rightTipBox.innerText = value.leftText;
             ctx.trackElement.src = item.source;
             for (let index in ctx.subtitles) {
