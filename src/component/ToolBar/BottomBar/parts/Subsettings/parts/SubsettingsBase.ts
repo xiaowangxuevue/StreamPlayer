@@ -53,6 +53,7 @@ export class SubsettingsBase extends BaseEvent {
         this.subsetting.subsettingsBaseGraph.set(this, res);
       }
     }
+    if(!this.SubsettingsItem.includes(item))
     this.SubsettingsItem.push(item);
 
     let instance = new SubsettingItem(
